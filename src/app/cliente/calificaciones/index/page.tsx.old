@@ -1,0 +1,315 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { withClienteRole } from "@/hoc/withRole";
+import { useRouter } from "next/navigation";
+import { 
+  Star,
+  Plus,
+  Trash2,
+  RefreshCw,
+  AlertCircle,
+  Calendar,
+  User,
+  MapPin,
+  MessageSquare,
+  X,
+  Check,
+  Briefcase
+} from "lucide-react";
+
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+interface Calificacion {
+  id: string;
+  calificacion_servicio: number;
+  calificacion_empleada: number | null;
+  comentario: string | null;
+  created_at: string | null;
+  reserva: {
+    id: string;
+    fecha: string;
+    plan: {
+      nombre: string;
+    } | null;
+    empleada: {
+      nombre: string;
+      apellido: string;
+    } | null;
+  } | null;
+}
+
+interface CalificacionesData {
+  message: string;
+  calificaciones: Calificacion[];
+  estadisticas: {
+    total: number;
+    promedio_servicio: number;
+    promedio_empleada: number;
+    por_calificacion: Record<string, number>;
+  };
+}
+
+interface ReservaPendiente {
+  id: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_final: string;
+  plan: {
+    nombre: string;
+  } | null;
+  empleada: {
+    id: string;
+    nombre: string;
+    apellido: string;
+  } | null;
+  lugar: {
+    nombre: string;
+  } | null;
+}
+
+function CalificacionesPage() {
+  const [data, setData] = useState<CalificacionesData | null>(null);
+  const [reservasPendientes, setReservasPendientes] = useState<ReservaPendiente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingPendientes, setLoadingPendientes] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const router = useRouter();
+
+  // Form state
+  const [selectedReserva, setSelectedReserva] = useState<ReservaPendiente | null>(null);
+  const [calificacionServicio, setCalificacionServicio] = useState(0);
+  const [calificacionEmpleada, setCalificacionEmpleada] = useState(0);
+  const [comentario, setComentario] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchCalificaciones();
+  }, []);
+
+  const fetchCalificaciones = async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      const userStr = localStorage.getItem("user");
+      if (!userStr) {
+        setError("No se encontró información del usuario");
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      const response = await fetch(`${API}/api/calificaciones/usuario/${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error("Error al cargar calificaciones");
+      }
+
+      const result = await response.json();
+      setData(result);
+    } catch (err: any) {
+      setError(err.message || "Error al cargar calificaciones");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (calificacionId: string) => {
+    if (!confirm("¿Estás seguro de eliminar esta calificación?")) return;
+    
+    try {
+      const response = await fetch(`${API}/api/calificaciones/${calificacionId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar calificación");
+      }
+
+      fetchCalificaciones();
+    } catch (err: any) {
+      setError(err.message || "Error al eliminar calificación");
+      console.error(err);
+    }
+  };
+
+  const renderStars = (rating: number, size: "sm" | "lg" = "sm") => {
+    const sizeClass = size === "lg" ? "h-6 w-6" : "h-4 w-4";
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`${sizeClass} ${
+              star <= rating
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const formatFecha = (fechaISO: string | null) => {
+    if (!fechaISO) return "N/A";
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4894AD]"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Star className="h-8 w-8 text-yellow-500" />
+            Mis Calificaciones
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Calificaciones que has dado a los servicios
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Statistics */}
+        {data && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="text-sm text-gray-600 mb-2">Total Calificaciones</div>
+              <div className="text-3xl font-bold text-gray-900">{data.estadisticas.total}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="text-sm text-gray-600 mb-2">Promedio Servicio</div>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl font-bold text-yellow-600">
+                  {data.estadisticas.promedio_servicio.toFixed(1)}
+                </div>
+                {renderStars(Math.round(data.estadisticas.promedio_servicio), "lg")}
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="text-sm text-gray-600 mb-2">Promedio Empleada</div>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl font-bold text-yellow-600">
+                  {data.estadisticas.promedio_empleada.toFixed(1)}
+                </div>
+                {renderStars(Math.round(data.estadisticas.promedio_empleada), "lg")}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calificaciones List */}
+        <div className="space-y-4">
+          {!data || data.calificaciones.length === 0 ? (
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
+              <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No has realizado ninguna calificación aún</p>
+            </div>
+          ) : (
+            data.calificaciones.map((calificacion) => (
+              <div
+                key={calificacion.id}
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div>
+                        <div className="text-sm text-gray-500 mb-1">Servicio</div>
+                        {renderStars(calificacion.calificacion_servicio)}
+                      </div>
+                      {calificacion.calificacion_empleada && (
+                        <div>
+                          <div className="text-sm text-gray-500 mb-1">Empleada</div>
+                          {renderStars(calificacion.calificacion_empleada)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar className="h-4 w-4" />
+                      {formatFecha(calificacion.created_at)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(calificacion.id)}
+                    className="text-red-600 hover:text-red-800 transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Reservation Info */}
+                {calificacion.reserva && (
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {calificacion.reserva.plan && (
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Plan</div>
+                          <div className="font-medium text-gray-900">
+                            {calificacion.reserva.plan.nombre}
+                          </div>
+                        </div>
+                      )}
+                      {calificacion.reserva.fecha && (
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Fecha</div>
+                          <div className="font-medium text-gray-900">
+                            {formatFecha(calificacion.reserva.fecha)}
+                          </div>
+                        </div>
+                      )}
+                      {calificacion.reserva.empleada && (
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Empleada</div>
+                          <div className="font-medium text-gray-900 flex items-center gap-2">
+                            <User className="h-4 w-4 text-[#4894AD]" />
+                            {calificacion.reserva.empleada.nombre}{" "}
+                            {calificacion.reserva.empleada.apellido}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Comentario */}
+                {calificacion.comentario && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold text-blue-900">Tu comentario:</h3>
+                    </div>
+                    <p className="text-blue-800">{calificacion.comentario}</p>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default withClienteRole(CalificacionesPage);
