@@ -1,0 +1,93 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import LandingPage from '@/features/landing/components/LandingPage';
+import LoginPage from '@/features/auth/components/LoginPage';
+import SignUpPage from '@/features/auth/components/SignUpPage';
+import EmailVerificationPage from '@/features/auth/components/EmailVerificationPage';
+import UnauthorizedPage from '@/features/auth/components/UnauthorizedPage';
+
+import AdminLayout from '@/features/admin/components/AdminLayout';
+import AdminDashboard from '@/features/admin/components/AdminDashboard';
+import AdminUsuarios from '@/features/admin/components/AdminUsuarios';
+import AdminEditarUsuario from '@/features/admin/components/AdminEditarUsuario';
+import AdminReservas from '@/features/admin/components/AdminReservas';
+import AdminEditarReserva from '@/features/admin/components/AdminEditarReserva';
+import AdminPlanes from '@/features/admin/components/AdminPlanes';
+import AdminCrearPlan from '@/features/admin/components/AdminCrearPlan';
+import AdminEditarPlan from '@/features/admin/components/AdminEditarPlan';
+import AdminPQRS from '@/features/admin/components/AdminPQRS';
+import AdminNotificaciones from '@/features/admin/components/AdminNotificaciones';
+import AdminConfiguracion from '@/features/admin/components/AdminConfiguracion';
+
+import ClienteLayout from '@/features/cliente/components/ClienteLayout';
+import ClienteDashboard from '@/features/cliente/components/ClienteDashboard';
+import ClienteReservas from '@/features/cliente/components/ClienteReservas';
+import ClienteCrearReserva from '@/features/cliente/components/ClienteCrearReserva';
+import ClienteEditarReserva from '@/features/cliente/components/ClienteEditarReserva';
+import ClienteUbicaciones from '@/features/cliente/components/ClienteUbicaciones';
+import ClienteCrearUbicacion from '@/features/cliente/components/ClienteCrearUbicacion';
+import ClienteCalificaciones from '@/features/cliente/components/ClienteCalificaciones';
+import ClienteNotificaciones from '@/features/cliente/components/ClienteNotificaciones';
+import ClientePQRS from '@/features/cliente/components/ClientePQRS';
+
+import EmpleadaLayout from '@/features/empleada/components/EmpleadaLayout';
+import EmpleadaDashboard from '@/features/empleada/components/EmpleadaDashboard';
+import EmpleadaReservas from '@/features/empleada/components/EmpleadaReservas';
+import EmpleadaCalificaciones from '@/features/empleada/components/EmpleadaCalificaciones';
+import EmpleadaNotificaciones from '@/features/empleada/components/EmpleadaNotificaciones';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Públicas */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/sign_up" element={<SignUpPage />} />
+        <Route path="/auth/email" element={<EmailVerificationPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+        {/* Admin */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="index" element={<AdminDashboard />} />
+          <Route path="usuarios/index" element={<AdminUsuarios />} />
+          <Route path="usuarios/editar" element={<AdminEditarUsuario />} />
+          <Route path="reservas/index" element={<AdminReservas />} />
+          <Route path="reservas/editar" element={<AdminEditarReserva />} />
+          <Route path="planes/index" element={<AdminPlanes />} />
+          <Route path="planes/crear" element={<AdminCrearPlan />} />
+          <Route path="planes/editar" element={<AdminEditarPlan />} />
+          <Route path="pqrs/index" element={<AdminPQRS />} />
+          <Route path="notificaciones/index" element={<AdminNotificaciones />} />
+          <Route path="configuracion/index" element={<AdminConfiguracion />} />
+          <Route index element={<Navigate to="index" replace />} />
+        </Route>
+
+        {/* Cliente */}
+        <Route path="/cliente" element={<ClienteLayout />}>
+          <Route path="index" element={<ClienteDashboard />} />
+          <Route path="reservas/index" element={<ClienteReservas />} />
+          <Route path="reservas/crear" element={<ClienteCrearReserva />} />
+          <Route path="reservas/editar" element={<ClienteEditarReserva />} />
+          <Route path="ubicaciones/index" element={<ClienteUbicaciones />} />
+          <Route path="ubicaciones/crear" element={<ClienteCrearUbicacion />} />
+          <Route path="calificaciones/index" element={<ClienteCalificaciones />} />
+          <Route path="notificaciones/index" element={<ClienteNotificaciones />} />
+          <Route path="pqrs/index" element={<ClientePQRS />} />
+          <Route index element={<Navigate to="index" replace />} />
+        </Route>
+
+        {/* Empleada */}
+        <Route path="/empleada" element={<EmpleadaLayout />}>
+          <Route path="index" element={<EmpleadaDashboard />} />
+          <Route path="reservas/index" element={<EmpleadaReservas />} />
+          <Route path="calificaciones/index" element={<EmpleadaCalificaciones />} />
+          <Route path="notificaciones/index" element={<EmpleadaNotificaciones />} />
+          <Route index element={<Navigate to="index" replace />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

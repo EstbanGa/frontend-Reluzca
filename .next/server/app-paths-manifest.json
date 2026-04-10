@@ -1,0 +1,9 @@
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/cliente/calificaciones/index/page": "app/cliente/calificaciones/index/page.js",
+  "/cliente/index/page": "app/cliente/index/page.js",
+  "/cliente/reservas/crear/page": "app/cliente/reservas/crear/page.js",
+  "/cliente/reservas/index/page": "app/cliente/reservas/index/page.js",
+  "/cliente/ubicaciones/crear/page": "app/cliente/ubicaciones/crear/page.js",
+  "/cliente/ubicaciones/index/page": "app/cliente/ubicaciones/index/page.js"
+}
