@@ -281,9 +281,14 @@ function ClienteUbicaciones() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Función auxiliar para mostrar el tamaño
+  // Función auxiliar para mostrar el tamaño con m² y ft²
   const formatTamano = (tamano: Ubicacion['tamaño']) => {
     if (!tamano) return t('cliente.locations.notSpecified');
+    if (tamano.display && tamano.display.includes('ft²')) return tamano.display;
+    if (tamano.metros) {
+      const ft2 = Math.round(tamano.metros * 10.7639 * 100) / 100;
+      return `${tamano.metros} m² / ${ft2} ft²`;
+    }
     return tamano.display || t('cliente.locations.notSpecified');
   };
 
@@ -447,17 +452,22 @@ function ClienteUbicaciones() {
 
       // Preparar campo tamaño con el formato correcto
       let tamañoData = null;
+      let areaM2: number | null = null;
+      let areaFt2: number | null = null;
       if (editFormData.tamaño) {
         const metros = Number(editFormData.tamaño);
+        areaM2 = metros;
+        areaFt2 = Math.round(metros * 10.7639 * 100) / 100;
         let categoria = 'pequeño';
         if (metros > 150) categoria = 'grande';
         else if (metros > 80) categoria = 'mediano';
 
         tamañoData = {
           metros: metros,
+          pies: areaFt2,
           unidad: 'm²',
           categoria: categoria,
-          display: `${metros} m² (${categoria.charAt(0).toUpperCase() + categoria.slice(1)})`
+          display: `${metros} m² / ${areaFt2} ft²`
         };
       }
 
@@ -465,6 +475,8 @@ function ClienteUbicaciones() {
         nombre: editFormData.nombre.trim(),
         tipo_lugar: editFormData.tipo_lugar || null,
         tamaño: tamañoData,
+        area_m2: areaM2,
+        area_ft2: areaFt2,
         baños: editFormData.baños ? parseInt(editFormData.baños) : null,
         pisos: editFormData.pisos ? parseInt(editFormData.pisos) : null,
         descripcion: editFormData.descripcion.trim() || null,

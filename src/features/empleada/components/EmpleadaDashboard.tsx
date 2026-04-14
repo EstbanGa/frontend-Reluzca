@@ -82,8 +82,8 @@ function EmpleadaIndex() {
     return { color: 'bg-orange-100 text-orange-800', label: t('empleada.dashboard.ranking.improving') };
   };
 
-  const handleNavigation = (section: string) => {
-    navigate(`/empleada/${section}`);
+  const handleNavigation = (path: string) => {
+    navigate(path);
   };
 
   if (loading) {
@@ -148,7 +148,7 @@ function EmpleadaIndex() {
         {/* Mis Servicios */}
         <div 
           className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
-          onClick={() => handleNavigation('reservas')}
+          onClick={() => handleNavigation('/empleada/reservas/index')}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
@@ -173,7 +173,7 @@ function EmpleadaIndex() {
         {/* Horarios */}
         <div 
           className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group sm:col-span-2 lg:col-span-1"
-          onClick={() => handleNavigation('horarios')}
+          onClick={() => handleNavigation('/empleada/reservas/index')}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
@@ -258,7 +258,7 @@ function EmpleadaIndex() {
           <div className="space-y-3">
             {/* Calificaciones */}
             <button 
-              onClick={() => handleNavigation('calificaciones')}
+              onClick={() => handleNavigation('/empleada/calificaciones/index')}
               className="w-full p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-left flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ function EmpleadaIndex() {
 
             {/* Notificaciones */}
             <button 
-              onClick={() => handleNavigation('notificaciones')}
+              onClick={() => handleNavigation('/empleada/notificaciones/index')}
               className="w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ function EmpleadaIndex() {
 
             {/* Perfil */}
             <button 
-              onClick={() => handleNavigation('perfil')}
+              onClick={() => handleNavigation('/empleada/index')}
               className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left flex items-center justify-between"
             >
               <div className="flex items-center gap-3">

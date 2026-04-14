@@ -30,6 +30,7 @@ import ClienteCrearUbicacion from '@/features/cliente/components/ClienteCrearUbi
 import ClienteCalificaciones from '@/features/cliente/components/ClienteCalificaciones';
 import ClienteNotificaciones from '@/features/cliente/components/ClienteNotificaciones';
 import ClientePQRS from '@/features/cliente/components/ClientePQRS';
+import ClientePerfil from '@/features/cliente/components/ClientePerfil';
 
 import EmpleadaLayout from '@/features/empleada/components/EmpleadaLayout';
 import EmpleadaDashboard from '@/features/empleada/components/EmpleadaDashboard';
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="calificaciones/index" element={<ClienteCalificaciones />} />
           <Route path="notificaciones/index" element={<ClienteNotificaciones />} />
           <Route path="pqrs/index" element={<ClientePQRS />} />
+          <Route path="perfil" element={<ClientePerfil />} />
           <Route index element={<Navigate to="index" replace />} />
         </Route>
 

@@ -206,7 +206,7 @@ function AdminPQRS() {
         body: JSON.stringify({
           respuesta: respuestaText,
           estado: estadoRespuesta,
-          id_empleada: user.id,
+          respondida_por: user.id,
         }),
       });
 

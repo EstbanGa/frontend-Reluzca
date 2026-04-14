@@ -5,7 +5,6 @@ import {
   MapPin,
   Star,
   FileText,
-  Bell,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -20,7 +19,6 @@ export default function ClienteLayout() {
     { href: "/cliente/ubicaciones/index", icon: MapPin, label: t('cliente.menu.locations') },
     { href: "/cliente/calificaciones/index", icon: Star, label: t('cliente.menu.ratings') },
     { href: "/cliente/pqrs/index", icon: FileText, label: t('cliente.menu.support') },
-    { href: "/cliente/notificaciones/index", icon: Bell, label: t('cliente.menu.notifications') },
   ];
 
   const theme: ThemeConfig = {
@@ -32,6 +30,7 @@ export default function ClienteLayout() {
     avatarGradient: "from-[#D95B26] to-[#4894AD]",
     focusRing: "focus:ring-[#4894AD]",
     profileRoute: "/cliente/perfil",
+    notificationsRoute: "/cliente/notificaciones/index",
   };
 
   return <AppLayout menuItems={menuItems} theme={theme} />;

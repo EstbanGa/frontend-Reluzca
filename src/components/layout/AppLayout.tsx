@@ -7,10 +7,9 @@ import AppHeader from "./AppHeader";
 interface AppLayoutProps {
   menuItems: MenuItem[];
   theme: ThemeConfig;
-  showNotificationBell?: boolean;
 }
 
-export default function AppLayout({ menuItems, theme, showNotificationBell = false }: AppLayoutProps) {
+export default function AppLayout({ menuItems, theme }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -107,7 +106,6 @@ export default function AppLayout({ menuItems, theme, showNotificationBell = fal
           theme={theme}
           userMenuOpen={userMenuOpen}
           isLoggingOut={isLoggingOut}
-          showNotificationBell={showNotificationBell}
           onToggleUserMenu={() => setUserMenuOpen(!userMenuOpen)}
           onToggleSidebar={() => setSidebarOpen(true)}
           onLogout={handleLogout}

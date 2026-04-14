@@ -3,10 +3,8 @@ import {
   Users,
   Calendar,
   LayoutDashboard,
-  Settings,
   FileText,
   CreditCard,
-  Bell,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -21,8 +19,6 @@ export default function AdminLayout() {
     { href: "/admin/reservas/index", icon: Calendar, label: t('admin.menu.reservations') },
     { href: "/admin/planes/index", icon: CreditCard, label: t('admin.menu.plans') },
     { href: "/admin/pqrs/index", icon: FileText, label: t('admin.menu.pqrs') },
-    { href: "/admin/notificaciones/index", icon: Bell, label: t('admin.menu.notifications') },
-    { href: "/admin/configuracion/index", icon: Settings, label: t('admin.menu.settings') },
   ];
 
   const theme: ThemeConfig = {
@@ -34,7 +30,9 @@ export default function AdminLayout() {
     avatarGradient: "from-[#4894AD] to-[#195083]",
     focusRing: "focus:ring-[#195083]",
     profileRoute: "/admin/perfil",
+    settingsRoute: "/admin/configuracion/index",
+    notificationsRoute: "/admin/notificaciones/index",
   };
 
-  return <AppLayout menuItems={menuItems} theme={theme} showNotificationBell />;
+  return <AppLayout menuItems={menuItems} theme={theme} />;
 }

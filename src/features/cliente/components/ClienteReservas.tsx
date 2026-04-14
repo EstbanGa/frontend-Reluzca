@@ -28,6 +28,8 @@ interface Reserva {
   hora_inicio: string;
   hora_final: string;
   estado: string;
+  estado_pago?: string;
+  metodo_pago?: string;
   descripcion?: string;
   precio_total?: number;
   created_at: string;
@@ -436,6 +438,16 @@ function ClienteReservas() {
                           <p className="text-xs text-gray-600">
                             {formatCurrency(reserva.precio_total)}
                           </p>
+                        )}
+                        {reserva.estado_pago && (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                            reserva.estado_pago === 'PAGADO' ? 'bg-green-100 text-green-800' :
+                            reserva.estado_pago === 'PARCIAL' ? 'bg-yellow-100 text-yellow-800' :
+                            reserva.estado_pago === 'REEMBOLSADO' ? 'bg-purple-100 text-purple-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {t(`common.paymentStatus.${reserva.estado_pago}`, { defaultValue: reserva.estado_pago })}
+                          </span>
                         )}
                       </div>
                     </div>

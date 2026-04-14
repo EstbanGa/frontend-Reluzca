@@ -547,17 +547,22 @@ function CrearUbicacion() {
 
     // Preparar campo tamaño con el formato correcto
     let tamañoData = null;
+    let areaM2: number | null = null;
+    let areaFt2: number | null = null;
     if (formData.tamaño) {
       const metros = Number(formData.tamaño);
+      areaM2 = metros;
+      areaFt2 = Math.round(metros * 10.7639 * 100) / 100;
       let categoria = 'pequeño';
       if (metros > 150) categoria = 'grande';
       else if (metros > 80) categoria = 'mediano';
 
       tamañoData = {
         metros: metros,
+        pies: areaFt2,
         unidad: 'm²',
         categoria: categoria,
-        display: `${metros} m² (${categoria.charAt(0).toUpperCase() + categoria.slice(1)})`
+        display: `${metros} m² / ${areaFt2} ft²`
       };
     }
 
@@ -567,6 +572,8 @@ function CrearUbicacion() {
       nombre: formData.nombre.trim(),
       tipo_lugar: formData.tipo_lugar || null,
       tamaño: tamañoData,
+      area_m2: areaM2,
+      area_ft2: areaFt2,
       baños: formData.baños ? parseInt(formData.baños) : null,
       pisos: formData.pisos ? parseInt(formData.pisos) : null,
       nombre_lugar: formData.nombre_lugar.trim() || null,

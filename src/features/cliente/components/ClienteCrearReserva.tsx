@@ -730,7 +730,18 @@ function CrearReserva() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {planes.map((plan) => (
+              {planes.length === 0 ? (
+                <div className="lg:col-span-2 text-center py-12">
+                  <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {t('cliente.createReservation.selectPlan.noPlans')}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {t('cliente.createReservation.selectPlan.noPlansDesc')}
+                  </p>
+                </div>
+              ) : (
+              planes.map((plan) => (
                 <div
                   key={plan.id}
                   onClick={() => seleccionarPlan(plan)}
@@ -778,7 +789,8 @@ function CrearReserva() {
                     </div>
                   )}
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         )}

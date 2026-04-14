@@ -80,6 +80,8 @@ interface Reserva {
   hora_inicio: string;
   hora_final: string;
   estado: string;
+  estado_pago?: string;
+  metodo_pago?: string;
   descripcion?: string;
   precio_total?: number;
   created_at: string;
@@ -730,6 +732,16 @@ function AdminReservas() {
                             <p className="text-sm font-bold text-blue-600">
                               {formatCurrency(reserva.precio_total)}
                             </p>
+                            {reserva.estado_pago && (
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                                reserva.estado_pago === 'PAGADO' ? 'bg-green-100 text-green-800' :
+                                reserva.estado_pago === 'PARCIAL' ? 'bg-yellow-100 text-yellow-800' :
+                                reserva.estado_pago === 'REEMBOLSADO' ? 'bg-purple-100 text-purple-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {t(`common.paymentStatus.${reserva.estado_pago}`, { defaultValue: reserva.estado_pago })}
+                              </span>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1029,6 +1041,37 @@ function AdminReservas() {
                   </div>
                 )}
               </div>
+
+              {/* Estado de pago */}
+              {(selectedReserva.estado_pago || selectedReserva.metodo_pago) && (
+                <div className="bg-amber-50 p-4 rounded-lg mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    {t('admin.reservations.modal.paymentInfo')}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedReserva.estado_pago && (
+                      <div>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.paymentStatus')}</p>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                          selectedReserva.estado_pago === 'PAGADO' ? 'bg-green-100 text-green-800' :
+                          selectedReserva.estado_pago === 'PARCIAL' ? 'bg-yellow-100 text-yellow-800' :
+                          selectedReserva.estado_pago === 'REEMBOLSADO' ? 'bg-purple-100 text-purple-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {t(`common.paymentStatus.${selectedReserva.estado_pago}`, { defaultValue: selectedReserva.estado_pago })}
+                        </span>
+                      </div>
+                    )}
+                    {selectedReserva.metodo_pago && (
+                      <div>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.paymentMethod')}</p>
+                        <p className="font-medium text-gray-900 capitalize">{t(`common.paymentMethod.${selectedReserva.metodo_pago}`, { defaultValue: selectedReserva.metodo_pago })}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Acciones */}
               <div className="flex gap-3 pt-4 border-t">

@@ -4,6 +4,8 @@
     "logout": "Log Out",
     "loggingOut": "Logging out...",
     "myProfile": "My Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
     "error": "Error",
     "close": "Close",
     "cancel": "Cancel",
@@ -85,6 +87,17 @@
       "complaint": "Complaint",
       "claim": "Claim",
       "suggestion": "Suggestion"
+    },
+    "paymentStatus": {
+      "SIN_PAGAR": "Unpaid",
+      "PAGADO": "Paid",
+      "PARCIAL": "Partial",
+      "REEMBOLSADO": "Refunded"
+    },
+    "paymentMethod": {
+      "efectivo": "Cash",
+      "transferencia": "Transfer",
+      "tarjeta": "Card"
     }
   },
   "landing": {
@@ -541,7 +554,10 @@
         "address": "Address",
         "description": "Description",
         "totalPrice": "Total Price",
-        "editReservation": "Edit Reservation"
+        "editReservation": "Edit Reservation",
+        "paymentInfo": "Payment Information",
+        "paymentStatus": "Payment Status",
+        "paymentMethod": "Payment Method"
       }
     },
     "plans": {
@@ -850,7 +866,9 @@
         "perDay": "/ day",
         "workHours": "{{n}}h of work",
         "available": "Available: {{start}} - {{end}}",
-        "servicesIncluded": "Included services:"
+        "servicesIncluded": "Included services:",
+        "noPlans": "No plans available",
+        "noPlansDesc": "There are currently no service plans configured. Please contact the administrator."
       },
       "selectSchedule": {
         "title": "Select the Schedule",
@@ -1255,6 +1273,81 @@
         "loadError": "Error loading PQRS",
         "createError": "Error creating PQRS",
         "deleteError": "Error deleting PQRS"
+      }
+    },
+    "profile": {
+      "title": "My Profile",
+      "subtitle": "View and update your personal information",
+      "personalInfo": "Personal Information",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Your profile has been updated successfully",
+      "saveError": "Error saving changes",
+      "errorLoading": "Error loading profile",
+      "userNotFound": "User information not found",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "document": "ID Document",
+      "documentPlaceholder": "e.g. 1234567890",
+      "personType": "Person Type",
+      "selectOption": "Select...",
+      "natural": "Individual",
+      "juridica": "Business",
+      "birthDate": "Date of Birth",
+      "registrationDate": "Registration Date"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your profile and security",
+    "errorLoading": "Error loading settings",
+    "userNotFound": "User information not found",
+    "tabs": {
+      "profile": "My Profile",
+      "password": "Password"
+    },
+    "profile": {
+      "personalInfo": "Personal Information",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Profile updated successfully",
+      "saveError": "Error saving changes",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "document": "ID Document",
+      "documentPlaceholder": "e.g. 1234567890",
+      "personType": "Person Type",
+      "selectOption": "Select...",
+      "natural": "Individual",
+      "juridica": "Business",
+      "birthDate": "Date of Birth",
+      "registrationDate": "Registration Date"
+    },
+    "password": {
+      "title": "Change Password",
+      "description": "Update your password to keep your account secure",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "changeButton": "Change Password",
+      "changing": "Changing...",
+      "changeSuccess": "Password updated successfully",
+      "changeError": "Error changing password",
+      "mismatch": "Passwords do not match",
+      "rules": {
+        "minLength": "At least 8 characters",
+        "uppercase": "One uppercase letter",
+        "lowercase": "One lowercase letter",
+        "number": "One number",
+        "symbol": "One symbol"
       }
     }
   },

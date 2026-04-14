@@ -27,6 +27,8 @@ export interface ThemeConfig {
   avatarGradient: string;  // e.g. "from-[#4894AD] to-[#195083]"
   focusRing: string;       // e.g. "focus:ring-[#195083]"
   profileRoute: string;    // e.g. "/admin/perfil"
+  settingsRoute?: string;  // e.g. "/admin/configuracion/index"
+  notificationsRoute?: string; // e.g. "/admin/notificaciones/index"
 }
 
 interface AppSidebarProps {

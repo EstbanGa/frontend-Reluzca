@@ -4,6 +4,8 @@
     "logout": "Cerrar Sesión",
     "loggingOut": "Cerrando...",
     "myProfile": "Mi Perfil",
+    "settings": "Configuración",
+    "notifications": "Notificaciones",
     "error": "Error",
     "close": "Cerrar",
     "cancel": "Cancelar",
@@ -85,6 +87,17 @@
       "complaint": "Queja",
       "claim": "Reclamo",
       "suggestion": "Sugerencia"
+    },
+    "paymentStatus": {
+      "SIN_PAGAR": "Sin Pagar",
+      "PAGADO": "Pagado",
+      "PARCIAL": "Parcial",
+      "REEMBOLSADO": "Reembolsado"
+    },
+    "paymentMethod": {
+      "efectivo": "Efectivo",
+      "transferencia": "Transferencia",
+      "tarjeta": "Tarjeta"
     }
   },
   "landing": {
@@ -541,7 +554,10 @@
         "address": "Dirección",
         "description": "Descripción",
         "totalPrice": "Precio Total",
-        "editReservation": "Editar Reserva"
+        "editReservation": "Editar Reserva",
+        "paymentInfo": "Información de Pago",
+        "paymentStatus": "Estado de Pago",
+        "paymentMethod": "Método de Pago"
       }
     },
     "plans": {
@@ -850,7 +866,9 @@
         "perDay": "/ día",
         "workHours": "{{n}}h de trabajo",
         "available": "Disponible: {{start}} - {{end}}",
-        "servicesIncluded": "Servicios incluidos:"
+        "servicesIncluded": "Servicios incluidos:",
+        "noPlans": "No hay planes disponibles",
+        "noPlansDesc": "Actualmente no hay planes de servicio configurados. Por favor contacta al administrador."
       },
       "selectSchedule": {
         "title": "Selecciona el Horario",
@@ -1255,6 +1273,81 @@
         "loadError": "Error al cargar PQRS",
         "createError": "Error al crear PQRS",
         "deleteError": "Error al eliminar PQRS"
+      }
+    },
+    "profile": {
+      "title": "Mi Perfil",
+      "subtitle": "Consulta y actualiza tu información personal",
+      "personalInfo": "Información Personal",
+      "edit": "Editar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "saveSuccess": "Tu perfil ha sido actualizado correctamente",
+      "saveError": "Error al guardar los cambios",
+      "errorLoading": "Error al cargar el perfil",
+      "userNotFound": "No se encontró información del usuario",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "document": "Documento",
+      "documentPlaceholder": "Ej: 1234567890",
+      "personType": "Tipo de persona",
+      "selectOption": "Seleccionar...",
+      "natural": "Persona Natural",
+      "juridica": "Persona Jurídica",
+      "birthDate": "Fecha de nacimiento",
+      "registrationDate": "Fecha de registro"
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Gestiona tu perfil y seguridad",
+    "errorLoading": "Error al cargar la configuración",
+    "userNotFound": "No se encontró información del usuario",
+    "tabs": {
+      "profile": "Mi Perfil",
+      "password": "Contraseña"
+    },
+    "profile": {
+      "personalInfo": "Información Personal",
+      "edit": "Editar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "saveSuccess": "Perfil actualizado correctamente",
+      "saveError": "Error al guardar los cambios",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "document": "Documento",
+      "documentPlaceholder": "Ej: 1234567890",
+      "personType": "Tipo de persona",
+      "selectOption": "Seleccionar...",
+      "natural": "Persona Natural",
+      "juridica": "Persona Jurídica",
+      "birthDate": "Fecha de nacimiento",
+      "registrationDate": "Fecha de registro"
+    },
+    "password": {
+      "title": "Cambiar Contraseña",
+      "description": "Actualiza tu contraseña para mantener tu cuenta segura",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "changeButton": "Cambiar contraseña",
+      "changing": "Cambiando...",
+      "changeSuccess": "Contraseña actualizada correctamente",
+      "changeError": "Error al cambiar la contraseña",
+      "mismatch": "Las contraseñas no coinciden",
+      "rules": {
+        "minLength": "Mínimo 8 caracteres",
+        "uppercase": "Una mayúscula",
+        "lowercase": "Una minúscula",
+        "number": "Un número",
+        "symbol": "Un símbolo"
       }
     }
   },

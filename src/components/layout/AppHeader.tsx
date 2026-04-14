@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Bell, Menu, User, LogOut } from "lucide-react";
+import { Bell, Menu, User, LogOut, Settings } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { ThemeConfig } from "./AppSidebar";
 
@@ -8,7 +8,6 @@ interface AppHeaderProps {
   theme: ThemeConfig;
   userMenuOpen: boolean;
   isLoggingOut: boolean;
-  showNotificationBell?: boolean;
   onToggleUserMenu: () => void;
   onToggleSidebar: () => void;
   onLogout: () => void;
@@ -18,7 +17,6 @@ export default function AppHeader({
   theme,
   userMenuOpen,
   isLoggingOut,
-  showNotificationBell = false,
   onToggleUserMenu,
   onToggleSidebar,
   onLogout,
@@ -65,10 +63,23 @@ export default function AppHeader({
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <LanguageSwitcher />
 
-          {showNotificationBell && (
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          {theme.settingsRoute && (
+            <button
+              onClick={() => navigate(theme.settingsRoute!)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title={t("common.settings")}
+            >
+              <Settings size={18} className="sm:w-5 sm:h-5 text-gray-600" />
+            </button>
+          )}
+
+          {theme.notificationsRoute && (
+            <button
+              onClick={() => navigate(theme.notificationsRoute!)}
+              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title={t("common.notifications")}
+            >
               <Bell size={18} className="sm:w-5 sm:h-5 text-gray-600" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full" />
             </button>
           )}
 
