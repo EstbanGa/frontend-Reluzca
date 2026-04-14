@@ -27,7 +27,8 @@ import {
   UserX,
   ChevronDown,
   ChevronUp,
-  Download
+  Download,
+  KeyRound
 } from "lucide-react";
 
 interface Usuario {
@@ -119,6 +120,11 @@ function AdminUsuarios() {
   const [showModal, setShowModal] = useState(false);
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordTarget, setPasswordTarget] = useState<Usuario | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -211,24 +217,19 @@ function AdminUsuarios() {
     try {
       setDeleteLoading(true);
       const token = localStorage.getItem("access_token");
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/usuario/admin/usuarios/`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ids })
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
+      await Promise.all(
+        ids.map(id =>
+          fetch(`${API_BASE_URL}/api/usuarios/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          })
+        )
+      );
 
-      const result = await response.json();
-      alert(result.message);
-      
       await fetchAllUsuarios();
       setSelectedUsuarios({ admin: [], cliente: [], empleada: [] });
     } catch (err) {
@@ -236,6 +237,48 @@ function AdminUsuarios() {
       alert(err instanceof Error ? err.message : t('admin.users.errors.deleteError'));
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const openPasswordModal = (usuario: Usuario) => {
+    setPasswordTarget(usuario);
+    setNewPassword('');
+    setPasswordError(null);
+    setShowPasswordModal(true);
+  };
+
+  const closePasswordModal = () => {
+    setShowPasswordModal(false);
+    setPasswordTarget(null);
+    setNewPassword('');
+    setPasswordError(null);
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordTarget) return;
+    if (newPassword.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    setPasswordLoading(true);
+    setPasswordError(null);
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`${API_BASE_URL}/api/usuarios/${passwordTarget.id}/password`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nueva_contrasena: newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.detail || `HTTP ${res.status}`);
+      }
+      closePasswordModal();
+      alert('Contraseña actualizada correctamente');
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'Error al cambiar contraseña');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -559,6 +602,14 @@ function AdminUsuarios() {
                             title={t('admin.users.editUser')}
                           >
                             <Edit3 className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            onClick={() => openPasswordModal(usuario)}
+                            className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            title="Cambiar contraseña"
+                          >
+                            <KeyRound className="h-4 w-4" />
                           </button>
                           
                           <button
@@ -989,10 +1040,87 @@ function AdminUsuarios() {
                   {t('admin.users.editUser')}
                 </button>
                 <button
+                  onClick={() => {
+                    closeModal();
+                    openPasswordModal(selectedUsuario);
+                  }}
+                  className="flex-1 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  Cambiar contraseña
+                </button>
+                <button
                   onClick={closeModal}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
                   {t('common.close')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal cambio de contraseña */}
+      {showPasswordModal && passwordTarget && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={closePasswordModal} />
+          <div className="relative bg-white rounded-xl max-w-md w-full shadow-2xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <KeyRound className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Cambiar contraseña</h2>
+                  <p className="text-sm text-gray-500">{passwordTarget.nombre} {passwordTarget.apellido}</p>
+                </div>
+              </div>
+              <button onClick={closePasswordModal} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nueva contraseña
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
+                  placeholder="Mínimo 6 caracteres"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
+              </div>
+
+              {passwordError && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  {passwordError}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleChangePassword}
+                  disabled={passwordLoading || newPassword.length < 6}
+                  className="flex-1 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  {passwordLoading ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="h-4 w-4" />
+                  )}
+                  Guardar contraseña
+                </button>
+                <button
+                  onClick={closePasswordModal}
+                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>
