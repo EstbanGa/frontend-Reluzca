@@ -445,6 +445,7 @@
       "title": "Gestión de Usuarios",
       "subtitle": "Administra todos los usuarios del sistema",
       "createUser": "Crear Usuario",
+      "exportCSV": "Exportar CSV",
       "administrators": "Administradores",
       "clients": "Clientes",
       "employees": "Empleadas",
@@ -504,8 +505,10 @@
         "cancelled": "Canceladas",
         "filtered": "Filtradas"
       },
+      "exportCSV": "Exportar CSV",
       "filters": {
-        "all": "Todos los estados"
+        "all": "Todos los estados",
+        "allPaymentStatuses": "Todos los pagos"
       },
       "search": "Buscar por ID, cliente, empleada, ubicación, plan...",
       "selectedCount": "{{n}} reserva(s) seleccionada(s)",
@@ -745,6 +748,35 @@
         "sendResponse": "Enviar Respuesta"
       }
     },
+    "notifications": {
+      "title": "Gestión de Notificaciones",
+      "subtitle": "Envía y administra notificaciones del sistema",
+      "send": "Nueva Notificación",
+      "history": "Historial de Notificaciones",
+      "empty": "No hay notificaciones registradas",
+      "confirmDelete": "¿Estás seguro de eliminar esta notificación?",
+      "userId": "ID de usuario",
+      "stats": {
+        "read": "Leídas",
+        "unread": "No leídas"
+      },
+      "form": {
+        "title": "Enviar Notificación",
+        "byRole": "Por rol (todos los usuarios del rol)",
+        "byUser": "A un usuario específico",
+        "role": "Rol destinatario",
+        "userId": "ID del usuario",
+        "tipo": "Tipo de notificación",
+        "canal": "Canal de envío",
+        "message": "Mensaje",
+        "messagePlaceholder": "Escribe el mensaje para los destinatarios...",
+        "sendBtn": "Enviar Notificación",
+        "errors": {
+          "emptyMessage": "El mensaje no puede estar vacío",
+          "emptyUserId": "Debes ingresar el ID del usuario"
+        }
+      }
+    },
     "editReservation": {
       "title": "Editar Reserva",
       "back": "Volver a Reservas"
@@ -901,8 +933,10 @@
           "available": "Disponible",
           "saturday": "Sábado (posible sobrecargo)",
           "unavailable": "No disponible",
+          "oneService": "Ya tiene 1 servicio (puede agendar otro)",
           "today": "Hoy"
-        }
+        },
+        "oneServiceToday": "Este día ya tiene 1 servicio agendado"
       },
       "details": {
         "title": "Detalles del Servicio",

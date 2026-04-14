@@ -26,7 +26,8 @@ import {
   Star,
   UserX,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Download
 } from "lucide-react";
 
 interface Usuario {
@@ -343,6 +344,35 @@ function AdminUsuarios() {
     }
   };
 
+  const exportToCSV = () => {
+    if (!data) return;
+    const allUsuarios = [...data.admins, ...data.clientes, ...data.empleadas];
+    const headers = ['nombre', 'apellido', 'correo', 'telefono', 'rol', 'estado', 'ranking', 'fecha_registro', 'fecha_nacimiento', 'genero', 'direccion'];
+    const rows = allUsuarios.map(u => [
+      u.nombre,
+      u.apellido,
+      u.correo,
+      u.telefono || '',
+      u.rol,
+      u.estado,
+      u.ranking != null ? String(u.ranking) : '',
+      u.fecha_registro || '',
+      u.fecha_nacimiento || '',
+      u.genero || '',
+      u.direccion || ''
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `usuarios_reluzca_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const filterUsuarios = (usuarios: Usuario[], searchTerm: string) => {
     if (!searchTerm) return usuarios;
     return usuarios.filter(usuario => 
@@ -649,6 +679,14 @@ function AdminUsuarios() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={exportToCSV}
+              disabled={!data}
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {t('admin.users.exportCSV')}
+            </button>
             <button
               onClick={() => navigate('/admin/usuarios/crear')}
               className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"

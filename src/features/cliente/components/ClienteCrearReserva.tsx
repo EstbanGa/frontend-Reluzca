@@ -82,6 +82,7 @@ interface DisponibilidadDia {
   es_sabado: boolean;
   es_domingo: boolean;
   sobrecargo_sabado: boolean;
+  reservas_existentes?: number;
 }
 
 interface HorarioDisponible {
@@ -977,6 +978,9 @@ function CrearReserva() {
                         {disponibilidadFecha?.es_sabado && disponible && (
                           <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-yellow-500 rounded-full"></div>
                         )}
+                        {disponibilidadFecha?.reservas_existentes === 1 && disponible && (
+                          <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-orange-400 rounded-full" title={t('cliente.createReservation.calendar.oneServiceToday')}></div>
+                        )}
                       </button>
                     );
                   })}
@@ -999,6 +1003,12 @@ function CrearReserva() {
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-gray-100 rounded"></div>
                     <span>{t('cliente.createReservation.calendar.legend.unavailable')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-white border border-gray-200 rounded relative">
+                      <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
+                    </div>
+                    <span>{t('cliente.createReservation.calendar.legend.oneService')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-400 rounded-full"></div>

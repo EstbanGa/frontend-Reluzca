@@ -12,7 +12,8 @@ import {
   AlertCircle,
   UserCheck,
   Home,
-  ArrowRight
+  ArrowRight,
+  Plus
 } from "lucide-react";
 
 interface ClienteData {
@@ -200,12 +201,21 @@ function ClienteIndex() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#4894AD] to-[#D95B26] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold mb-2">
-            {t('cliente.dashboard.greeting', { name: data.cliente_info.nombre })}
-          </h1>
-          <p className="text-white/80 text-sm sm:text-base">{t('cliente.dashboard.subtitle')}</p>
+      <div className="bg-linear-to-r from-[#4894AD] to-[#D95B26] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold mb-2">
+              {t('cliente.dashboard.greeting', { name: data.cliente_info.nombre })}
+            </h1>
+            <p className="text-white/80 text-sm sm:text-base">{t('cliente.dashboard.subtitle')}</p>
+          </div>
+          <button
+            onClick={() => handleNavigation('reservas/crear')}
+            className="bg-white text-[#4894AD] hover:bg-[#F5F0E7] px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-md transition-colors flex-shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            {t('cliente.dashboard.newReservation')}
+          </button>
         </div>
       </div>
 

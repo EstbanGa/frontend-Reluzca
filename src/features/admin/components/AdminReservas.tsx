@@ -34,7 +34,8 @@ import {
   CheckSquare,
   Trash2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Download
 } from "lucide-react";
 
 interface Cliente {
@@ -129,6 +130,7 @@ function AdminReservas() {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
+  const [filtroEstadoPago, setFiltroEstadoPago] = useState<string>('todos');
   const [busqueda, setBusqueda] = useState('');
   const [reservasFiltradas, setReservasFiltradas] = useState<Reserva[]>([]);
   const [selectedReservas, setSelectedReservas] = useState<string[]>([]);
@@ -146,7 +148,7 @@ function AdminReservas() {
     if (data) {
       filtrarReservas();
     }
-  }, [data, filtroEstado, busqueda]);
+  }, [data, filtroEstado, filtroEstadoPago, busqueda]);
 
   const fetchReservas = async () => {
     try {
@@ -188,6 +190,11 @@ function AdminReservas() {
       reservas = reservas.filter(reserva => reserva.estado === filtroEstado);
     }
 
+    // Filtro por estado de pago
+    if (filtroEstadoPago !== 'todos') {
+      reservas = reservas.filter(reserva => reserva.estado_pago === filtroEstadoPago);
+    }
+
     // Filtro por búsqueda
     if (busqueda) {
       const searchTerm = busqueda.toLowerCase();
@@ -214,6 +221,42 @@ function AdminReservas() {
 
   const handleEstadoFilter = (estado: string) => {
     setFiltroEstado(estado);
+  };
+
+  const handleEstadoPagoFilter = (estadoPago: string) => {
+    setFiltroEstadoPago(estadoPago);
+  };
+
+  const exportToCSV = () => {
+    const headers = ['id', 'fecha', 'hora_inicio', 'hora_final', 'estado', 'estado_pago', 'metodo_pago', 'precio_total', 'cliente_nombre', 'cliente_apellido', 'cliente_correo', 'empleada_nombre', 'empleada_apellido', 'lugar', 'plan', 'descripcion'];
+    const rows = reservasFiltradas.map(r => [
+      r.id,
+      r.fecha,
+      r.hora_inicio,
+      r.hora_final,
+      r.estado,
+      r.estado_pago || '',
+      r.metodo_pago || '',
+      r.precio_total != null ? String(r.precio_total) : '',
+      r.cliente?.nombre || '',
+      r.cliente?.apellido || '',
+      r.cliente?.correo || '',
+      r.empleada?.nombre || '',
+      r.empleada?.apellido || '',
+      r.lugar?.nombre || r.lugar?.direccion || '',
+      r.plan?.nombre || '',
+      r.descripcion || ''
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `reservas_reluzca_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleSelectReserva = (id: string) => {
@@ -404,6 +447,16 @@ function AdminReservas() {
               {t('admin.reservations.subtitle')}
             </p>
           </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportToCSV}
+              disabled={reservasFiltradas.length === 0}
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {t('admin.reservations.exportCSV')}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -466,7 +519,7 @@ function AdminReservas() {
             />
           </div>
 
-          {/* Segunda fila: Filtro por Estado */}
+          {/* Segunda fila: Filtros por Estado y Estado de Pago */}
           <div className="flex flex-col sm:flex-row gap-4">
             <select
               value={filtroEstado}
@@ -476,6 +529,18 @@ function AdminReservas() {
               {ESTADOS_RESERVA_VALUES.map(value => (
                 <option key={value} value={value}>
                   {value === 'todos' ? t('admin.reservations.filters.all') : t(`common.statuses.${value}`)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filtroEstadoPago}
+              onChange={(e) => handleEstadoPagoFilter(e.target.value)}
+              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
+            >
+              <option value="todos">{t('admin.reservations.filters.allPaymentStatuses')}</option>
+              {['SIN_PAGAR', 'PAGADO', 'PARCIAL', 'REEMBOLSADO'].map(value => (
+                <option key={value} value={value}>
+                  {t(`common.paymentStatus.${value}`, { defaultValue: value })}
                 </option>
               ))}
             </select>
