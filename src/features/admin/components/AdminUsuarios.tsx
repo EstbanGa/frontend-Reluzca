@@ -13,6 +13,7 @@ import {
   Briefcase,
   Edit3,
   Eye,
+  EyeOff,
   X,
   RefreshCw,
   AlertCircle,
@@ -123,6 +124,7 @@ function AdminUsuarios() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordTarget, setPasswordTarget] = useState<Usuario | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [showPasswordText, setShowPasswordText] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -248,6 +250,7 @@ function AdminUsuarios() {
   };
 
   const closePasswordModal = () => {
+    setShowPasswordText(false);
     setShowPasswordModal(false);
     setPasswordTarget(null);
     setNewPassword('');
@@ -1086,14 +1089,24 @@ function AdminUsuarios() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nueva contraseña
                 </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
-                  placeholder="Mínimo 6 caracteres"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                />
+                <div className="relative">
+                  <input
+                    type={showPasswordText ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
+                    placeholder="Mínimo 6 caracteres"
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordText(v => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPasswordText ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               {passwordError && (
