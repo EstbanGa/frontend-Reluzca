@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   FileText,
   CreditCard,
+  Activity,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -18,6 +19,7 @@ export default function AdminLayout() {
     { href: "/admin/usuarios/index", icon: Users, label: t('admin.menu.users') },
     { href: "/admin/reservas/index", icon: Calendar, label: t('admin.menu.reservations') },
     { href: "/admin/planes/index", icon: CreditCard, label: t('admin.menu.plans') },
+    { href: "/admin/actividades/index", icon: Activity, label: t('admin.menu.activities') },
     { href: "/admin/pqrs/index", icon: FileText, label: t('admin.menu.pqrs') },
   ];
 

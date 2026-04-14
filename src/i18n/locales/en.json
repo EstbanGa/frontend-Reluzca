@@ -402,6 +402,7 @@
       "users": "Users",
       "reservations": "Reservations",
       "plans": "Plans",
+      "activities": "Activities",
       "pqrs": "PQRS",
       "notifications": "Notifications",
       "settings": "Settings"
@@ -639,6 +640,14 @@
       "detailedDescription": "Detailed description",
       "descriptionPlaceholder": "Describe the features, benefits and important details of the plan...",
       "characters": "characters",
+      "tipoPlan": "Plan type",
+      "tipoPlanFull": "Full (all activities included)",
+      "tipoPlanALaCarte": "À la carte (client chooses activities)",
+      "activities": "Plan activities",
+      "activitiesHint": "Select the activities included in this plan",
+      "noActivitiesAvailable": "No activities available",
+      "selectedActivities": "{{n}} activity(ies) selected",
+      "estimatedTotal": "Estimated total",
       "submitBtn": "Create Plan",
       "successTitle": "Plan created successfully!",
       "successRedirect": "Redirecting to plan management...",
@@ -650,6 +659,46 @@
         "endTimeAfterStart": "End time must be after start time",
         "noToken": "Authentication token not found",
         "unknown": "Unknown error creating plan"
+      }
+    },
+    "editPlan": {
+      "title": "Edit Plan",
+      "subtitle": "Modify the service plan details",
+      "back": "Back to Plans",
+      "submitBtn": "Save Changes",
+      "successTitle": "Plan updated successfully!",
+      "successRedirect": "Redirecting to plan management...",
+      "errors": {
+        "notFound": "Plan not found",
+        "unknown": "Unknown error updating the plan"
+      }
+    },
+    "activities": {
+      "title": "Activity Management",
+      "subtitle": "Manage the catalog of activities available for plans",
+      "createActivity": "New Activity",
+      "editActivity": "Edit Activity",
+      "saveActivity": "Save Activity",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete the activity \"{{name}}\"?",
+      "empty": "No activities registered",
+      "createFirst": "Create First Activity",
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "E.g.: Kitchen cleaning, Carpet vacuuming...",
+        "price": "Unit price",
+        "duration": "Duration (min)",
+        "active": "Active"
+      },
+      "filterAll": "All",
+      "filterActive": "Active",
+      "filterInactive": "Inactive",
+      "errors": {
+        "nameRequired": "Name is required",
+        "pricePositive": "Price must be positive",
+        "loadFailed": "Error loading activities",
+        "saveFailed": "Error saving activity",
+        "deleteFailed": "Error deleting activity"
       }
     },
     "createUser": {
@@ -1393,8 +1442,60 @@
     "menu": {
       "home": "Home",
       "services": "My Services",
+      "earnings": "My Earnings",
       "ratings": "Ratings",
       "notifications": "Notifications"
+    },
+    "earnings": {
+      "title": "My Earnings",
+      "subtitle": "View your income by period",
+      "period": "Period",
+      "currentMonth": "Current month",
+      "totalEarned": "Total earned",
+      "completedServices": "Completed services",
+      "avgPerService": "Average per service",
+      "rate": "Assigned percentage",
+      "grossTotal": "Gross total",
+      "table": {
+        "date": "Date",
+        "gross": "Total price",
+        "earnings": "Your earnings",
+        "paymentMethod": "Payment method"
+      },
+      "empty": "No completed services in this period",
+      "loading": "Loading earnings...",
+      "history": "Previous months history",
+      "services": "services"
+    },
+    "checklist": {
+      "title": "Service Activities",
+      "programada": "Scheduled",
+      "ejecutada": "Completed",
+      "markDone": "Mark as done",
+      "markPending": "Mark as pending",
+      "notes": "Notes",
+      "notesPlaceholder": "Add an observation...",
+      "empty": "No activities assigned to this booking",
+      "loading": "Loading activities...",
+      "saveNotes": "Save notes",
+      "progress": "{{done}} of {{total}} completed"
+    },
+    "photos": {
+      "title": "Service Photos",
+      "upload": "Upload photo",
+      "uploading": "Uploading...",
+      "types": {
+        "antes": "Before",
+        "durante": "During",
+        "despues": "After"
+      },
+      "typeLabel": "Type",
+      "descriptionLabel": "Description (optional)",
+      "empty": "No photos for this service",
+      "loading": "Loading photos...",
+      "deleteConfirm": "Delete this photo?",
+      "uploadError": "Error uploading photo",
+      "deleteError": "Error deleting photo"
     },
     "dashboard": {
       "panelReady": "Your work panel is ready",

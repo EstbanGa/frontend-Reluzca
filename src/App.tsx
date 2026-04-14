@@ -16,6 +16,7 @@ import AdminEditarReserva from '@/features/admin/components/AdminEditarReserva';
 import AdminPlanes from '@/features/admin/components/AdminPlanes';
 import AdminCrearPlan from '@/features/admin/components/AdminCrearPlan';
 import AdminEditarPlan from '@/features/admin/components/AdminEditarPlan';
+import AdminActividades from '@/features/admin/components/AdminActividades';
 import AdminPQRS from '@/features/admin/components/AdminPQRS';
 import AdminNotificaciones from '@/features/admin/components/AdminNotificaciones';
 import AdminConfiguracion from '@/features/admin/components/AdminConfiguracion';
@@ -37,6 +38,7 @@ import EmpleadaDashboard from '@/features/empleada/components/EmpleadaDashboard'
 import EmpleadaReservas from '@/features/empleada/components/EmpleadaReservas';
 import EmpleadaCalificaciones from '@/features/empleada/components/EmpleadaCalificaciones';
 import EmpleadaNotificaciones from '@/features/empleada/components/EmpleadaNotificaciones';
+import EmpleadaGanancias from '@/features/empleada/components/EmpleadaGanancias';
 
 export default function App() {
   return (
@@ -60,6 +62,7 @@ export default function App() {
           <Route path="planes/index" element={<AdminPlanes />} />
           <Route path="planes/crear" element={<AdminCrearPlan />} />
           <Route path="planes/editar" element={<AdminEditarPlan />} />
+          <Route path="actividades/index" element={<AdminActividades />} />
           <Route path="pqrs/index" element={<AdminPQRS />} />
           <Route path="notificaciones/index" element={<AdminNotificaciones />} />
           <Route path="configuracion/index" element={<AdminConfiguracion />} />
@@ -87,6 +90,7 @@ export default function App() {
           <Route path="reservas/index" element={<EmpleadaReservas />} />
           <Route path="calificaciones/index" element={<EmpleadaCalificaciones />} />
           <Route path="notificaciones/index" element={<EmpleadaNotificaciones />} />
+          <Route path="ganancias/index" element={<EmpleadaGanancias />} />
           <Route index element={<Navigate to="index" replace />} />
         </Route>
 

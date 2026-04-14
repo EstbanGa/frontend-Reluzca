@@ -256,6 +256,23 @@ function EmpleadaIndex() {
           </div>
           
           <div className="space-y-3">
+            {/* Ganancias */}
+            <button
+              onClick={() => handleNavigation('/empleada/ganancias/index')}
+              className="w-full p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{t('empleada.menu.earnings')}</p>
+                  <p className="text-xs text-gray-600">{t('empleada.earnings.subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400" />
+            </button>
+
             {/* Calificaciones */}
             <button 
               onClick={() => handleNavigation('/empleada/calificaciones/index')}

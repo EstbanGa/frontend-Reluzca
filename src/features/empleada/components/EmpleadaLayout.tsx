@@ -3,6 +3,7 @@ import {
   Home,
   Calendar,
   Star,
+  TrendingUp,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -15,6 +16,7 @@ export default function EmpleadaLayout() {
     { href: "/empleada/index", icon: Home, label: t('empleada.menu.home') },
     { href: "/empleada/reservas/index", icon: Calendar, label: t('empleada.menu.services') },
     { href: "/empleada/calificaciones/index", icon: Star, label: t('empleada.menu.ratings') },
+    { href: "/empleada/ganancias/index", icon: TrendingUp, label: t('empleada.menu.earnings') },
   ];
 
   const theme: ThemeConfig = {

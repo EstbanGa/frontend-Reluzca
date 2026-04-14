@@ -40,6 +40,13 @@ interface Empleada {
   ranking: number;
 }
 
+interface ActividadPlan {
+  id: string;
+  nombre: string;
+  precio_unitario?: number | null;
+  duracion_estimada_minutos?: number | null;
+}
+
 interface Plan {
   id: string;
   nombre: string;
@@ -49,6 +56,8 @@ interface Plan {
   hora_inicio: string;
   hora_final: string;
   horas_servicio: number;
+  tipo_plan?: "full" | "a_la_carte";
+  actividades?: ActividadPlan[];
 }
 
 interface Ubicacion {
@@ -150,7 +159,8 @@ function CrearReserva() {
   const [fechasSeleccionadas, setFechasSeleccionadas] = useState<string[]>([]);
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<Ubicacion | null>(null);
   const [tareasSeleccionadas, setTareasSeleccionadas] = useState<string[]>([]);
-  
+  const [actividadesSeleccionadas, setActividadesSeleccionadas] = useState<string[]>([]);
+
   // Estados de cálculo
   const [calculoPrecio, setCalculoPrecio] = useState<CalculoPrecio | null>(null);
   const [calculandoPrecio, setCalculandoPrecio] = useState(false);
@@ -453,7 +463,8 @@ function CrearReserva() {
           plan_id: planSeleccionado?.id,
           ubicacion_id: ubicacionSeleccionada?.id,
           fechas_horarios: fechasHorarios,
-          tareas_extra: tareasSeleccionadas
+          tareas_extra: tareasSeleccionadas,
+          actividades_seleccionadas: actividadesSeleccionadas,
         })
       });
 
@@ -540,8 +551,20 @@ function CrearReserva() {
 
   const seleccionarPlan = (plan: Plan) => {
     setPlanSeleccionado(plan);
-    setHorarioSeleccionado(null); // Resetear horario cuando cambia el plan
-    setFechasSeleccionadas([]); // Resetear fechas cuando cambia el plan
+    setHorarioSeleccionado(null);
+    setFechasSeleccionadas([]);
+    // Si es full, preseleccionar todas las actividades del plan
+    if (plan.tipo_plan !== 'a_la_carte') {
+      setActividadesSeleccionadas((plan.actividades ?? []).map((a) => a.id));
+    } else {
+      setActividadesSeleccionadas([]);
+    }
+  };
+
+  const toggleActividadPlan = (id: string) => {
+    setActividadesSeleccionadas((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
   const toggleFecha = (fecha: string) => {
@@ -777,7 +800,47 @@ function CrearReserva() {
                     {t('cliente.createReservation.selectPlan.available', { start: plan.hora_inicio, end: plan.hora_final })}
                   </div>
 
-                  {plan.servicios_asociados.length > 0 && (
+                  {/* Actividades à la carte */}
+                  {plan.tipo_plan === 'a_la_carte' && plan.actividades && plan.actividades.length > 0 && planSeleccionado?.id === plan.id && (
+                    <div className="mt-3 border-t border-gray-100 pt-3">
+                      <p className="text-xs font-medium text-gray-600 mb-2">
+                        {t('admin.createPlan.activities')}
+                      </p>
+                      <div className="space-y-1">
+                        {plan.actividades.map((act) => {
+                          const sel = actividadesSeleccionadas.includes(act.id);
+                          return (
+                            <label key={act.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                              <input
+                                type="checkbox"
+                                checked={sel}
+                                onChange={() => toggleActividadPlan(act.id)}
+                                className="w-4 h-4 text-[#195083]"
+                              />
+                              <span className="flex-1 text-gray-700">{act.nombre}</span>
+                              {act.precio_unitario != null && (
+                                <span className="text-gray-500 text-xs">
+                                  ${Number(act.precio_unitario).toLocaleString('es-CO')}
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {actividadesSeleccionadas.length > 0 && (
+                        <p className="text-xs text-[#195083] mt-2 font-medium">
+                          Total: ${(
+                            plan.actividades
+                              .filter((a) => actividadesSeleccionadas.includes(a.id))
+                              .reduce((s, a) => s + (a.precio_unitario ?? 0), 0)
+                          ).toLocaleString('es-CO')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Servicios incluidos (planes full) */}
+                  {plan.tipo_plan !== 'a_la_carte' && plan.servicios_asociados.length > 0 && (
                     <div className="mt-3">
                       <p className="text-xs text-gray-500 mb-1">{t('cliente.createReservation.selectPlan.servicesIncluded')}</p>
                       <div className="flex flex-wrap gap-1">

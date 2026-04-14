@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
+import { API_BASE_URL } from "@/config/env";
 import { 
   Calendar,
   Clock,
@@ -28,7 +29,10 @@ import {
   Mail,
   FileText,
   Package,
-  X
+  X,
+  ListChecks,
+  Image,
+  Trash2
 } from "lucide-react";
 
 // Tipos predefinidos de ubicaciones (values only, labels translated at render)
@@ -96,6 +100,22 @@ interface Servicio {
   descripcion: string | null;
   created_at: string | null;
   updated_at: string | null;
+}
+
+interface ChecklistItem {
+  id: string;
+  id_actividad: string;
+  nombre_actividad?: string;
+  programada: boolean;
+  ejecutada: boolean;
+  notas?: string | null;
+}
+
+interface FotoItem {
+  id: string;
+  url_foto: string;
+  descripcion?: string | null;
+  tipo?: string | null;
 }
 
 interface ServiciosData {
@@ -294,6 +314,15 @@ function EmpleadaServicios() {
   const [serviciosFiltrados, setServiciosFiltrados] = useState<Servicio[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null);
+  const [modalTab, setModalTab] = useState<'details' | 'checklist' | 'photos'>('details');
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [checklistLoading, setChecklistLoading] = useState(false);
+  const [fotos, setFotos] = useState<FotoItem[]>([]);
+  const [fotosLoading, setFotosLoading] = useState(false);
+  const [newFotoUrl, setNewFotoUrl] = useState('');
+  const [newFotoTipo, setNewFotoTipo] = useState('durante');
+  const [newFotoDesc, setNewFotoDesc] = useState('');
+  const [savingFoto, setSavingFoto] = useState(false);
 
   // Función auxiliar para mostrar el tamaño
   const formatTamano = (tamano: UbicacionInfo['tamaño']) => {
@@ -375,14 +404,88 @@ function EmpleadaServicios() {
     return { ...info, label: t('empleada.services.status.' + info.key) };
   };
 
+  const authHeader = () => ({
+    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+    'Content-Type': 'application/json',
+  });
+
+  const fetchChecklist = async (reservaId: string) => {
+    setChecklistLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/actividades`, { headers: authHeader() });
+      if (res.ok) setChecklist(await res.json());
+    } catch { /* ignore */ } finally {
+      setChecklistLoading(false);
+    }
+  };
+
+  const fetchFotos = async (reservaId: string) => {
+    setFotosLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos`, { headers: authHeader() });
+      if (res.ok) setFotos(await res.json());
+    } catch { /* ignore */ } finally {
+      setFotosLoading(false);
+    }
+  };
+
+  const toggleActividad = async (reservaId: string, itemId: string) => {
+    const res = await fetch(
+      `${API_BASE_URL}/api/reservas/${reservaId}/actividades/${itemId}/toggle`,
+      { method: 'PATCH', headers: authHeader() }
+    );
+    if (res.ok) {
+      const updated: ChecklistItem = await res.json();
+      setChecklist(prev => prev.map(c => c.id === itemId ? { ...c, ejecutada: updated.ejecutada } : c));
+    }
+  };
+
+  const saveFoto = async (reservaId: string) => {
+    if (!newFotoUrl.trim()) return;
+    setSavingFoto(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ url_foto: newFotoUrl.trim(), tipo: newFotoTipo, descripcion: newFotoDesc.trim() || null }),
+      });
+      if (res.ok) {
+        const foto: FotoItem = await res.json();
+        setFotos(prev => [...prev, foto]);
+        setNewFotoUrl('');
+        setNewFotoDesc('');
+      }
+    } finally {
+      setSavingFoto(false);
+    }
+  };
+
+  const deleteFoto = async (reservaId: string, fotoId: string) => {
+    const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos/${fotoId}`, {
+      method: 'DELETE',
+      headers: authHeader(),
+    });
+    if (res.ok || res.status === 204) {
+      setFotos(prev => prev.filter(f => f.id !== fotoId));
+    }
+  };
+
   const openModal = (servicio: Servicio) => {
     setSelectedServicio(servicio);
+    setModalTab('details');
+    setChecklist([]);
+    setFotos([]);
     setShowModal(true);
+    fetchChecklist(servicio.id);
+    fetchFotos(servicio.id);
   };
 
   const closeModal = () => {
     setShowModal(false);
     setSelectedServicio(null);
+    setModalTab('details');
+    setChecklist([]);
+    setFotos([]);
   };
 
   if (loading) {
@@ -640,7 +743,7 @@ function EmpleadaServicios() {
           <div className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
             <div className="p-6">
               {/* Header del modal */}
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-[#D95B26]/10 p-3 rounded-lg">
                     {(() => {
@@ -665,7 +768,30 @@ function EmpleadaServicios() {
                 </button>
               </div>
 
-              <div className="space-y-6">
+              {/* Tabs */}
+              <div className="flex gap-1 border-b border-gray-200 mb-5">
+                {[
+                  { key: 'details' as const, label: t('empleada.services.modal.scheduledDate').split(' ')[0] !== '' ? t('empleada.services.modal.clientInfo').replace(/\s.*/,'') : 'Detalles', icon: <FileText className="h-4 w-4" /> },
+                  { key: 'checklist' as const, label: t('empleada.checklist.title'), icon: <ListChecks className="h-4 w-4" /> },
+                  { key: 'photos' as const, label: t('empleada.photos.title'), icon: <Image className="h-4 w-4" /> },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setModalTab(tab.key)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                      modalTab === tab.key
+                        ? 'border-[#D95B26] text-[#D95B26]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {tab.icon}
+                    {tab.key === 'details' ? 'Detalles' : tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab: Details */}
+              {modalTab === 'details' && <div className="space-y-6">
                 {/* Estado del servicio */}
                 <div className="flex items-center gap-3">
                   {(() => {
@@ -830,7 +956,131 @@ function EmpleadaServicios() {
                     <p className="text-gray-700 leading-relaxed">{selectedServicio.descripcion}</p>
                   </div>
                 )}
-              </div>
+              </div>}
+
+              {/* Tab: Checklist */}
+              {modalTab === 'checklist' && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <ListChecks className="h-5 w-5 text-[#D95B26]" />
+                    {t('empleada.checklist.title')}
+                  </h3>
+                  {checklistLoading ? (
+                    <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
+                  ) : checklist.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-6 text-center">{t('empleada.checklist.empty')}</p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-gray-500">
+                        {t('empleada.checklist.progress')}: {checklist.filter(c => c.ejecutada).length}/{checklist.length}
+                      </p>
+                      <ul className="divide-y divide-gray-100">
+                        {checklist.map(item => (
+                          <li key={item.id} className="flex items-center justify-between py-3 gap-3">
+                            <div className="flex items-center gap-3 flex-1">
+                              <input
+                                type="checkbox"
+                                checked={item.ejecutada}
+                                onChange={() => toggleActividad(selectedServicio.id, item.id)}
+                                className="h-4 w-4 rounded border-gray-300 text-[#D95B26] focus:ring-[#D95B26] cursor-pointer"
+                              />
+                              <span className={`text-sm ${item.ejecutada ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                {item.nombre_actividad || item.id_actividad}
+                              </span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${
+                              item.ejecutada ? 'bg-green-100 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                            }`}>
+                              {item.ejecutada ? t('empleada.checklist.ejecutada') : t('empleada.checklist.programada')}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Tab: Fotos */}
+              {modalTab === 'photos' && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <Image className="h-5 w-5 text-[#D95B26]" />
+                    {t('empleada.photos.title')}
+                  </h3>
+
+                  {/* Agregar URL de foto */}
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                    <p className="text-sm font-medium text-gray-700">{t('empleada.photos.upload')}</p>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={newFotoUrl}
+                      onChange={e => setNewFotoUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                      <select
+                        value={newFotoTipo}
+                        onChange={e => setNewFotoTipo(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
+                      >
+                        <option value="antes">{t('empleada.photos.types.before')}</option>
+                        <option value="durante">{t('empleada.photos.types.during')}</option>
+                        <option value="despues">{t('empleada.photos.types.after')}</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder={t('empleada.photos.descriptionLabel')}
+                        value={newFotoDesc}
+                        onChange={e => setNewFotoDesc(e.target.value)}
+                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
+                      />
+                      <button
+                        onClick={() => saveFoto(selectedServicio.id)}
+                        disabled={savingFoto || !newFotoUrl.trim()}
+                        className="px-4 py-2 bg-[#D95B26] text-white rounded-lg text-sm font-medium hover:bg-[#b84c1e] disabled:opacity-50 transition-colors"
+                      >
+                        {savingFoto ? <Loader2 className="h-4 w-4 animate-spin" /> : t('empleada.photos.upload')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {fotosLoading ? (
+                    <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
+                  ) : fotos.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-4 text-center">{t('empleada.photos.empty')}</p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {fotos.map(foto => (
+                        <div key={foto.id} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                          <img
+                            src={foto.url_foto}
+                            alt={foto.descripcion || ''}
+                            className="w-full h-28 object-cover"
+                          />
+                          {foto.tipo && (
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">
+                              {t(`empleada.photos.types.${foto.tipo === 'antes' ? 'before' : foto.tipo === 'durante' ? 'during' : 'after'}`)}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => deleteFoto(selectedServicio.id, foto.id)}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                          {foto.descripcion && (
+                            <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate">
+                              {foto.descripcion}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

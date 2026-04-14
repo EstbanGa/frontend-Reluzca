@@ -402,6 +402,7 @@
       "users": "Usuarios",
       "reservations": "Reservas",
       "plans": "Planes",
+      "activities": "Actividades",
       "pqrs": "PQRS",
       "notifications": "Notificaciones",
       "settings": "Configuración"
@@ -639,6 +640,14 @@
       "detailedDescription": "Descripción detallada",
       "descriptionPlaceholder": "Describe las características, beneficios y detalles importantes del plan...",
       "characters": "caracteres",
+      "tipoPlan": "Tipo de plan",
+      "tipoPlanFull": "Full (todas las actividades incluidas)",
+      "tipoPlanALaCarte": "À la carte (cliente elige actividades)",
+      "activities": "Actividades del plan",
+      "activitiesHint": "Selecciona las actividades que incluye este plan",
+      "noActivitiesAvailable": "No hay actividades disponibles",
+      "selectedActivities": "{{n}} actividad(es) seleccionada(s)",
+      "estimatedTotal": "Total estimado",
       "submitBtn": "Crear Plan",
       "successTitle": "¡Plan creado exitosamente!",
       "successRedirect": "Redirigiendo a la gestión de planes...",
@@ -650,6 +659,46 @@
         "endTimeAfterStart": "La hora final debe ser posterior a la hora de inicio",
         "noToken": "No se encontró el token de autenticación",
         "unknown": "Error desconocido al crear el plan"
+      }
+    },
+    "editPlan": {
+      "title": "Editar Plan",
+      "subtitle": "Modifica los datos del plan de servicio",
+      "back": "Volver a Planes",
+      "submitBtn": "Guardar Cambios",
+      "successTitle": "¡Plan actualizado exitosamente!",
+      "successRedirect": "Redirigiendo a la gestión de planes...",
+      "errors": {
+        "notFound": "Plan no encontrado",
+        "unknown": "Error desconocido al actualizar el plan"
+      }
+    },
+    "activities": {
+      "title": "Gestión de Actividades",
+      "subtitle": "Administra el catálogo de actividades disponibles para los planes",
+      "createActivity": "Nueva Actividad",
+      "editActivity": "Editar Actividad",
+      "saveActivity": "Guardar Actividad",
+      "cancel": "Cancelar",
+      "confirmDelete": "¿Eliminar la actividad \"{{name}}\"?",
+      "empty": "No hay actividades registradas",
+      "createFirst": "Crear Primera Actividad",
+      "fields": {
+        "name": "Nombre",
+        "namePlaceholder": "Ej: Limpieza de cocina, Aspirado de alfombras...",
+        "price": "Precio unitario",
+        "duration": "Duración (min)",
+        "active": "Activa"
+      },
+      "filterAll": "Todas",
+      "filterActive": "Activas",
+      "filterInactive": "Inactivas",
+      "errors": {
+        "nameRequired": "El nombre es obligatorio",
+        "pricePositive": "El precio debe ser positivo",
+        "loadFailed": "Error al cargar actividades",
+        "saveFailed": "Error al guardar la actividad",
+        "deleteFailed": "Error al eliminar la actividad"
       }
     },
     "createUser": {
@@ -1393,8 +1442,60 @@
     "menu": {
       "home": "Inicio",
       "services": "Mis Servicios",
+      "earnings": "Mis Ganancias",
       "ratings": "Calificaciones",
       "notifications": "Notificaciones"
+    },
+    "earnings": {
+      "title": "Mis Ganancias",
+      "subtitle": "Consulta tus ingresos por período",
+      "period": "Período",
+      "currentMonth": "Mes actual",
+      "totalEarned": "Total ganado",
+      "completedServices": "Servicios completados",
+      "avgPerService": "Promedio por servicio",
+      "rate": "Porcentaje asignado",
+      "grossTotal": "Total bruto",
+      "table": {
+        "date": "Fecha",
+        "gross": "Precio total",
+        "earnings": "Tu ganancia",
+        "paymentMethod": "Método de pago"
+      },
+      "empty": "No hay servicios completados en este período",
+      "loading": "Cargando ganancias...",
+      "history": "Historial de meses anteriores",
+      "services": "servicios"
+    },
+    "checklist": {
+      "title": "Actividades del Servicio",
+      "programada": "Programada",
+      "ejecutada": "Ejecutada",
+      "markDone": "Marcar como realizada",
+      "markPending": "Marcar como pendiente",
+      "notes": "Notas",
+      "notesPlaceholder": "Agrega una observación...",
+      "empty": "No hay actividades asignadas a esta reserva",
+      "loading": "Cargando actividades...",
+      "saveNotes": "Guardar notas",
+      "progress": "{{done}} de {{total}} realizadas"
+    },
+    "photos": {
+      "title": "Fotos del Servicio",
+      "upload": "Subir foto",
+      "uploading": "Subiendo...",
+      "types": {
+        "antes": "Antes",
+        "durante": "Durante",
+        "despues": "Después"
+      },
+      "typeLabel": "Tipo",
+      "descriptionLabel": "Descripción (opcional)",
+      "empty": "No hay fotos para este servicio",
+      "loading": "Cargando fotos...",
+      "deleteConfirm": "¿Eliminar esta foto?",
+      "uploadError": "Error al subir la foto",
+      "deleteError": "Error al eliminar la foto"
     },
     "dashboard": {
       "panelReady": "Tu panel de trabajo está listo",
