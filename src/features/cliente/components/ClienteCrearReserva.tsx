@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -115,13 +116,14 @@ interface CalculoPrecio {
 }
 
 // Pasos del proceso
-const PASOS = [
-  { id: 1, nombre: 'Empleada', descripcion: 'Seleccionar empleada' },
-  { id: 2, nombre: 'Plan', descripcion: 'Elegir plan de servicio' },
-  { id: 3, nombre: 'Horario', descripcion: 'Seleccionar horario único' },
-  { id: 4, nombre: 'Fechas', descripcion: 'Elegir fechas disponibles' },
-  { id: 5, nombre: 'Detalles', descripcion: 'Ubicación y extras' },
-  { id: 6, nombre: 'Confirmación', descripcion: 'Revisar y confirmar' }
+const PASOS_IDS = [1, 2, 3, 4, 5, 6];
+const PASO_KEYS = [
+  { nombre: 'steps.employee', descripcion: 'steps.employeeDesc' },
+  { nombre: 'steps.plan', descripcion: 'steps.planDesc' },
+  { nombre: 'steps.schedule', descripcion: 'steps.scheduleDesc' },
+  { nombre: 'steps.dates', descripcion: 'steps.datesDesc' },
+  { nombre: 'steps.details', descripcion: 'steps.detailsDesc' },
+  { nombre: 'steps.confirmation', descripcion: 'steps.confirmationDesc' }
 ];
 
 function CrearReserva() {
@@ -130,6 +132,7 @@ function CrearReserva() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Estados de datos
   const [empleadas, setEmpleadas] = useState<Empleada[]>([]);
@@ -203,7 +206,7 @@ function CrearReserva() {
       const empleadas = await response.json();
       setEmpleadas(empleadas);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar empleadas");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadEmployees'));
     }
   };
 
@@ -226,10 +229,10 @@ function CrearReserva() {
       if (result.success) {
         setPlanes(result.planes);
       } else {
-        throw new Error(result.error || 'Error al cargar planes');
+        throw new Error(result.error || t('cliente.createReservation.errors.loadPlans'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar planes");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadPlans'));
     }
   };
 
@@ -252,10 +255,10 @@ function CrearReserva() {
       if (result.success) {
         setUbicaciones(result.ubicaciones);
       } else {
-        throw new Error(result.error || 'Error al cargar ubicaciones');
+        throw new Error(result.error || t('cliente.createReservation.errors.loadLocations'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar ubicaciones");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadLocations'));
     }
   };
 
@@ -285,7 +288,7 @@ function CrearReserva() {
         setDisponibilidad([]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar disponibilidad");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadAvailability'));
     } finally {
       setLoading(false);
     }
@@ -313,10 +316,10 @@ function CrearReserva() {
       if (result.success) {
         setHorariosDisponibles(result.horarios_disponibles);
       } else {
-        throw new Error(result.error || 'Error al cargar horarios');
+        throw new Error(result.error || t('cliente.createReservation.errors.loadSchedules'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar horarios");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadSchedules'));
     } finally {
       setCargandoHorarios(false);
     }
@@ -344,10 +347,10 @@ function CrearReserva() {
         setTareasExtra(result.tareas_extra);
         setTareasSeleccionadas([]); // Resetear selección
       } else {
-        throw new Error(result.error || 'Error al cargar tareas extra');
+        throw new Error(result.error || t('cliente.createReservation.errors.loadExtraTasks'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar tareas extra");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadExtraTasks'));
     }
   };
 
@@ -400,10 +403,10 @@ function CrearReserva() {
       if (result.success) {
         setCalculoPrecio(result.calculo);
       } else {
-        throw new Error(result.error || 'Error al calcular precio');
+        throw new Error(result.error || t('cliente.createReservation.errors.calculatePrice'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al calcular precio");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.calculatePrice'));
     } finally {
       setCalculandoPrecio(false);
     }
@@ -462,10 +465,10 @@ function CrearReserva() {
         alert(`${result.message}\nTotal pagado: ${formatCurrency(result.data.resumen.precio_total)}`);
         navigate('/cliente/reservas/index');
       } else {
-        throw new Error(result.error || 'Error al crear reservas');
+        throw new Error(result.error || t('cliente.createReservation.errors.createReservations'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al crear reservas");
+      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.createReservations'));
     } finally {
       setLoading(false);
     }
@@ -490,12 +493,12 @@ function CrearReserva() {
   };
 
   const obtenerDescuentoPorDias = (dias: number) => {
-    if (dias <= 3) return { porcentaje: 0, descripcion: 'Sin descuento' };
-    if (dias <= 7) return { porcentaje: 3, descripcion: '3% de descuento' };
-    if (dias <= 11) return { porcentaje: 5, descripcion: '5% de descuento' };
-    if (dias <= 14) return { porcentaje: 7, descripcion: '7% de descuento' };
-    if (dias <= 30) return { porcentaje: 10, descripcion: '10% de descuento' };
-    return { porcentaje: 10, descripcion: '10% de descuento (máximo)' };
+    if (dias <= 3) return { porcentaje: 0, descripcion: t('cliente.createReservation.discounts.none') };
+    if (dias <= 7) return { porcentaje: 3, descripcion: t('cliente.createReservation.discounts.3pct') };
+    if (dias <= 11) return { porcentaje: 5, descripcion: t('cliente.createReservation.discounts.5pct') };
+    if (dias <= 14) return { porcentaje: 7, descripcion: t('cliente.createReservation.discounts.7pct') };
+    if (dias <= 30) return { porcentaje: 10, descripcion: t('cliente.createReservation.discounts.10pct') };
+    return { porcentaje: 10, descripcion: t('cliente.createReservation.discounts.10pctMax') };
   };
 
   // Funciones de navegación
@@ -604,10 +607,10 @@ function CrearReserva() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mb-2">
-              Crear Nueva Reserva
+              {t('cliente.createReservation.title')}
             </h1>
             <p className="text-white/90 text-sm sm:text-base">
-              Reserva tu servicio de limpieza paso a paso
+              {t('cliente.createReservation.subtitle')}
             </p>
           </div>
           <button
@@ -615,7 +618,7 @@ function CrearReserva() {
             className="bg-[#D95B26] hover:bg-[#b8491f] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium text-sm sm:text-base flex items-center gap-2 transition-colors whitespace-nowrap"
           >
             <ArrowLeft size={20} />
-            Volver a Reservas
+            {t('cliente.createReservation.backToReservations')}
           </button>
         </div>
       </div>
@@ -623,30 +626,30 @@ function CrearReserva() {
       {/* Indicador de pasos */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between">
-          {PASOS.map((paso, index) => (
-            <div key={paso.id} className="flex items-center flex-1">
+          {PASOS_IDS.map((pasoId, index) => (
+            <div key={pasoId} className="flex items-center flex-1">
               <div className="flex items-center">
                 <button
-                  onClick={() => irAPaso(paso.id)}
+                  onClick={() => irAPaso(pasoId)}
                   className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all ${
-                    pasoActual === paso.id
+                    pasoActual === pasoId
                       ? 'bg-[#195083] text-white'
-                      : pasoActual > paso.id
+                      : pasoActual > pasoId
                       ? 'bg-[#22c55e] text-white'
                       : 'bg-gray-200 text-gray-600'
                   }`}
                 >
-                  {pasoActual > paso.id ? <Check size={16} /> : paso.id}
+                  {pasoActual > pasoId ? <Check size={16} /> : pasoId}
                 </button>
                 <div className="ml-2 sm:ml-3 hidden sm:block">
-                  <p className={`font-medium text-sm ${pasoActual >= paso.id ? 'text-gray-900' : 'text-gray-500'}`}>
-                    {paso.nombre}
+                  <p className={`font-medium text-sm ${pasoActual >= pasoId ? 'text-gray-900' : 'text-gray-500'}`}>
+                    {t(`cliente.createReservation.${PASO_KEYS[index].nombre}`)}
                   </p>
-                  <p className="text-xs text-gray-500">{paso.descripcion}</p>
+                  <p className="text-xs text-gray-500">{t(`cliente.createReservation.${PASO_KEYS[index].descripcion}`)}</p>
                 </div>
               </div>
-              {index < PASOS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 sm:mx-4 ${pasoActual > paso.id ? 'bg-[#22c55e]' : 'bg-gray-200'}`} />
+              {index < PASOS_IDS.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-2 sm:mx-4 ${pasoActual > pasoId ? 'bg-[#22c55e]' : 'bg-gray-200'}`} />
               )}
             </div>
           ))}
@@ -660,10 +663,10 @@ function CrearReserva() {
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Selecciona una Empleada
+                {t('cliente.createReservation.selectEmployee.title')}
               </h2>
               <p className="text-gray-600">
-                Elige la empleada que realizará tu servicio de limpieza
+                {t('cliente.createReservation.selectEmployee.subtitle')}
               </p>
             </div>
 
@@ -705,7 +708,7 @@ function CrearReserva() {
             ) : (
               <div className="text-center py-8">
                 <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No hay empleadas disponibles</p>
+                <p className="text-gray-500">{t('cliente.createReservation.selectEmployee.noEmployees')}</p>
               </div>
             )}
           </div>
@@ -716,13 +719,13 @@ function CrearReserva() {
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Selecciona un Plan
+                {t('cliente.createReservation.selectPlan.title')}
               </h2>
               <p className="text-gray-600">
-                Empleada: <span className="font-semibold text-gray-900">{empleadaSeleccionada?.nombre_completo}</span>
+                {t('cliente.createReservation.selectPlan.employee')} <span className="font-semibold text-gray-900">{empleadaSeleccionada?.nombre_completo}</span>
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                El plan define las horas de trabajo y servicios incluidos
+                {t('cliente.createReservation.selectPlan.planDefines')}
               </p>
             </div>
 
@@ -751,20 +754,20 @@ function CrearReserva() {
                   
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-lg font-bold text-[#195083]">
-                      {formatCurrency(plan.precio)} / día
+                      {formatCurrency(plan.precio)} {t('cliente.createReservation.selectPlan.perDay')}
                     </span>
                     <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                      {plan.horas_servicio}h de trabajo
+                      {t('cliente.createReservation.selectPlan.workHours', { n: plan.horas_servicio })}
                     </span>
                   </div>
 
                   <div className="text-sm text-gray-600 mb-3">
-                    Disponible: {plan.hora_inicio} - {plan.hora_final}
+                    {t('cliente.createReservation.selectPlan.available', { start: plan.hora_inicio, end: plan.hora_final })}
                   </div>
 
                   {plan.servicios_asociados.length > 0 && (
                     <div className="mt-3">
-                      <p className="text-xs text-gray-500 mb-1">Servicios incluidos:</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('cliente.createReservation.selectPlan.servicesIncluded')}</p>
                       <div className="flex flex-wrap gap-1">
                         {plan.servicios_asociados.slice(0, 20).map((servicio, index) => (
                           <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
@@ -785,14 +788,14 @@ function CrearReserva() {
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Selecciona el Horario
+                {t('cliente.createReservation.selectSchedule.title')}
               </h2>
               <p className="text-gray-600">
-                Plan: <span className="font-semibold text-gray-900">{planSeleccionado?.nombre}</span> 
-                ({planSeleccionado?.horas_servicio}h de trabajo)
+                {t('cliente.createReservation.selectSchedule.plan')} <span className="font-semibold text-gray-900">{planSeleccionado?.nombre}</span> 
+                ({t('cliente.createReservation.selectPlan.workHours', { n: planSeleccionado?.horas_servicio })})
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Este horario se aplicará a todos los días que reserves
+                {t('cliente.createReservation.selectSchedule.subtitle')}
               </p>
             </div>
 
@@ -828,16 +831,16 @@ function CrearReserva() {
                     </h4>
                     
                     <p className="text-sm text-gray-600 mb-2">
-                      {horario.horas_duracion} horas de servicio
+                      {t('cliente.createReservation.selectSchedule.hoursOfService', { n: horario.horas_duracion })}
                     </p>
 
                     {horario.sobrecargo_sabado > 0 && (
                       <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
                         <p className="text-yellow-800 font-medium">
-                          Sobrecargo sábados después del mediodía
+                          {t('cliente.createReservation.selectSchedule.saturdaySurcharge')}
                         </p>
                         <p className="text-yellow-700">
-                          +{formatCurrency(horario.sobrecargo_sabado)} por día
+                          {t('cliente.createReservation.selectSchedule.surchargeAmount', { amount: formatCurrency(horario.sobrecargo_sabado) })}
                         </p>
                       </div>
                     )}
@@ -847,7 +850,7 @@ function CrearReserva() {
                 {horariosDisponibles.length === 0 && (
                   <div className="col-span-full text-center py-8">
                     <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No hay horarios disponibles para este plan</p>
+                    <p className="text-gray-500">{t('cliente.createReservation.selectSchedule.noSchedules')}</p>
                   </div>
                 )}
               </div>
@@ -860,15 +863,15 @@ function CrearReserva() {
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Selecciona las Fechas
+                {t('cliente.createReservation.selectDates.title')}
               </h2>
               <p className="text-gray-600">
-                Horario seleccionado: <span className="font-semibold text-gray-900">
+                {t('cliente.createReservation.selectDates.selectedSchedule')} <span className="font-semibold text-gray-900">
                   {horarioSeleccionado?.hora_inicio} - {horarioSeleccionado?.hora_final}
                 </span>
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Puedes seleccionar entre 1 y 30 días. Días seleccionados: {fechasSeleccionadas.length}
+                {t('cliente.createReservation.selectDates.subtitle', { n: fechasSeleccionadas.length })}
               </p>
               
               {fechasSeleccionadas.length > 0 && (
@@ -880,7 +883,7 @@ function CrearReserva() {
                     <div className="flex flex-wrap gap-1">
                       {fechasSeleccionadas.map(fecha => (
                         <span key={fecha} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                          {new Date(fecha).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}
+                          {new Date(fecha).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </span>
                       ))}
                     </div>
@@ -919,7 +922,7 @@ function CrearReserva() {
                 {/* Calendario */}
                 <div className="grid grid-cols-7 gap-1 sm:gap-2">
                   {/* Encabezados de días */}
-                  {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(dia => (
+                  {(t('cliente.createReservation.calendar.days', { returnObjects: true }) as string[]).map(dia => (
                     <div key={dia} className="p-2 text-center text-sm font-medium text-gray-600">
                       {dia}
                     </div>
@@ -971,23 +974,23 @@ function CrearReserva() {
                 <div className="flex flex-wrap gap-4 text-xs text-gray-600 bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-[#195083] rounded"></div>
-                    <span>Seleccionado</span>
+                    <span>{t('cliente.createReservation.calendar.legend.selected')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-white border border-gray-200 rounded"></div>
-                    <span>Disponible</span>
+                    <span>{t('cliente.createReservation.calendar.legend.available')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded"></div>
-                    <span>Sábado (posible sobrecargo)</span>
+                    <span>{t('cliente.createReservation.calendar.legend.saturday')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-gray-100 rounded"></div>
-                    <span>No disponible</span>
+                    <span>{t('cliente.createReservation.calendar.legend.unavailable')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                    <span>Hoy</span>
+                    <span>{t('cliente.createReservation.calendar.legend.today')}</span>
                   </div>
                 </div>
               </div>
@@ -1000,16 +1003,16 @@ function CrearReserva() {
           <div className="p-4 sm:p-6 space-y-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Detalles del Servicio
+                {t('cliente.createReservation.details.title')}
               </h2>
               <p className="text-gray-600">
-                Selecciona ubicación y servicios adicionales
+                {t('cliente.createReservation.details.subtitle')}
               </p>
             </div>
 
             {/* Selección de Ubicación */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Ubicación del Servicio</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('cliente.createReservation.details.locationTitle')}</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {ubicaciones.map((ubicacion) => (
                   <div
@@ -1036,15 +1039,15 @@ function CrearReserva() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Building className="h-4 w-4" />
-                        <span>{ubicacion.pisos} piso{ubicacion.pisos !== 1 ? 's' : ''}</span>
+                        <span>{t('cliente.createReservation.details.floors', { n: ubicacion.pisos })}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Users className="h-4 w-4" />
-                        <span>{ubicacion.baños} baño{ubicacion.baños !== 1 ? 's' : ''}</span>
+                        <span>{t('cliente.createReservation.details.bathrooms', { n: ubicacion.baños })}</span>
                       </div>
                       {ubicacion.pisos > 1 && (
                         <div className="text-xs text-orange-600 mt-2">
-                          +{formatCurrency((ubicacion.pisos - 1) * 10000)} por pisos adicionales
+                          {t('cliente.createReservation.details.extraFloorsCharge', { amount: formatCurrency((ubicacion.pisos - 1) * 10000) })}
                         </div>
                       )}
                     </div>
@@ -1057,9 +1060,9 @@ function CrearReserva() {
             {planSeleccionado && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Tareas Adicionales
+                  {t('cliente.createReservation.details.extraTasks')}
                   <span className="text-sm font-normal text-gray-600 ml-2">
-                    (Opcionales - $15.000 cada una)
+                    {t('cliente.createReservation.details.extraTasksPrice')}
                   </span>
                 </h3>
                 
@@ -1086,7 +1089,7 @@ function CrearReserva() {
                   </div>
                 ) : (
                   <div className="text-center py-6 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">Todas las tareas están incluidas en este plan</p>
+                    <p className="text-gray-500">{t('cliente.createReservation.details.allTasksIncluded')}</p>
                   </div>
                 )}
               </div>
@@ -1095,17 +1098,17 @@ function CrearReserva() {
             {/* Resumen de precio en tiempo real */}
             {calculoPrecio && (
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <h3 className="text-lg font-semibold text-blue-900 mb-3">Resumen de Costos</h3>
+                <h3 className="text-lg font-semibold text-blue-900 mb-3">{t('cliente.createReservation.pricing.title')}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Plan base ({calculoPrecio.cantidad_dias} días)</span>
+                    <span className="text-gray-700">{t('cliente.createReservation.pricing.planBase', { n: calculoPrecio.cantidad_dias })}</span>
                     <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_base)}</span>
                   </div>
                   
                   {calculoPrecio.cantidad_tareas_extra > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-700">
-                        Tareas extra ({calculoPrecio.cantidad_tareas_extra})
+                        {t('cliente.createReservation.pricing.extraTasks', { n: calculoPrecio.cantidad_tareas_extra })}
                       </span>
                       <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_tareas_extra)}</span>
                     </div>
@@ -1114,7 +1117,7 @@ function CrearReserva() {
                   {calculoPrecio.pisos_extra > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-700">
-                        Pisos adicionales ({calculoPrecio.pisos_extra})
+                        {t('cliente.createReservation.pricing.extraFloors', { n: calculoPrecio.pisos_extra })}
                       </span>
                       <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_pisos_extra)}</span>
                     </div>
@@ -1122,32 +1125,32 @@ function CrearReserva() {
 
                   {calculoPrecio.sobrecargo_sabados > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Sobrecargo sábados</span>
+                      <span className="text-gray-700">{t('cliente.createReservation.pricing.saturdaySurcharge')}</span>
                       <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.sobrecargo_sabados)}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between pt-2 border-t border-blue-200">
-                    <span className="text-gray-700">Subtotal</span>
+                    <span className="text-gray-700">{t('cliente.createReservation.pricing.subtotal')}</span>
                     <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.subtotal)}</span>
                   </div>
                   
                   {calculoPrecio.porcentaje_descuento_dias > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Descuento por días ({calculoPrecio.porcentaje_descuento_dias}%)</span>
+                      <span>{t('cliente.createReservation.pricing.dayDiscount', { n: calculoPrecio.porcentaje_descuento_dias })}</span>
                       <span className="font-medium">-{formatCurrency(calculoPrecio.descuento_dias)}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between pt-2 border-t border-blue-200">
-                    <span className="font-semibold text-blue-900">Total</span>
+                    <span className="font-semibold text-blue-900">{t('cliente.createReservation.pricing.total')}</span>
                     <span className="font-bold text-lg text-blue-900">
                       {formatCurrency(calculoPrecio.precio_final)}
                     </span>
                   </div>
                   
                   <div className="text-xs text-gray-600 text-center pt-2">
-                    Equivale a {formatCurrency(calculoPrecio.precio_por_dia)} por día
+                    {t('cliente.createReservation.pricing.perDay', { amount: formatCurrency(calculoPrecio.precio_por_dia) })}
                   </div>
                 </div>
               </div>
@@ -1160,10 +1163,10 @@ function CrearReserva() {
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Confirmar Reserva
+                {t('cliente.createReservation.confirm.title')}
               </h2>
               <p className="text-gray-600">
-                Revisa todos los detalles antes de confirmar tu reserva
+                {t('cliente.createReservation.confirm.subtitle')}
               </p>
             </div>
 
@@ -1174,13 +1177,13 @@ function CrearReserva() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Empleada Asignada
+                    {t('cliente.createReservation.confirm.assignedEmployee')}
                   </h4>
                   <p className="text-gray-700">{empleadaSeleccionada?.nombre_completo}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="text-sm text-gray-600">
-                      {empleadaSeleccionada?.ranking.toFixed(1)} estrellas
+                      {t('cliente.createReservation.confirm.stars', { n: empleadaSeleccionada?.ranking.toFixed(1) })}
                     </span>
                   </div>
                 </div>
@@ -1189,16 +1192,16 @@ function CrearReserva() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <Package className="h-4 w-4" />
-                    Plan y Horario
+                    {t('cliente.createReservation.confirm.planAndSchedule')}
                   </h4>
                   <p className="text-gray-700 font-medium">{planSeleccionado?.nombre}</p>
                   <p className="text-sm text-gray-600">{planSeleccionado?.descripcion}</p>
                   <div className="mt-2 bg-white p-2 rounded border">
                     <p className="text-sm font-medium text-gray-900">
-                      Horario: {horarioSeleccionado?.hora_inicio} - {horarioSeleccionado?.hora_final}
+                      {t('cliente.createReservation.confirm.schedule')} {horarioSeleccionado?.hora_inicio} - {horarioSeleccionado?.hora_final}
                     </p>
                     <p className="text-xs text-gray-600">
-                      {horarioSeleccionado?.horas_duracion} horas de trabajo
+                      {t('cliente.createReservation.confirm.workHours', { n: horarioSeleccionado?.horas_duracion })}
                     </p>
                   </div>
                 </div>
@@ -1207,7 +1210,7 @@ function CrearReserva() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Fechas del Servicio ({fechasSeleccionadas.length} días)
+                    {t('cliente.createReservation.confirm.serviceDates', { n: fechasSeleccionadas.length })}
                   </h4>
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {fechasSeleccionadas.map(fecha => {
@@ -1218,7 +1221,7 @@ function CrearReserva() {
                           <span>{formatDate(fecha)}</span>
                           {esSabado && horarioSeleccionado && horarioSeleccionado.hora_final > '12:00' && (
                             <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
-                              Sobrecargo
+                              {t('cliente.createReservation.selectDates.surcharge')}
                             </span>
                           )}
                         </div>
@@ -1231,13 +1234,13 @@ function CrearReserva() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Ubicación
+                    {t('cliente.createReservation.confirm.location')}
                   </h4>
                   <p className="text-gray-700 font-medium">{ubicacionSeleccionada?.nombre}</p>
                   <p className="text-sm text-gray-600">{ubicacionSeleccionada?.nombre_lugar}</p>
                   <div className="flex gap-4 mt-1 text-sm text-gray-600">
-                    <span>{ubicacionSeleccionada?.pisos} piso(s)</span>
-                    <span>{ubicacionSeleccionada?.baños} baño(s)</span>
+                    <span>{t('cliente.createReservation.confirm.floors', { n: ubicacionSeleccionada?.pisos })}</span>
+                    <span>{t('cliente.createReservation.confirm.bathrooms', { n: ubicacionSeleccionada?.baños })}</span>
                   </div>
                 </div>
 
@@ -1245,7 +1248,7 @@ function CrearReserva() {
                 {tareasSeleccionadas.length > 0 && (
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">
-                      Tareas Adicionales ({tareasSeleccionadas.length})
+                      {t('cliente.createReservation.confirm.extraTasks', { n: tareasSeleccionadas.length })}
                     </h4>
                     <div className="space-y-1">
                       {tareasSeleccionadas.map(tarea => (
@@ -1263,14 +1266,14 @@ function CrearReserva() {
                 <div className="bg-[#195083]/5 border border-[#195083]/20 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
-                    Resumen de Pago
+                    {t('cliente.createReservation.confirm.paymentSummary')}
                   </h4>
                   
                   {calculoPrecio && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-700">
-                          Plan base ({calculoPrecio.cantidad_dias} días)
+                          {t('cliente.createReservation.pricing.planBase', { n: calculoPrecio.cantidad_dias })}
                         </span>
                         <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_base)}</span>
                       </div>
@@ -1278,7 +1281,7 @@ function CrearReserva() {
                       {calculoPrecio.cantidad_tareas_extra > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-700">
-                            Tareas extra ({calculoPrecio.cantidad_tareas_extra})
+                            {t('cliente.createReservation.pricing.extraTasks', { n: calculoPrecio.cantidad_tareas_extra })}
                           </span>
                           <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_tareas_extra)}</span>
                         </div>
@@ -1287,7 +1290,7 @@ function CrearReserva() {
                       {calculoPrecio.pisos_extra > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-700">
-                            Pisos adicionales ({calculoPrecio.pisos_extra})
+                            {t('cliente.createReservation.pricing.extraFloors', { n: calculoPrecio.pisos_extra })}
                           </span>
                           <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_pisos_extra)}</span>
                         </div>
@@ -1295,32 +1298,32 @@ function CrearReserva() {
 
                       {calculoPrecio.sobrecargo_sabados > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-700">Sobrecargo sábados</span>
+                          <span className="text-gray-700">{t('cliente.createReservation.pricing.saturdaySurcharge')}</span>
                           <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.sobrecargo_sabados)}</span>
                         </div>
                       )}
                       
                       <div className="flex justify-between text-sm pt-2 border-t border-[#195083]/20">
-                        <span className="text-gray-700">Subtotal</span>
+                        <span className="text-gray-700">{t('cliente.createReservation.pricing.subtotal')}</span>
                         <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.subtotal)}</span>
                       </div>
                       
                       {calculoPrecio.porcentaje_descuento_dias > 0 && (
                         <div className="flex justify-between text-sm text-green-600">
-                          <span>Descuento por días ({calculoPrecio.porcentaje_descuento_dias}%)</span>
+                          <span>{t('cliente.createReservation.pricing.dayDiscount', { n: calculoPrecio.porcentaje_descuento_dias })}</span>
                           <span className="font-medium">-{formatCurrency(calculoPrecio.descuento_dias)}</span>
                         </div>
                       )}
                       
                       <div className="flex justify-between pt-2 border-t border-[#195083]/30">
-                        <span className="font-semibold text-[#195083]">TOTAL A PAGAR</span>
+                        <span className="font-semibold text-[#195083]">{t('cliente.createReservation.pricing.totalToPay')}</span>
                         <span className="font-bold text-xl text-[#195083]">
                           {formatCurrency(calculoPrecio.precio_final)}
                         </span>
                       </div>
                       
                       <div className="text-xs text-gray-600 text-center pt-2">
-                        Se dividirán en {calculoPrecio.cantidad_dias} reservas de {formatCurrency(calculoPrecio.precio_por_dia)} cada una
+                        {t('cliente.createReservation.pricing.splitInfo', { n: calculoPrecio.cantidad_dias, amount: formatCurrency(calculoPrecio.precio_por_dia) })}
                       </div>
                     </div>
                   )}
@@ -1331,11 +1334,9 @@ function CrearReserva() {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-yellow-800 mb-1">Importante</p>
+                      <p className="font-medium text-yellow-800 mb-1">{t('cliente.createReservation.confirm.important')}</p>
                       <p className="text-yellow-700">
-                        Se crearán {fechasSeleccionadas.length} reservas individuales con el mismo horario 
-                        ({horarioSeleccionado?.hora_inicio} - {horarioSeleccionado?.hora_final}). 
-                        Podrás modificar cada reserva individualmente después de crearlas.
+                        {t('cliente.createReservation.confirm.importantMessage', { n: fechasSeleccionadas.length, start: horarioSeleccionado?.hora_inicio, end: horarioSeleccionado?.hora_final })}
                       </p>
                     </div>
                   </div>
@@ -1343,11 +1344,11 @@ function CrearReserva() {
 
                 {/* Términos y condiciones */}
                 <div className="text-xs text-gray-600 space-y-1">
-                  <p>• El pago se procesa de manera segura</p>
-                  <p>• Puedes cancelar hasta 24 horas antes del servicio</p>
-                  <p>• La empleada llegará en el horario acordado</p>
-                  <p>• Todas las tareas incluyen materiales básicos</p>
-                  <p>• Los sábados después del mediodía tienen sobrecargo</p>
+                  <p>• {t('cliente.createReservation.terms.securePayment')}</p>
+                  <p>• {t('cliente.createReservation.terms.cancel24h')}</p>
+                  <p>• {t('cliente.createReservation.terms.onTimeArrival')}</p>
+                  <p>• {t('cliente.createReservation.terms.basicMaterials')}</p>
+                  <p>• {t('cliente.createReservation.terms.saturdaySurcharge')}</p>
                 </div>
               </div>
             </div>
@@ -1363,7 +1364,7 @@ function CrearReserva() {
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              Anterior
+              {t('cliente.createReservation.nav.previous')}
             </button>
 
             <div className="flex items-center gap-3">
@@ -1379,7 +1380,7 @@ function CrearReserva() {
                   }
                   className="flex items-center gap-2 bg-[#195083] text-white px-6 py-2 rounded-lg hover:bg-[#0f3a5f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  Continuar
+                  {t('cliente.createReservation.nav.continue')}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
@@ -1391,12 +1392,12 @@ function CrearReserva() {
                   {loading ? (
                     <>
                       <RefreshCw className="h-4 w-4 animate-spin" />
-                      Procesando...
+                      {t('cliente.createReservation.nav.processing')}
                     </>
                   ) : (
                     <>
                       <CheckCircle className="h-4 w-4" />
-                      Confirmar y Pagar
+                      {t('cliente.createReservation.nav.confirmAndPay')}
                     </>
                   )}
                 </button>
@@ -1416,7 +1417,7 @@ function CrearReserva() {
                 <XCircle className="h-5 w-5 text-red-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-gray-900">Error</h3>
+                <h3 className="font-semibold text-gray-900">{t('cliente.createReservation.errorModal.title')}</h3>
                 <p className="text-sm text-gray-600 mt-1">{error}</p>
               </div>
             </div>
@@ -1424,7 +1425,7 @@ function CrearReserva() {
               onClick={() => setError(null)}
               className="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors font-medium"
             >
-              Cerrar
+              {t('cliente.createReservation.errorModal.close')}
             </button>
           </div>
         </div>

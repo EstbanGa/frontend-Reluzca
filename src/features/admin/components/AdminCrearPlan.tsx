@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   ArrowLeft,
   Save,
@@ -51,6 +52,7 @@ const SERVICIOS_DISPONIBLES = [
 
 function AdminCrearPlan() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -104,18 +106,18 @@ function AdminCrearPlan() {
     
     // Validaciones del lado del cliente
     if (!formData.nombre.trim()) {
-      setError('El nombre del plan es obligatorio');
+      setError(t('admin.createPlan.errors.nameRequired'));
       return;
     }
 
     if (formData.nombre.trim().length > 100) {
-      setError('El nombre no puede exceder 100 caracteres');
+      setError(t('admin.createPlan.errors.nameMaxLength'));
       return;
     }
 
     // Validar precio si se proporciona
     if (formData.precio && (isNaN(Number(formData.precio)) || Number(formData.precio) < 0)) {
-      setError('El precio debe ser un número positivo');
+      setError(t('admin.createPlan.errors.pricePositive'));
       return;
     }
 
@@ -125,7 +127,7 @@ function AdminCrearPlan() {
       const fechaFinal = new Date(formData.fecha_final);
       
       if (fechaFinal <= fechaInicio) {
-        setError('La fecha final debe ser posterior a la fecha de inicio');
+        setError(t('admin.createPlan.errors.endDateAfterStart'));
         return;
       }
     }
@@ -136,7 +138,7 @@ function AdminCrearPlan() {
       const horaFinal = new Date(`2000-01-01T${formData.hora_final}`);
       
       if (horaFinal <= horaInicio) {
-        setError('La hora final debe ser posterior a la hora de inicio');
+        setError(t('admin.createPlan.errors.endTimeAfterStart'));
         return;
       }
     }
@@ -167,7 +169,7 @@ function AdminCrearPlan() {
       
       const token = localStorage.getItem("access_token");
       if (!token) {
-        throw new Error('No se encontró el token de autenticación');
+        throw new Error(t('admin.createPlan.errors.noToken'));
       }
       
       console.log('Enviando solicitud con payload:', payload);
@@ -196,7 +198,7 @@ function AdminCrearPlan() {
 
     } catch (err) {
       console.error('Error al crear plan:', err);
-      setError(err instanceof Error ? err.message : "Error desconocido al crear el plan");
+      setError(err instanceof Error ? err.message : t('admin.createPlan.errors.unknown'));
     } finally {
       setLoading(false);
     }
@@ -209,8 +211,8 @@ function AdminCrearPlan() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">¡Plan creado exitosamente!</h2>
-          <p className="text-gray-600 mb-4">Redirigiendo a la gestión de planes...</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t('admin.createPlan.successTitle')}</h2>
+          <p className="text-gray-600 mb-4">{t('admin.createPlan.successRedirect')}</p>
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#195083] mx-auto"></div>
         </div>
       </div>
@@ -231,10 +233,10 @@ function AdminCrearPlan() {
             </button>
             <div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-[#F5F0E7]">
-                Nuevo Plan
+                {t('admin.createPlan.title')}
               </h1>
               <p className="text-[#F5F0E7]/80 text-sm sm:text-base mt-1">
-                Crea un nuevo plan de servicio
+                {t('admin.createPlan.subtitle')}
               </p>
             </div>
           </div>
@@ -245,13 +247,13 @@ function AdminCrearPlan() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h3 className="font-medium text-red-800">Error</h3>
+              <h3 className="font-medium text-red-800">{t('common.error')}</h3>
               <p className="text-red-700 text-sm mt-1">{error}</p>
               <button
                 onClick={() => setError(null)}
                 className="text-red-600 text-sm mt-2 hover:text-red-800"
               >
-                Cerrar
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -262,38 +264,38 @@ function AdminCrearPlan() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Package className="h-5 w-5 text-[#195083]" />
-              Información Básica
+              {t('admin.createPlan.basicInfo')}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre del plan *
+                  {t('admin.createPlan.planName')} *
                 </label>
                 <input
                   type="text"
                   value={formData.nombre}
                   onChange={(e) => handleInputChange('nombre', e.target.value)}
-                  placeholder="Ej: Plan Básico, Plan Premium, Mantenimiento Mensual..."
+                  placeholder={t('admin.createPlan.planNamePlaceholder')}
                   maxLength={100}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-gray-900 placeholder-gray-500"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.nombre.length}/100 caracteres
+                  {formData.nombre.length}/100 {t('admin.createPlan.characters')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
-                  Precio (COP)
+                  {t('admin.createPlan.price')} (COP)
                 </label>
                 <input
                   type="number"
                   value={formData.precio}
                   onChange={(e) => handleInputChange('precio', e.target.value)}
-                  placeholder="Ej: 50000"
+                  placeholder={t('admin.createPlan.pricePlaceholder')}
                   min="0"
                   step="100"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-gray-900 placeholder-gray-500"
@@ -315,7 +317,7 @@ function AdminCrearPlan() {
                   ) : (
                     <ToggleLeft className="h-5 w-5" />
                   )}
-                  {formData.estado ? 'Activo' : 'Inactivo'}
+                  {formData.estado ? t('common.active') : t('common.inactive')}
                 </button>
               </div>
             </div>
@@ -325,13 +327,13 @@ function AdminCrearPlan() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-[#195083]" />
-              Vigencia del Plan
+              {t('admin.createPlan.planValidity')}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de inicio
+                  {t('admin.createPlan.startDate')}
                 </label>
                 <input
                   type="date"
@@ -343,7 +345,7 @@ function AdminCrearPlan() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de finalización
+                  {t('admin.createPlan.endDate')}
                 </label>
                 <input
                   type="date"
@@ -359,13 +361,13 @@ function AdminCrearPlan() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Clock className="h-5 w-5 text-[#195083]" />
-              Horarios de Servicio
+              {t('admin.createPlan.serviceHours')}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hora de inicio
+                  {t('admin.createPlan.startTime')}
                 </label>
                 <input
                   type="time"
@@ -377,7 +379,7 @@ function AdminCrearPlan() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hora de finalización
+                  {t('admin.createPlan.endTime')}
                 </label>
                 <input
                   type="time"
@@ -393,13 +395,13 @@ function AdminCrearPlan() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Tag className="h-5 w-5 text-[#195083]" />
-              Servicios Asociados
+              {t('admin.createPlan.associatedServices')}
             </h2>
             
             {/* Servicios predefinidos */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Selecciona los servicios incluidos:
+                {t('admin.createPlan.selectServices')}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {SERVICIOS_DISPONIBLES.map((servicio) => (
@@ -422,14 +424,14 @@ function AdminCrearPlan() {
             {/* Agregar servicio personalizado */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Agregar servicio personalizado:
+                {t('admin.createPlan.addCustomService')}
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={customService}
                   onChange={(e) => setCustomService(e.target.value)}
-                  placeholder="Escribe un servicio personalizado..."
+                  placeholder={t('admin.createPlan.customServicePlaceholder')}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-gray-900 placeholder-gray-500"
                 />
                 <button
@@ -439,7 +441,7 @@ function AdminCrearPlan() {
                   className="px-4 py-3 bg-[#195083] text-white rounded-lg hover:bg-[#0f3a5f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Agregar
+                  {t('common.add')}
                 </button>
               </div>
             </div>
@@ -448,7 +450,7 @@ function AdminCrearPlan() {
             {formData.servicios_asociados.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Servicios seleccionados ({formData.servicios_asociados.length}):
+                  {t('admin.createPlan.selectedServices')} ({formData.servicios_asociados.length}):
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {formData.servicios_asociados.map((servicio, index) => (
@@ -475,23 +477,23 @@ function AdminCrearPlan() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <FileText className="h-5 w-5 text-[#195083]" />
-              Descripción del Plan
+              {t('admin.createPlan.planDescription')}
             </h2>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descripción detallada
+                {t('admin.createPlan.detailedDescription')}
               </label>
               <textarea
                 value={formData.descripcion}
                 onChange={(e) => handleInputChange('descripcion', e.target.value)}
-                placeholder="Describe las características, beneficios y detalles importantes del plan..."
+                placeholder={t('admin.createPlan.descriptionPlaceholder')}
                 rows={6}
                 maxLength={1000}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-gray-900 placeholder-gray-500 resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.descripcion.length}/1000 caracteres
+                {formData.descripcion.length}/1000 {t('admin.createPlan.characters')}
               </p>
             </div>
           </div>
@@ -503,7 +505,7 @@ function AdminCrearPlan() {
               onClick={() => navigate('/admin/planes/index')}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -515,7 +517,7 @@ function AdminCrearPlan() {
               ) : (
                 <Save className="h-5 w-5" />
               )}
-              {loading ? 'Creando...' : 'Crear Plan'}
+              {loading ? t('common.creating') : t('admin.createPlan.submitBtn')}
             </button>
           </div>
         </form>

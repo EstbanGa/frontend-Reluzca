@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/services/http/client';
 import { Link } from 'react-router-dom';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { 
   Eye, 
   EyeOff, 
@@ -19,6 +21,7 @@ import {
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     nombre: '',
     apellido: '',
@@ -57,22 +60,22 @@ export default function SignUpPage() {
 
   const validateForm = () => {
     if (!form.rol) {
-      setMessage('Debes seleccionar si eres Cliente o Empleada');
+      setMessage(t('auth.signup.errors.selectRole'));
       setMessageType('error');
       return false;
     }
     if (!isPasswordValid) {
-      setMessage('La contraseña no cumple con todos los requisitos');
+      setMessage(t('auth.signup.errors.passwordReqs'));
       setMessageType('error');
       return false;
     }
     if (form.password !== form.confirmPassword) {
-      setMessage('Las contraseñas no coinciden');
+      setMessage(t('auth.signup.errors.passwordMismatch'));
       setMessageType('error');
       return false;
     }
     if (form.documento.length < 5) {
-      setMessage('El documento debe tener al menos 5 caracteres');
+      setMessage(t('auth.signup.errors.documentMinLength'));
       setMessageType('error');
       return false;
     }
@@ -103,7 +106,7 @@ export default function SignUpPage() {
         }),
       });
       
-      setMessage('Usuario creado correctamente');
+      setMessage(t('auth.signup.success'));
       setMessageType('success');
       
       setForm({
@@ -122,7 +125,7 @@ export default function SignUpPage() {
     } catch (err: unknown) {
       console.error("❌ Error al registrar:", err);
       const error = err as { message?: string };
-      setMessage(error.message || 'Error al crear la cuenta. Intenta nuevamente.');
+      setMessage(error.message || t('auth.signup.errors.generic'));
       setMessageType('error');
     } finally {
       setLoading(false);
@@ -131,14 +134,17 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#FCF7F0] flex flex-col">
-      {/* Botón de regreso al inicio */}
-      <Link 
-        to="/" 
-        className="fixed top-4 left-4 md:top-6 md:left-6 flex items-center space-x-2 text-[#4894AD] hover:text-[#195083] transition-colors z-10"
-      >
-        <Home className="w-5 h-5" />
-        <span className="font-medium hidden sm:inline">Volver al inicio</span>
-      </Link>
+      {/* Top bar */}
+      <div className="fixed top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between z-10">
+        <Link 
+          to="/" 
+          className="flex items-center space-x-2 text-[#4894AD] hover:text-[#195083] transition-colors"
+        >
+          <Home className="w-5 h-5" />
+          <span className="font-medium hidden sm:inline">{t('auth.backToHome')}</span>
+        </Link>
+        <LanguageSwitcher />
+      </div>
 
       {/* Contenedor principal con flex-grow */}
       <div className="flex-grow flex items-center justify-center p-4 py-8">
@@ -148,8 +154,8 @@ export default function SignUpPage() {
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <UserCheck className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-xl md:text-2xl font-bold text-white mb-2">Crear Cuenta</h1>
-          <p className="text-white/80 text-sm">Únete a la comunidad Reluzca</p>
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-2">{t('auth.signup.title')}</h1>
+          <p className="text-white/80 text-sm">{t('auth.signup.subtitle')}</p>
         </div>
 
         {/* Form */}
@@ -158,7 +164,7 @@ export default function SignUpPage() {
             {/* Rol de usuario - Nuevo campo al inicio */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#195083]">
-                ¿Cómo te quieres registrar?
+                {t('auth.signup.roleQuestion')}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div 
@@ -184,8 +190,8 @@ export default function SignUpPage() {
                       <User className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#195083]">Cliente</p>
-                      <p className="text-xs text-gray-500">Busco servicios de belleza</p>
+                      <p className="font-medium text-[#195083]">{t('auth.signup.roleClient')}</p>
+                      <p className="text-xs text-gray-500">{t('auth.signup.roleClientDesc')}</p>
                     </div>
                   </div>
                   {form.rol === 'cliente' && (
@@ -220,8 +226,8 @@ export default function SignUpPage() {
                       <Users className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#195083]">Empleada</p>
-                      <p className="text-xs text-gray-500">Ofrezco servicios de belleza</p>
+                      <p className="font-medium text-[#195083]">{t('auth.signup.roleEmployee')}</p>
+                      <p className="text-xs text-gray-500">{t('auth.signup.roleEmployeeDesc')}</p>
                     </div>
                   </div>
                   {form.rol === 'empleada' && (
@@ -239,7 +245,7 @@ export default function SignUpPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#195083]">
-                  Nombre
+                  {t('auth.signup.nameLabel')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -252,7 +258,7 @@ export default function SignUpPage() {
                                text-[#195083] placeholder-gray-500 
                                focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                                outline-none transition-all"
-                    placeholder="Tu nombre"
+                    placeholder={t('auth.signup.namePlaceholder')}
                     required
                   />
                 </div>
@@ -260,7 +266,7 @@ export default function SignUpPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#195083]">
-                  Apellido
+                  {t('auth.signup.lastNameLabel')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -273,7 +279,7 @@ export default function SignUpPage() {
                                text-[#195083] placeholder-gray-500 
                                focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                                outline-none transition-all"
-                    placeholder="Tu apellido"
+                    placeholder={t('auth.signup.lastNamePlaceholder')}
                     required
                   />
                 </div>
@@ -283,7 +289,7 @@ export default function SignUpPage() {
             {/* Email */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#195083]">
-                Correo electrónico
+                {t('auth.signup.emailLabel')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -296,7 +302,7 @@ export default function SignUpPage() {
                              text-[#195083] placeholder-gray-500 
                              focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                              outline-none transition-all"
-                  placeholder="tu@email.com"
+                  placeholder={t('auth.signup.emailPlaceholder')}
                   required
                 />
               </div>
@@ -306,7 +312,7 @@ export default function SignUpPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#195083]">
-                  Contraseña
+                  {t('auth.signup.passwordLabel')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -319,7 +325,7 @@ export default function SignUpPage() {
                                text-[#195083] placeholder-gray-500 
                                focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                                outline-none transition-all"
-                    placeholder="Contraseña segura"
+                    placeholder={t('auth.signup.passwordPlaceholder')}
                     required
                   />
                   <button
@@ -334,7 +340,7 @@ export default function SignUpPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#195083]">
-                  Confirmar contraseña
+                  {t('auth.signup.confirmPasswordLabel')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -347,7 +353,7 @@ export default function SignUpPage() {
                                text-[#195083] placeholder-gray-500 
                                focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                                outline-none transition-all"
-                    placeholder="Repetir contraseña"
+                    placeholder={t('auth.signup.confirmPasswordPlaceholder')}
                     required
                   />
                   <button
@@ -364,27 +370,27 @@ export default function SignUpPage() {
             {/* Validación de contraseña en tiempo real */}
             {form.password && (
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-[#195083] mb-3">Requisitos de contraseña:</p>
+                <p className="text-sm font-medium text-[#195083] mb-3">{t('auth.signup.passwordReqs.title')}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div className={`flex items-center space-x-2 ${passwordValidation.minLength ? 'text-green-600' : 'text-red-500'}`}>
                     <div className={`w-2 h-2 rounded-full ${passwordValidation.minLength ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span>Mínimo 8 caracteres</span>
+                    <span>{t('auth.signup.passwordReqs.minLength')}</span>
                   </div>
                   <div className={`flex items-center space-x-2 ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-red-500'}`}>
                     <div className={`w-2 h-2 rounded-full ${passwordValidation.hasUppercase ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span>Una mayúscula (A-Z)</span>
+                    <span>{t('auth.signup.passwordReqs.uppercase')}</span>
                   </div>
                   <div className={`flex items-center space-x-2 ${passwordValidation.hasLowercase ? 'text-green-600' : 'text-red-500'}`}>
                     <div className={`w-2 h-2 rounded-full ${passwordValidation.hasLowercase ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span>Una minúscula (a-z)</span>
+                    <span>{t('auth.signup.passwordReqs.lowercase')}</span>
                   </div>
                   <div className={`flex items-center space-x-2 ${passwordValidation.hasNumber ? 'text-green-600' : 'text-red-500'}`}>
                     <div className={`w-2 h-2 rounded-full ${passwordValidation.hasNumber ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span>Un número (0-9)</span>
+                    <span>{t('auth.signup.passwordReqs.number')}</span>
                   </div>
                   <div className={`flex items-center space-x-2 ${passwordValidation.hasSymbol ? 'text-green-600' : 'text-red-500'} sm:col-span-2`}>
                     <div className={`w-2 h-2 rounded-full ${passwordValidation.hasSymbol ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span>Un símbolo (!@#$%^&*)</span>
+                    <span>{t('auth.signup.passwordReqs.symbol')}</span>
                   </div>
                 </div>
               </div>
@@ -394,7 +400,7 @@ export default function SignUpPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#195083]">
-                  Documento
+                  {t('auth.signup.documentLabel')}
                 </label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -407,7 +413,7 @@ export default function SignUpPage() {
                                text-[#195083] placeholder-gray-500 
                                focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                                outline-none transition-all"
-                    placeholder="Número de documento"
+                    placeholder={t('auth.signup.documentPlaceholder')}
                     required
                   />
                 </div>
@@ -415,7 +421,7 @@ export default function SignUpPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#195083]">
-                  Teléfono
+                  {t('auth.signup.phoneLabel')}
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -428,7 +434,7 @@ export default function SignUpPage() {
                                text-[#195083] placeholder-gray-500 
                                focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                                outline-none transition-all"
-                    placeholder="Número de teléfono"
+                    placeholder={t('auth.signup.phonePlaceholder')}
                     required
                   />
                 </div>
@@ -438,7 +444,7 @@ export default function SignUpPage() {
             {/* Tipo de persona */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#195083]">
-                Tipo de persona
+                {t('auth.signup.personTypeLabel')}
               </label>
               <div className="relative">
                 <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -452,9 +458,9 @@ export default function SignUpPage() {
                              outline-none transition-all bg-white appearance-none cursor-pointer"
                   required
                 >
-                  <option value="">Seleccione tipo de persona</option>
-                  <option value="natural">Persona Natural</option>
-                  <option value="juridica">Persona Jurídica</option>
+                  <option value="">{t('auth.signup.personTypes.select')}</option>
+                  <option value="natural">{t('auth.signup.personTypes.natural')}</option>
+                  <option value="juridica">{t('auth.signup.personTypes.legal')}</option>
                 </select>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <svg className="w-5 h-5 text-[#4894AD]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -467,7 +473,7 @@ export default function SignUpPage() {
             {/* Fecha de nacimiento */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#195083]">
-                Fecha de nacimiento
+                {t('auth.signup.birthDateLabel')}
               </label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -497,11 +503,11 @@ export default function SignUpPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Creando cuenta...</span>
+                  <span>{t('auth.signup.submitting')}</span>
                 </div>
               ) : (
                 <>
-                  <span>Crear Cuenta</span>
+                  <span>{t('auth.signup.submit')}</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -509,7 +515,7 @@ export default function SignUpPage() {
 
             {!form.rol && (
               <p className="text-sm text-red-500 text-center -mt-2">
-                Por favor selecciona cómo te quieres registrar
+                {t('auth.signup.errors.selectRoleBelow')}
               </p>
             )}
           </form>
@@ -527,7 +533,7 @@ export default function SignUpPage() {
                   onClick={() => navigate('/auth/login')}
                   className="block w-full mt-3 bg-[#4894AD] hover:bg-[#195083] text-white py-2 px-4 rounded-lg font-medium transition-colors"
                 >
-                  Ir a iniciar sesión
+                  {t('auth.signup.goToLoginBtn')}
                 </button>
               )}
             </div>
@@ -536,12 +542,12 @@ export default function SignUpPage() {
           {/* Sign In Link */}
           <div className="mt-6 md:mt-8 pt-6 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
-              ¿Ya tienes cuenta?{' '}
+              {t('auth.signup.hasAccount')}{' '}
               <Link
                 to="/auth/login"
                 className="text-[#4894AD] hover:text-[#195083] font-medium transition-colors"
               >
-                Iniciar sesión
+                {t('auth.signup.goToLogin')}
               </Link>
             </p>
           </div>
@@ -551,7 +557,7 @@ export default function SignUpPage() {
 
       {/* Footer - Ahora fuera del contenedor principal */}
       <footer className="text-center py-4 text-xs text-gray-500 bg-[#FCF7F0]">
-        © {new Date().getFullYear()} Reluzca. Todos los derechos reservados.
+        {t('common.footer.copyright', { year: new Date().getFullYear() })}
       </footer>
 
       {/* Background decoration */}

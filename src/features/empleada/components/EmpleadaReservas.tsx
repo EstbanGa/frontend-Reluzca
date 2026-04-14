@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
+import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { 
   Calendar,
@@ -30,21 +31,21 @@ import {
   X
 } from "lucide-react";
 
-// Tipos predefinidos de ubicaciones
-const TIPOS_LUGAR = [
-  { value: 'casa', label: 'Casa', icon: Home },
-  { value: 'apartamento', label: 'Apartamento', icon: Building2 },
-  { value: 'oficina', label: 'Oficina', icon: Briefcase },
-  { value: 'local_comercial', label: 'Local Comercial', icon: Store },
-  { value: 'otro', label: 'Otro', icon: MapPin }
+// Tipos predefinidos de ubicaciones (values only, labels translated at render)
+const TIPOS_LUGAR_VALUES = [
+  { value: 'casa', key: 'house', icon: Home },
+  { value: 'apartamento', key: 'apartment', icon: Building2 },
+  { value: 'oficina', key: 'office', icon: Briefcase },
+  { value: 'local_comercial', key: 'commercial', icon: Store },
+  { value: 'otro', key: 'other', icon: MapPin }
 ];
 
-// Estados de servicio con colores
-const ESTADOS_SERVICIO = {
-  'PENDIENTE': { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  'EN_PROGRESO': { label: 'En Progreso', color: 'bg-blue-100 text-blue-800', icon: RefreshCw },
-  'COMPLETADO': { label: 'Completado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  'CANCELADO': { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle }
+// Estados de servicio con colores (labels translated at render)
+const ESTADOS_SERVICIO_VALUES = {
+  'PENDIENTE': { key: 'pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  'EN_PROGRESO': { key: 'inProgress', color: 'bg-blue-100 text-blue-800', icon: RefreshCw },
+  'COMPLETADO': { key: 'completed', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  'CANCELADO': { key: 'cancelled', color: 'bg-red-100 text-red-800', icon: XCircle }
 };
 
 interface ClienteInfo {
@@ -140,7 +141,7 @@ const useGoogleMaps = () => {
     };
 
     script.onerror = () => {
-      setLoadError('Error cargando Google Maps');
+      setLoadError('Error loading Google Maps');
     };
 
     if (!document.querySelector(`script[src*="maps.googleapis.com"]`)) {
@@ -158,6 +159,7 @@ const useGoogleMaps = () => {
 // Componente de mapa interactivo con marcador fijo
 const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }) => {
   const { isLoaded, loadError } = useGoogleMaps();
+  const { t } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
@@ -197,7 +199,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
         position: position,
         map: map,
         draggable: false,
-        title: ubicacion.formatted_address || ubicacion.direccion || 'Ubicación del servicio',
+        title: ubicacion.formatted_address || ubicacion.direccion || t('empleada.services.modal.serviceLocation'),
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -218,7 +220,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
         const infoWindow = new google.maps.InfoWindow({
           content: `
             <div style="padding: 8px; max-width: 200px;">
-              <strong style="color: #D95B26;">Ubicación del servicio</strong><br/>
+              <strong style="color: #D95B26;">${t('empleada.services.modal.serviceLocation')}</strong><br/>
               <span style="font-size: 14px; color: #666;">${address}</span>
             </div>
           `
@@ -245,7 +247,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
       <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center text-gray-500">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="text-sm">Error cargando el mapa</p>
+          <p className="text-sm">{t('empleada.services.errorLoadingMap')}</p>
         </div>
       </div>
     );
@@ -256,7 +258,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
       <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="flex items-center gap-2 text-gray-600">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Cargando mapa...</span>
+          <span className="text-sm">{t('empleada.services.loadingMap')}</span>
         </div>
       </div>
     );
@@ -267,7 +269,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
       <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center text-gray-500">
           <MapPin className="h-8 w-8 mx-auto mb-2" />
-          <p className="text-sm">Coordenadas no disponibles</p>
+          <p className="text-sm">{t('empleada.services.coordinatesUnavailable')}</p>
         </div>
       </div>
     );
@@ -283,6 +285,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
 };
 
 function EmpleadaServicios() {
+  const { t } = useTranslation();
   const [data, setData] = useState<ServiciosData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -294,8 +297,8 @@ function EmpleadaServicios() {
 
   // Función auxiliar para mostrar el tamaño
   const formatTamano = (tamano: UbicacionInfo['tamaño']) => {
-    if (!tamano) return 'No especificado';
-    return tamano.display || 'No especificado';
+    if (!tamano) return t('empleada.services.notSpecified');
+    return tamano.display || t('empleada.services.notSpecified');
   };
 
   useEffect(() => {
@@ -329,7 +332,7 @@ function EmpleadaServicios() {
       setData(result);
     } catch (err) {
       console.error('Error al cargar servicios:', err);
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('empleada.dashboard.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -361,13 +364,15 @@ function EmpleadaServicios() {
   };
 
   const getTipoInfo = (tipo: string) => {
-    const tipoInfo = TIPOS_LUGAR.find(t => t.value === tipo);
-    return tipoInfo || { value: tipo, label: tipo, icon: MapPin };
+    const tipoInfo = TIPOS_LUGAR_VALUES.find(t => t.value === tipo);
+    if (!tipoInfo) return { value: tipo, label: tipo, icon: MapPin };
+    return { ...tipoInfo, label: t('empleada.services.types.' + tipoInfo.key) };
   };
 
   const getEstadoInfo = (estado: string) => {
-    return ESTADOS_SERVICIO[estado as keyof typeof ESTADOS_SERVICIO] || 
-           { label: estado, color: 'bg-gray-100 text-gray-800', icon: AlertCircle };
+    const info = ESTADOS_SERVICIO_VALUES[estado as keyof typeof ESTADOS_SERVICIO_VALUES];
+    if (!info) return { label: estado, color: 'bg-gray-100 text-gray-800', icon: AlertCircle };
+    return { ...info, label: t('empleada.services.status.' + info.key) };
   };
 
   const openModal = (servicio: Servicio) => {
@@ -392,14 +397,14 @@ function EmpleadaServicios() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar servicios</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('empleada.services.errorLoading')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchServicios}
           className="bg-[#D95B26] text-white px-4 py-2 rounded-lg hover:bg-[#B8491F] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -412,10 +417,10 @@ function EmpleadaServicios() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              Mis Servicios Asignados
+              {t('empleada.services.title')}
             </h1>
             <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              Gestiona los servicios de limpieza que tienes programados
+              {t('empleada.services.subtitle')}
             </p>
           </div>
         </div>
@@ -425,7 +430,7 @@ function EmpleadaServicios() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.total')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#D95B26]">
               {data.estadisticas.total}
             </p>
@@ -433,7 +438,7 @@ function EmpleadaServicios() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Pendientes</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.pending')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">
               {data.estadisticas.por_estado.pendientes}
             </p>
@@ -441,7 +446,7 @@ function EmpleadaServicios() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">En Progreso</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.inProgress')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">
               {data.estadisticas.por_estado.en_progreso}
             </p>
@@ -449,7 +454,7 @@ function EmpleadaServicios() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Completados</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.completed')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
               {data.estadisticas.por_estado.completados}
             </p>
@@ -464,7 +469,7 @@ function EmpleadaServicios() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por cliente, ubicación, plan..."
+              placeholder={t('empleada.services.search')}
               className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#D95B26] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
@@ -477,11 +482,11 @@ function EmpleadaServicios() {
               onChange={(e) => setFiltroEstado(e.target.value)}
               className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#D95B26] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              <option value="todos">Todos los estados</option>
-              <option value="pendiente">Pendientes</option>
-              <option value="en_progreso">En Progreso</option>
-              <option value="completado">Completados</option>
-              <option value="cancelado">Cancelados</option>
+              <option value="todos">{t('empleada.services.filters.all')}</option>
+              <option value="pendiente">{t('empleada.services.filters.pending')}</option>
+              <option value="en_progreso">{t('empleada.services.filters.inProgress')}</option>
+              <option value="completado">{t('empleada.services.filters.completed')}</option>
+              <option value="cancelado">{t('empleada.services.filters.cancelled')}</option>
             </select>
           </div>
         </div>
@@ -508,7 +513,7 @@ function EmpleadaServicios() {
                       
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-gray-900 text-base sm:text-lg break-words">
-                          {servicio.ubicacion?.nombre || 'Ubicación sin nombre'}
+                          {servicio.ubicacion?.nombre || t('empleada.services.noName')}
                         </h3>
                         <div className="flex items-center gap-2 text-sm text-gray-600 mt-1 flex-wrap">
                           <span className="capitalize">{tipoInfo.label}</span>
@@ -520,7 +525,7 @@ function EmpleadaServicios() {
                           )}
                         </div>
                         <p className="text-sm text-gray-700 mt-1">
-                          Cliente: <span className="font-medium">{servicio.cliente.nombre}</span>
+                          {t('empleada.services.clientLabel')} <span className="font-medium">{servicio.cliente.nombre}</span>
                         </p>
                       </div>
                     </div>
@@ -561,7 +566,7 @@ function EmpleadaServicios() {
                       </div>
                     )}
                     
-                    {servicio.ubicacion?.tamaño && formatTamano(servicio.ubicacion.tamaño) !== 'No especificado' && (
+                    {servicio.ubicacion?.tamaño && formatTamano(servicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <Ruler className="h-4 w-4" />
                         <span>{formatTamano(servicio.ubicacion.tamaño)}</span>
@@ -575,14 +580,14 @@ function EmpleadaServicios() {
                       {servicio.ubicacion.baños && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <Bath className="h-4 w-4" />
-                          <span>{servicio.ubicacion.baños} baño{servicio.ubicacion.baños !== 1 ? 's' : ''}</span>
+                          <span>{servicio.ubicacion.baños} {t('empleada.services.bathrooms').toLowerCase()}</span>
                         </div>
                       )}
                       
                       {servicio.ubicacion.pisos && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <Layers className="h-4 w-4" />
-                          <span>{servicio.ubicacion.pisos} piso{servicio.ubicacion.pisos !== 1 ? 's' : ''}</span>
+                          <span>{servicio.ubicacion.pisos} {t('empleada.services.floors').toLowerCase()}</span>
                         </div>
                       )}
                       
@@ -610,14 +615,14 @@ function EmpleadaServicios() {
             <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
               {busqueda || filtroEstado !== 'todos' 
-                ? 'No se encontraron servicios' 
-                : 'No tienes servicios asignados'
+                ? t('empleada.services.noResults') 
+                : t('empleada.services.empty')
               }
             </h3>
             <p className="text-sm sm:text-base text-gray-600">
               {busqueda || filtroEstado !== 'todos'
-                ? 'Intenta cambiar los filtros de búsqueda'
-                : 'Cuando se te asignen servicios, aparecerán aquí'
+                ? t('empleada.services.emptyFilterMessage')
+                : t('empleada.services.emptyMessage')
               }
             </p>
           </div>
@@ -680,7 +685,7 @@ function EmpleadaServicios() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Fecha programada
+                      {t('empleada.services.modal.scheduledDate')}
                     </h4>
                     <p className="text-gray-700">{formatDate(selectedServicio.fecha)}</p>
                   </div>
@@ -688,7 +693,7 @@ function EmpleadaServicios() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Horario
+                      {t('empleada.services.modal.schedule')}
                     </h4>
                     <p className="text-gray-700">
                       {formatTime(selectedServicio.hora_inicio)} - {formatTime(selectedServicio.hora_final)}
@@ -700,11 +705,11 @@ function EmpleadaServicios() {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Información del cliente
+                    {t('empleada.services.modal.clientInfo')}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Nombre</p>
+                      <p className="text-sm text-gray-600">{t('empleada.services.modal.clientName')}</p>
                       <p className="font-medium text-gray-900">{selectedServicio.cliente.nombre}</p>
                     </div>
 
@@ -716,7 +721,7 @@ function EmpleadaServicios() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <Package className="h-4 w-4" />
-                      Plan de limpieza
+                      {t('empleada.services.modal.cleaningPlan')}
                     </h4>
                     <div className="space-y-3">
                       <div>
@@ -728,7 +733,7 @@ function EmpleadaServicios() {
                       
                       {selectedServicio.plan.servicios_asociados && selectedServicio.plan.servicios_asociados.length > 0 && (
                         <div>
-                          <p className="text-sm text-gray-600 mb-2">Servicios incluidos:</p>
+                          <p className="text-sm text-gray-600 mb-2">{t('empleada.services.modal.servicesIncluded')}</p>
                           <div className="flex flex-wrap gap-2">
                             {selectedServicio.plan.servicios_asociados.map((servicio, index) => (
                               <span key={index} className="px-2 py-1 bg-white rounded-md text-xs text-gray-700 border border-gray-200">
@@ -748,34 +753,34 @@ function EmpleadaServicios() {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        Detalles de la ubicación
+                        {t('empleada.services.modal.locationDetails')}
                       </h4>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {selectedServicio.ubicacion.nombre_lugar && (
                           <div>
-                            <p className="text-sm text-gray-600">Lugar</p>
+                            <p className="text-sm text-gray-600">{t('empleada.services.modal.place')}</p>
                             <p className="font-medium text-gray-900">{selectedServicio.ubicacion.nombre_lugar}</p>
                           </div>
                         )}
 
-                        {selectedServicio.ubicacion.tamaño && formatTamano(selectedServicio.ubicacion.tamaño) !== 'No especificado' && (
+                        {selectedServicio.ubicacion.tamaño && formatTamano(selectedServicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
                           <div>
-                            <p className="text-sm text-gray-600">Tamaño</p>
+                            <p className="text-sm text-gray-600">{t('empleada.services.size')}</p>
                             <p className="font-medium text-gray-900">{formatTamano(selectedServicio.ubicacion.tamaño)}</p>
                           </div>
                         )}
 
                         {selectedServicio.ubicacion.baños && (
                           <div>
-                            <p className="text-sm text-gray-600">Baños</p>
+                            <p className="text-sm text-gray-600">{t('empleada.services.bathrooms')}</p>
                             <p className="font-medium text-gray-900">{selectedServicio.ubicacion.baños}</p>
                           </div>
                         )}
 
                         {selectedServicio.ubicacion.pisos && (
                           <div>
-                            <p className="text-sm text-gray-600">Pisos</p>
+                            <p className="text-sm text-gray-600">{t('empleada.services.floors')}</p>
                             <p className="font-medium text-gray-900">{selectedServicio.ubicacion.pisos}</p>
                           </div>
                         )}
@@ -783,7 +788,7 @@ function EmpleadaServicios() {
 
                       {selectedServicio.ubicacion.descripcion && (
                         <div className="mt-4">
-                          <p className="text-sm text-gray-600">Descripción adicional</p>
+                          <p className="text-sm text-gray-600">{t('empleada.services.modal.additionalDescription')}</p>
                           <p className="text-gray-700 mt-1">{selectedServicio.ubicacion.descripcion}</p>
                         </div>
                       )}
@@ -794,7 +799,7 @@ function EmpleadaServicios() {
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                           <Map className="h-4 w-4" />
-                          Ubicación en el mapa
+                          {t('empleada.services.modal.mapLocation')}
                         </h4>
                         
                         {(selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion) && (
@@ -820,7 +825,7 @@ function EmpleadaServicios() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      Notas adicionales
+                      {t('empleada.services.modal.additionalNotes')}
                     </h4>
                     <p className="text-gray-700 leading-relaxed">{selectedServicio.descripcion}</p>
                   </div>

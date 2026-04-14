@@ -1,5 +1,6 @@
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { formatDate } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
 import { 
@@ -111,6 +112,7 @@ function AdminIndex() {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -284,7 +286,7 @@ function AdminIndex() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('admin.dashboard.loadError')}</h3>
         <p className="text-sm sm:text-base text-gray-600">{error}</p>
       </div>
     );
@@ -305,14 +307,14 @@ function AdminIndex() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              ¡Hola, {data.admin_info.nombre}! 👋
+              {t('admin.dashboard.greeting', { name: data.admin_info.nombre })}
             </h1>
             <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              Aquí tienes un resumen de la actividad del sistema
+              {t('admin.dashboard.summary')}
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-xs sm:text-sm text-[#F5F0E7]/60">Última actualización</p>
+            <p className="text-xs sm:text-sm text-[#F5F0E7]/60">{t('admin.dashboard.lastUpdate')}</p>
             <p className="text-[#F5F0E7] font-semibold text-sm sm:text-base">
               {new Date(data.fecha_consulta).toLocaleString('es-CO')}
             </p>
@@ -326,12 +328,12 @@ function AdminIndex() {
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Usuarios</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.totalUsers')}</p>
               <p className="text-2xl sm:text-3xl font-bold text-[#195083]">
                 {data.estadisticas_usuarios.total_usuarios}
               </p>
               <p className="text-xs sm:text-sm text-green-600 mt-1">
-                +{data.estadisticas_usuarios.nuevos_usuarios_semana} esta semana
+                +{data.estadisticas_usuarios.nuevos_usuarios_semana} {t('admin.dashboard.thisWeek')}
               </p>
             </div>
             <div className="bg-[#195083] p-2 sm:p-3 rounded-lg flex-shrink-0">
@@ -344,12 +346,12 @@ function AdminIndex() {
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Reservas</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.totalReservations')}</p>
               <p className="text-2xl sm:text-3xl font-bold text-[#4894AD]">
                 {data.estadisticas_reservas.total_reservas}
               </p>
               <p className="text-xs sm:text-sm text-blue-600 mt-1">
-                {data.estadisticas_reservas.reservas_hoy} hoy
+                {data.estadisticas_reservas.reservas_hoy} {t('admin.dashboard.today')}
               </p>
             </div>
             <div className="bg-[#4894AD] p-2 sm:p-3 rounded-lg flex-shrink-0">
@@ -362,12 +364,12 @@ function AdminIndex() {
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Ingresos Totales</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.totalRevenue')}</p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 truncate">
                 {formatCurrency(data.estadisticas_financieras.ingresos_totales)}
               </p>
               <p className="text-xs sm:text-sm text-green-600 mt-1 truncate">
-                {formatCurrency(data.estadisticas_financieras.ingresos_mes)} este mes
+                {formatCurrency(data.estadisticas_financieras.ingresos_mes)} {t('admin.dashboard.thisMonth')}
               </p>
             </div>
             <div className="bg-green-500 p-2 sm:p-3 rounded-lg flex-shrink-0">
@@ -380,12 +382,12 @@ function AdminIndex() {
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">PQRS Pendientes</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.pendingPqrs')}</p>
               <p className="text-2xl sm:text-3xl font-bold text-orange-600">
                 {data.estadisticas_sistema.pqrs_pendientes}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                de {data.estadisticas_sistema.total_pqrs} totales
+                {t('admin.dashboard.ofTotal', { total: data.estadisticas_sistema.total_pqrs })}
               </p>
             </div>
             <div className="bg-orange-500 p-2 sm:p-3 rounded-lg flex-shrink-0">
@@ -399,12 +401,12 @@ function AdminIndex() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* Usuarios por Rol */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">Usuarios por Rol</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.usersByRole')}</h3>
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 text-[#195083] flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">Administradores</span>
+                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('common.roles.admin')}</span>
               </div>
               <span className="font-bold text-[#195083] text-sm sm:text-base flex-shrink-0">
                 {data.estadisticas_usuarios.admin_count}
@@ -413,7 +415,7 @@ function AdminIndex() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-[#4894AD] flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">Empleadas</span>
+                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('common.roles.empleada')}</span>
               </div>
               <span className="font-bold text-[#4894AD] text-sm sm:text-base flex-shrink-0">
                 {data.estadisticas_usuarios.empleadas_count}
@@ -422,7 +424,7 @@ function AdminIndex() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">Clientes</span>
+                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('common.roles.cliente')}</span>
               </div>
               <span className="font-bold text-green-600 text-sm sm:text-base flex-shrink-0">
                 {data.estadisticas_usuarios.clientes_count}
@@ -433,12 +435,12 @@ function AdminIndex() {
 
         {/* Estado de Reservas */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">Estado de Reservas</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.reservationStatus')}</h3>
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">Activas</span>
+                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('admin.dashboard.active')}</span>
               </div>
               <span className="font-bold text-blue-600 text-sm sm:text-base flex-shrink-0">
                 {data.estadisticas_reservas.reservas_activas}
@@ -447,7 +449,7 @@ function AdminIndex() {
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">Completadas</span>
+                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('admin.dashboard.completed')}</span>
               </div>
               <span className="font-bold text-green-600 text-sm sm:text-base flex-shrink-0">
                 {data.estadisticas_reservas.reservas_completadas}
@@ -456,7 +458,7 @@ function AdminIndex() {
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">Canceladas</span>
+                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('admin.dashboard.cancelled')}</span>
               </div>
               <span className="font-bold text-red-600 text-sm sm:text-base flex-shrink-0">
                 {data.estadisticas_reservas.reservas_canceladas}
@@ -470,7 +472,7 @@ function AdminIndex() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* Reservas Recientes */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">Reservas Recientes</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.recentReservations')}</h3>
           
           {data.datos_recientes.reservas_recientes.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
@@ -479,7 +481,7 @@ function AdminIndex() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                        {reserva.cliente?.nombre || 'Cliente desconocido'}
+                        {reserva.cliente?.nombre || t('admin.dashboard.unknownClient')}
                       </p>
                       <p className="text-xs sm:text-sm text-gray-500 mt-1">
                         {reserva.fecha && formatDate(reserva.fecha)} • {reserva.hora_inicio}
@@ -511,14 +513,14 @@ function AdminIndex() {
           ) : (
             <div className="text-center py-6 sm:py-8">
               <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm sm:text-base">No hay reservas recientes</p>
+              <p className="text-gray-500 text-sm sm:text-base">{t('admin.dashboard.noRecentReservations')}</p>
             </div>
           )}
         </div>
 
         {/* Top Empleadas */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">Top Empleadas</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.topEmployees')}</h3>
           
           {data.datos_recientes.top_empleadas.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
@@ -558,7 +560,7 @@ function AdminIndex() {
           ) : (
             <div className="text-center py-6 sm:py-8">
               <UserCheck className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm sm:text-base">No hay empleadas registradas</p>
+              <p className="text-gray-500 text-sm sm:text-base">{t('admin.dashboard.noEmployees')}</p>
             </div>
           )}
         </div>
@@ -568,18 +570,18 @@ function AdminIndex() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Sistema Info */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">Sistema</h4>
+          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">{t('admin.dashboard.system')}</h4>
           <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Ubicaciones activas</span>
+              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.activeLocations')}</span>
               <span className="font-semibold text-sm sm:text-base">{data.estadisticas_sistema.ubicaciones_activas}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Descuentos activos</span>
+              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.activeDiscounts')}</span>
               <span className="font-semibold text-sm sm:text-base">{data.estadisticas_sistema.descuentos_activos}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Notificaciones</span>
+              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.notifications')}</span>
               <span className="font-semibold text-sm sm:text-base text-red-600">{data.estadisticas_sistema.notificaciones_no_leidas}</span>
             </div>
           </div>
@@ -587,14 +589,14 @@ function AdminIndex() {
 
         {/* Planes Info */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">Planes</h4>
+          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">{t('admin.dashboard.plans')}</h4>
           <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Planes activos</span>
+              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.activePlans')}</span>
               <span className="font-semibold text-sm sm:text-base text-green-600">{data.estadisticas_planes.planes_activos}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">Planes inactivos</span>
+              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.inactivePlans')}</span>
               <span className="font-semibold text-sm sm:text-base text-red-600">{data.estadisticas_planes.planes_inactivos}</span>
             </div>
           </div>
@@ -602,16 +604,16 @@ function AdminIndex() {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 sm:col-span-2 lg:col-span-1">
-          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">Acciones Rápidas</h4>
+          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">{t('admin.dashboard.quickActions')}</h4>
           <div className="space-y-2 sm:space-y-3">
             <button className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
-              Gestionar PQRS pendientes
+              {t('admin.dashboard.managePqrs')}
             </button>
             <button className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors">
-              Ver reportes financieros
+              {t('admin.dashboard.viewReports')}
             </button>
             <button className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors">
-              Revisar nuevos usuarios
+              {t('admin.dashboard.reviewNewUsers')}
             </button>
           </div>
         </div>

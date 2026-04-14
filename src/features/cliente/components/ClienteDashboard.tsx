@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   Calendar, 
   Star, 
@@ -97,6 +98,7 @@ function ClienteIndex() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,7 +106,7 @@ function ClienteIndex() {
         // Obtener el usuario_id desde el localStorage (lo guarda el HOC withRole)
         const userStr = localStorage.getItem("user");
         if (!userStr) {
-          throw new Error("No se encontró información del usuario");
+          throw new Error(t('cliente.dashboard.userNotFound'));
         }
         
         const user = JSON.parse(userStr);
@@ -126,13 +128,13 @@ function ClienteIndex() {
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
           const responseText = await response.text();
-          throw new Error('El servidor no devolvió JSON válido');
+          throw new Error(t('cliente.dashboard.noValidJSON'));
         }
 
         const result = await response.json();
         setData(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
+        setError(err instanceof Error ? err.message : t('cliente.dashboard.errorUnknown'));
       } finally {
         setLoading(false);
       }
@@ -153,7 +155,7 @@ function ClienteIndex() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('cliente.dashboard.errorLoading')}</h3>
         <p className="text-sm sm:text-base text-gray-600">{error}</p>
       </div>
     );
@@ -201,9 +203,9 @@ function ClienteIndex() {
       <div className="bg-gradient-to-r from-[#4894AD] to-[#D95B26] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold mb-2">
-            ¡Hola, {data.cliente_info.nombre}! ✨
+            {t('cliente.dashboard.greeting', { name: data.cliente_info.nombre })}
           </h1>
-          <p className="text-white/80 text-sm sm:text-base">Agenda tu próximo servicio de limpieza</p>
+          <p className="text-white/80 text-sm sm:text-base">{t('cliente.dashboard.subtitle')}</p>
         </div>
       </div>
 
@@ -216,12 +218,12 @@ function ClienteIndex() {
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Mis Reservas</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.dashboard.myReservations')}</p>
               <p className="text-2xl sm:text-3xl font-bold text-[#4894AD]">
                 {data.estadisticas_reservas.total_reservas}
               </p>
               <p className="text-xs sm:text-sm text-blue-600 mt-1">
-                {data.estadisticas_reservas.reservas_activas} activas
+                {t('cliente.dashboard.activeCount', { n: data.estadisticas_reservas.reservas_activas })}
               </p>
             </div>
             <div className="bg-[#4894AD] p-2 sm:p-3 rounded-lg group-hover:bg-[#195083] transition-colors flex-shrink-0">
@@ -229,7 +231,7 @@ function ClienteIndex() {
             </div>
           </div>
           <button className="w-full text-[#4894AD] hover:text-[#195083] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-[#4894AD]/20 hover:bg-[#4894AD]/5 transition-colors">
-            Ver reservas <ArrowRight size={14} />
+            {t('cliente.dashboard.viewReservations')} <ArrowRight size={14} />
           </button>
         </div>
 
@@ -240,12 +242,12 @@ function ClienteIndex() {
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Mis Ubicaciones</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.dashboard.myLocations')}</p>
               <p className="text-2xl sm:text-3xl font-bold text-[#D95B26]">
                 {data.estadisticas_ubicaciones.total_ubicaciones}
               </p>
               <p className="text-xs sm:text-sm text-orange-600 mt-1">
-                {data.estadisticas_ubicaciones.ubicaciones_activas} activas
+                {t('cliente.dashboard.activeLocations', { n: data.estadisticas_ubicaciones.ubicaciones_activas })}
               </p>
             </div>
             <div className="bg-[#D95B26] p-2 sm:p-3 rounded-lg group-hover:bg-orange-600 transition-colors flex-shrink-0">
@@ -253,7 +255,7 @@ function ClienteIndex() {
             </div>
           </div>
           <button className="w-full text-[#D95B26] hover:text-orange-600 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-[#D95B26]/20 hover:bg-[#D95B26]/5 transition-colors">
-            Ver ubicaciones <ArrowRight size={14} />
+            {t('cliente.dashboard.viewLocations')} <ArrowRight size={14} />
           </button>
         </div>
 
@@ -264,12 +266,12 @@ function ClienteIndex() {
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Completados</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.dashboard.completed')}</p>
               <p className="text-2xl sm:text-3xl font-bold text-green-600">
                 {data.estadisticas_reservas.reservas_completadas}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                servicios finalizados
+                {t('cliente.dashboard.completedServices')}
               </p>
             </div>
             <div className="bg-green-500 p-2 sm:p-3 rounded-lg group-hover:bg-green-600 transition-colors flex-shrink-0">
@@ -277,7 +279,7 @@ function ClienteIndex() {
             </div>
           </div>
           <button className="w-full text-green-600 hover:text-green-700 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-green-600/20 hover:bg-green-50 transition-colors">
-            Ver historial <ArrowRight size={14} />
+            {t('cliente.dashboard.viewHistory')} <ArrowRight size={14} />
           </button>
         </div>
       </div>
@@ -287,7 +289,7 @@ function ClienteIndex() {
         {/* Próximas Reservas */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg sm:text-xl font-bold text-[#4894AD]">Próximas Reservas</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-[#4894AD]">{t('cliente.dashboard.upcomingReservations')}</h3>
           </div>
           
           {data.datos_principales.proximas_reservas.length > 0 ? (
@@ -326,7 +328,7 @@ function ClienteIndex() {
                     
                     <div className="flex-shrink-0 self-start">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(reserva.estado)}`}>
-                        {reserva.estado}
+                        {t(`common.statuses.${reserva.estado}`, { defaultValue: reserva.estado })}
                       </span>
                     </div>
                   </div>
@@ -337,18 +339,18 @@ function ClienteIndex() {
                 onClick={() => handleNavigation('reservas/index')}
                 className="w-full mt-3 sm:mt-4 text-[#4894AD] hover:text-[#195083] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-[#4894AD]/20 hover:bg-[#4894AD]/5 transition-colors"
               >
-                Ver todas las reservas <ArrowRight size={14} />
+                {t('cliente.dashboard.viewAll')} <ArrowRight size={14} />
               </button>
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8">
               <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">No tienes reservas próximas</p>
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">{t('cliente.dashboard.noUpcoming')}</p>
               <button 
                 onClick={() => handleNavigation('reservas/crear')}
                 className="bg-[#4894AD] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base"
               >
-                Crear nueva reserva
+                {t('cliente.dashboard.newReservation')}
               </button>
             </div>
           )}
@@ -357,7 +359,7 @@ function ClienteIndex() {
         {/* Mis Ubicaciones */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg sm:text-xl font-bold text-[#4894AD]">Mis Ubicaciones</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-[#4894AD]">{t('cliente.dashboard.myLocationsSection')}</h3>
           </div>
           
           {data.datos_principales.ultimas_ubicaciones.length > 0 ? (
@@ -369,16 +371,16 @@ function ClienteIndex() {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                       ubicacion.estado ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {ubicacion.estado ? 'Activa' : 'Inactiva'}
+                      {ubicacion.estado ? t('cliente.dashboard.active') : t('cliente.dashboard.inactive')}
                     </span>
                   </div>
                   
                   <div className="space-y-1 text-xs sm:text-sm text-gray-600">
                     {ubicacion.tipo_lugar && (
-                      <p className="truncate">Tipo: {ubicacion.tipo_lugar}</p>
+                      <p className="truncate">{t('cliente.dashboard.type')} {ubicacion.tipo_lugar}</p>
                     )}
                     {ubicacion.nombre_lugar && (
-                      <p className="truncate">Dirección: {ubicacion.nombre_lugar}</p>
+                      <p className="truncate">{t('cliente.dashboard.address')} {ubicacion.nombre_lugar}</p>
                     )}
                   </div>
                 </div>
@@ -388,18 +390,18 @@ function ClienteIndex() {
                 onClick={() => handleNavigation('ubicaciones/index')}
                 className="w-full mt-3 sm:mt-4 text-[#D95B26] hover:text-orange-600 font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-[#D95B26]/20 hover:bg-[#D95B26]/5 transition-colors"
               >
-                Gestionar ubicaciones <ArrowRight size={14} />
+                {t('cliente.dashboard.manageLocations')} <ArrowRight size={14} />
               </button>
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8">
               <MapPin className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">No tienes ubicaciones registradas</p>
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">{t('cliente.dashboard.noLocations')}</p>
               <button 
                 onClick={() => handleNavigation('ubicaciones/crear')}
                 className="bg-[#D95B26] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium text-sm sm:text-base"
               >
-                Agregar Ubicación
+                {t('cliente.dashboard.addLocation')}
               </button>
             </div>
           )}
@@ -409,7 +411,7 @@ function ClienteIndex() {
       {/* Empleadas Frecuentes - Full width section */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg sm:text-xl font-bold text-[#4894AD]">Empleadas Frecuentes</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-[#4894AD]">{t('cliente.dashboard.frequentEmployees')}</h3>
         </div>
         
         {data.datos_principales.empleadas_frecuentes.length > 0 ? (
@@ -425,7 +427,7 @@ function ClienteIndex() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{empleada.nombre}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">{empleada.total_servicios || 0} servicios</p>
+                      <p className="text-xs sm:text-sm text-gray-500">{t('cliente.dashboard.servicesCount', { n: empleada.total_servicios || 0 })}</p>
                     </div>
                   </div>
                   
@@ -449,12 +451,12 @@ function ClienteIndex() {
         ) : (
           <div className="text-center py-6 sm:py-8">
             <UserCheck className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">Aún no has contratado empleadas</p>
+            <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">{t('cliente.dashboard.noEmployees')}</p>
             <button 
               onClick={() => handleNavigation('reservas/crear')}
               className="bg-[#4894AD] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base"
             >
-              Hacer primera reserva
+              {t('cliente.dashboard.firstReservation')}
             </button>
           </div>
         )}

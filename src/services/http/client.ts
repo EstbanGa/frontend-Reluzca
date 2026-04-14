@@ -14,7 +14,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   }
 
   // Endpoints que NO necesitan token
-  const publicEndpoints = ["/api/auth/register", "/api/auth/login/json"];
+  const publicEndpoints = ["/api/auth/register", "/api/auth/login"];
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

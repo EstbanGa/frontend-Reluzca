@@ -1,0 +1,1409 @@
+{
+  "common": {
+    "brand": "Reluzca",
+    "logout": "Cerrar Sesión",
+    "loggingOut": "Cerrando...",
+    "myProfile": "Mi Perfil",
+    "error": "Error",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "creating": "Creando...",
+    "loading": "Cargando...",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "total": "Total",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "description": "Descripción",
+    "notSpecified": "No especificado",
+    "noData": "No disponible",
+    "na": "N/A",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "actions": "Acciones",
+    "date": "Fecha",
+    "status": "Estado",
+    "type": "Tipo",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "password": "Contraseña",
+    "address": "Dirección",
+    "created": "Creado",
+    "updated": "Actualizado",
+    "breadcrumb": {
+      "dashboard": "Panel Principal",
+      "home": "Inicio"
+    },
+    "temp": {
+      "working": "¡Estamos trabajando!",
+      "comingSoon": "Esta sección estará disponible muy pronto",
+      "preparingExperience": "Estamos preparando una experiencia increíble para ti",
+      "progress": "75% completado"
+    },
+    "footer": {
+      "copyright": "© {{year}} Reluzca. Todos los derechos reservados."
+    },
+    "backToHome": "Volver al inicio",
+    "roles": {
+      "admin": "Administrador",
+      "cliente": "Cliente",
+      "empleada": "Empleada"
+    },
+    "statuses": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmada",
+      "inProgress": "En Proceso",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "pendiente": "Pendiente",
+      "confirmada": "Confirmada",
+      "en_proceso": "En Proceso",
+      "completada": "Completada",
+      "cancelada": "Cancelada",
+      "activo": "Activo",
+      "inactivo": "Inactivo",
+      "resuelto": "Resuelto",
+      "cerrado": "Cerrado"
+    },
+    "priorities": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta"
+    },
+    "pqrsTypes": {
+      "petition": "Petición",
+      "complaint": "Queja",
+      "claim": "Reclamo",
+      "suggestion": "Sugerencia"
+    }
+  },
+  "landing": {
+    "nav": {
+      "home": "Inicio",
+      "services": "Servicios",
+      "howItWorks": "Cómo Funciona",
+      "whyUs": "Por Qué Elegirnos",
+      "testimonials": "Testimonios",
+      "contact": "Contacto",
+      "login": "Iniciar Sesión",
+      "createUser": "Crear Usuario"
+    },
+    "hero": {
+      "badge": "App.Reluzca.com",
+      "title": "Cuidamos cada rincón de tu ",
+      "titleHighlight": " hogar y empresa",
+      "subtitle": "Nuestras Auxiliares Reluzca utilizan técnicas que garantizan espacios impecables, frescos y acogedores, para que disfrutes de un ambiente limpio sin preocuparte por nada.",
+      "ctaPrimary": "Agendar Ahora",
+      "ctaSecondary": "Ver Cómo Funciona",
+      "badge1": "Personal Verificado",
+      "badge2": "Servicio Garantizado",
+      "badge3": "Disponible 24/7",
+      "cardTitle": "Líderes en limpieza profesional",
+      "cardSubtitle": "Más de 500 clientes satisfechos confían en nosotros"
+    },
+    "services": {
+      "title": "Profesionales de limpieza en quienes puedes confiar",
+      "subtitle": "Nuestros Auxiliares Reluzca están capacitados para brindarte un servicio seguro, confiable y de alta calidad con responsabilidad, discreción y atención al detalle.",
+      "professionals": {
+        "title": "Profesionales Capacitados",
+        "desc": "Auxiliares Reluzca entrenados para brindar un servicio de alta calidad"
+      },
+      "trust": {
+        "title": "Confianza y Seguridad",
+        "desc": "Personal verificado con la más alta discreción y responsabilidad"
+      },
+      "punctuality": {
+        "title": "Puntualidad Garantizada",
+        "desc": "Cumplimos con los horarios acordados para tu tranquilidad"
+      },
+      "results": {
+        "title": "Resultados Impecables",
+        "desc": "Técnicas profesionales que garantizan espacios frescos y acogedores"
+      },
+      "specializedTitle": "Nuestros Servicios Especializados",
+      "specializedSubtitle": "Adaptamos nuestros servicios a tus necesidades específicas",
+      "tabHome": "Hogar",
+      "tabBusiness": "Empresa",
+      "home": {
+        "title": "Servicios para el Hogar",
+        "subtitle": "Tu hogar merece el mejor cuidado",
+        "general": "Limpieza General",
+        "generalDesc": "Limpieza completa de todas las áreas de tu hogar",
+        "deep": "Limpieza Profunda",
+        "deepDesc": "Servicio detallado para una limpieza exhaustiva",
+        "regular": "Mantenimiento Regular",
+        "regularDesc": "Planes semanales, quincenales o mensuales",
+        "postWork": "Limpieza Post-Obra",
+        "postWorkDesc": "Especializado en limpieza después de remodelaciones"
+      },
+      "business": {
+        "title": "Servicios Empresariales",
+        "subtitle": "Espacios profesionales impecables",
+        "offices": "Oficinas Corporativas",
+        "officesDesc": "Limpieza integral para espacios de trabajo",
+        "medical": "Consultorios Médicos",
+        "medicalDesc": "Desinfección especializada para centros de salud",
+        "stores": "Comercios y Tiendas",
+        "storesDesc": "Mantenimiento para espacios comerciales",
+        "buildings": "Edificios Residenciales",
+        "buildingsDesc": "Limpieza de áreas comunes y zonas sociales"
+      }
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona Nuestro Servicio",
+      "subtitle": "Un proceso simple y confiable en 4 pasos",
+      "step1": {
+        "title": "Agenda tu Servicio",
+        "desc": "Selecciona el día y hora que mejor te convenga a través de nuestra plataforma"
+      },
+      "step2": {
+        "title": "Confirmamos tu Cita",
+        "desc": "Verificamos la disponibilidad y confirmamos todos los detalles de tu servicio"
+      },
+      "step3": {
+        "title": "Auxiliar Asignada",
+        "desc": "Una profesional Reluzca llega a tu hogar u oficina en el horario acordado"
+      },
+      "step4": {
+        "title": "Disfruta el Resultado",
+        "desc": "Tu espacio queda impecable, fresco y acogedor para que puedas disfrutarlo"
+      }
+    },
+    "guarantees": {
+      "title": "Nuestras Garantías",
+      "subtitle": "Tu tranquilidad es nuestra prioridad",
+      "satisfaction": {
+        "title": "Garantía de Satisfacción",
+        "desc": "Si no quedas completamente satisfecho, regresamos sin costo adicional"
+      },
+      "insurance": {
+        "title": "Personal Asegurado",
+        "desc": "Todo nuestro personal cuenta con pólizas de responsabilidad civil"
+      },
+      "punctuality": {
+        "title": "Puntualidad Garantizada",
+        "desc": "Llegamos a tiempo o te compensamos con descuentos en tu próximo servicio"
+      }
+    },
+    "whyUs": {
+      "title": "¿Por Qué Elegir Reluzca?",
+      "subtitle": "Somos más que un servicio de limpieza, somos tu socio de confianza",
+      "experience": {
+        "title": "Experiencia Comprobada",
+        "highlight": "Líderes en el sector",
+        "desc": "Más de 3 años brindando servicios de limpieza profesional en Medellín y el área metropolitana."
+      },
+      "personalized": {
+        "title": "Atención Personalizada",
+        "highlight": "100% personalizado",
+        "desc": "Cada servicio se adapta a tus necesidades específicas, brindándote una experiencia única."
+      },
+      "tech": {
+        "title": "Tecnología Avanzada",
+        "highlight": "Eco-friendly",
+        "desc": "Utilizamos productos ecológicos y equipos de última generación para un resultado superior."
+      },
+      "improvement": {
+        "title": "Mejora Continua",
+        "highlight": "Siempre mejorando",
+        "desc": "Capacitamos constantemente a nuestro personal para ofrecer el mejor servicio."
+      },
+      "certTitle": "Certificación de Calidad",
+      "certTrainedStaff": "Personal Capacitado",
+      "certSatisfaction": "Satisfacción del Cliente",
+      "certPunctuality": "Puntualidad",
+      "watchVideo": "Ver Video Testimonial"
+    },
+    "testimonials": {
+      "title": "Lo que nuestros Usuarios dicen",
+      "subtitle": "Testimonios reales de clientes satisfechos",
+      "role": "Cliente"
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "subtitle": "Resolvemos las dudas más comunes de nuestros clientes",
+      "moreQuestions": "¿Tienes más preguntas?",
+      "contactNow": "Contáctanos Ahora"
+    },
+    "coverage": {
+      "title": "Zonas de Cobertura",
+      "subtitle": "Llevamos nuestro servicio hasta tu puerta en toda el área metropolitana",
+      "notListed": "¿Tu zona no está en la lista?",
+      "expanding": "Estamos en constante expansión. Contáctanos para verificar disponibilidad en tu zona.",
+      "checkAvailability": "Consultar Disponibilidad"
+    },
+    "cta": {
+      "badge": "Agenda Hoy - Disfruta Mañana",
+      "title": "¿Listo para tener tu espacio impecable?",
+      "subtitle": "Únete a cientos de clientes satisfechos que ya disfrutan de espacios impecables.",
+      "scheduleNow": "Agendar Mi Servicio Ahora",
+      "requestQuote": "Solicitar Cotización",
+      "noCommitment": "Sin compromiso",
+      "immediateResponse": "Respuesta inmediata",
+      "freeQuote": "Cotización gratuita"
+    },
+    "footer": {
+      "description": "Líderes en servicios de limpieza profesional en Medellín y el área metropolitana.",
+      "servicesTitle": "Servicios",
+      "homeService": "Limpieza de Hogar",
+      "officeService": "Limpieza de Oficinas",
+      "regularService": "Servicio Regular",
+      "deepService": "Limpieza Profunda",
+      "postWorkService": "Limpieza Post-Obra",
+      "companyTitle": "Empresa",
+      "aboutUs": "Sobre Nosotros",
+      "workWithUs": "Trabaja con Nosotros",
+      "qualityPolicy": "Política de Calidad",
+      "terms": "Términos y Condiciones",
+      "privacy": "Política de Privacidad",
+      "contactTitle": "Contacto",
+      "phone247": "Línea de atención 24/7",
+      "emailResponse": "Respuesta en menos de 2 horas",
+      "location": "Medellín, Antioquia",
+      "coverageArea": "Cobertura área metropolitana",
+      "copyright": "© 2024 Reluzca. Todos los derechos reservados.",
+      "madeWith": "Desarrollado con ❤ en Medellín"
+    }
+  },
+  "auth": {
+    "backToHome": "Volver al inicio",
+    "login": {
+      "title": "Iniciar Sesión",
+      "subtitle": "Accede a tu cuenta Reluzca",
+      "emailLabel": "Correo electrónico *",
+      "emailPlaceholder": "tu@email.com",
+      "passwordLabel": "Contraseña *",
+      "passwordPlaceholder": "Tu contraseña",
+      "submitting": "Iniciando sesión...",
+      "submit": "Iniciar Sesión",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tienes cuenta?",
+      "createAccount": "Crear cuenta",
+      "success": "Inicio de sesión exitoso",
+      "errors": {
+        "emailRequired": "El correo electrónico es requerido",
+        "passwordRequired": "La contraseña es requerida",
+        "invalidEmail": "Por favor ingresa un correo electrónico válido",
+        "generic": "Error al iniciar sesión. Inténtalo nuevamente.",
+        "server": "Error del servidor. Por favor inténtalo más tarde.",
+        "credentials": "Credenciales incorrectas. Verifica tu correo y contraseña.",
+        "pendingVerification": "Tu cuenta está pendiente de verificación. Revisa tu correo.",
+        "serverLate": "Error del servidor. Inténtalo más tarde.",
+        "notFound": "Servicio no encontrado. Contacta con soporte.",
+        "connection": "Error de conexión. Verifica tu internet e inténtalo nuevamente."
+      }
+    },
+    "signup": {
+      "title": "Crear Cuenta",
+      "subtitle": "Únete a la comunidad Reluzca",
+      "roleQuestion": "¿Cómo te quieres registrar?",
+      "roleClient": "Cliente",
+      "roleClientDesc": "Busco servicios de belleza",
+      "roleEmployee": "Empleada",
+      "roleEmployeeDesc": "Ofrezco servicios de belleza",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Tu nombre",
+      "lastNameLabel": "Apellido",
+      "lastNamePlaceholder": "Tu apellido",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Contraseña segura",
+      "confirmPasswordLabel": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "Repetir contraseña",
+      "documentLabel": "Documento",
+      "documentPlaceholder": "Número de documento",
+      "phoneLabel": "Teléfono",
+      "phonePlaceholder": "Número de teléfono",
+      "personTypeLabel": "Tipo de persona",
+      "personTypes": {
+        "select": "Seleccione tipo de persona",
+        "natural": "Persona Natural",
+        "legal": "Persona Jurídica"
+      },
+      "birthDateLabel": "Fecha de nacimiento",
+      "passwordReqs": {
+        "title": "Requisitos de contraseña:",
+        "minLength": "Mínimo 8 caracteres",
+        "uppercase": "Una mayúscula (A-Z)",
+        "lowercase": "Una minúscula (a-z)",
+        "number": "Un número (0-9)",
+        "symbol": "Un símbolo (!@#$%^&*)"
+      },
+      "errors": {
+        "selectRole": "Debes seleccionar si eres Cliente o Empleada",
+        "selectRoleBelow": "Por favor selecciona cómo te quieres registrar",
+        "passwordReqs": "La contraseña no cumple con todos los requisitos",
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "documentMinLength": "El documento debe tener al menos 5 caracteres",
+        "generic": "Error al crear la cuenta. Intenta nuevamente."
+      },
+      "success": "Usuario creado correctamente",
+      "submitting": "Creando cuenta...",
+      "submit": "Crear Cuenta",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "goToLogin": "Iniciar sesión",
+      "goToLoginBtn": "Ir a iniciar sesión"
+    },
+    "verify": {
+      "title": "Verificación de Correo",
+      "verifying": "Verificando tu correo...",
+      "tokenNotFound": "Token No Encontrado",
+      "tokenNotFoundMsg": "Token de verificación no encontrado en la URL",
+      "tokenNotFoundDesc": "La URL de verificación no contiene un token válido. Asegúrate de usar el enlace correcto enviado a tu correo.",
+      "successTitle": "¡Verificación Exitosa!",
+      "successMessage": "Correo verificado exitosamente",
+      "redirecting": "Serás redirigido al inicio de sesión en unos segundos...",
+      "errorTitle": "Error de Verificación",
+      "invalidResponse": "Respuesta inválida del servidor",
+      "connectionError": "Error de conexión",
+      "connectionErrorGeneric": "Error de conexión. Verifica tu conexión a internet e intenta nuevamente.",
+      "registerAgain": "Registrarse Nuevamente",
+      "goToLogin": "Ir al Login",
+      "tryAgain": "Intentar Nuevamente"
+    },
+    "unauthorized": {
+      "title": "Acceso no autorizado",
+      "message": "No tienes permisos para acceder a esta página.",
+      "goToLogin": "Ir al inicio de sesión",
+      "goHome": "Volver al inicio"
+    }
+  },
+  "admin": {
+    "theme": {
+      "subtitle": "Panel de Administración",
+      "breadcrumbPrefix": "Administración"
+    },
+    "menu": {
+      "dashboard": "Panel Principal",
+      "users": "Usuarios",
+      "reservations": "Reservas",
+      "plans": "Planes",
+      "pqrs": "PQRS",
+      "notifications": "Notificaciones",
+      "settings": "Configuración"
+    },
+    "dashboard": {
+      "greeting": "¡Hola, {{name}}! 👋",
+      "summary": "Aquí tienes un resumen de la actividad del sistema",
+      "lastUpdate": "Última actualización",
+      "loadError": "Error al cargar datos",
+      "totalUsers": "Total Usuarios",
+      "thisWeek": "esta semana",
+      "totalReservations": "Total Reservas",
+      "today": "hoy",
+      "totalRevenue": "Ingresos Totales",
+      "thisMonth": "este mes",
+      "pendingPqrs": "PQRS Pendientes",
+      "ofTotal": "de {{total}} totales",
+      "usersByRole": "Usuarios por Rol",
+      "reservationStatus": "Estado de Reservas",
+      "active": "Activas",
+      "completed": "Completadas",
+      "cancelled": "Canceladas",
+      "recentReservations": "Reservas Recientes",
+      "unknownClient": "Cliente desconocido",
+      "noRecentReservations": "No hay reservas recientes",
+      "topEmployees": "Top Empleadas",
+      "noEmployees": "No hay empleadas registradas",
+      "system": "Sistema",
+      "activeLocations": "Ubicaciones activas",
+      "activeDiscounts": "Descuentos activos",
+      "notifications": "Notificaciones",
+      "plans": "Planes",
+      "activePlans": "Planes activos",
+      "inactivePlans": "Planes inactivos",
+      "quickActions": "Acciones Rápidas",
+      "managePqrs": "Gestionar PQRS pendientes",
+      "viewReports": "Ver reportes financieros",
+      "reviewNewUsers": "Revisar nuevos usuarios"
+    },
+    "users": {
+      "title": "Gestión de Usuarios",
+      "subtitle": "Administra todos los usuarios del sistema",
+      "createUser": "Crear Usuario",
+      "administrators": "Administradores",
+      "clients": "Clientes",
+      "employees": "Empleadas",
+      "admins": "Admins",
+      "of": "de",
+      "shown": "mostrados",
+      "selected": "seleccionados",
+      "clear": "Limpiar",
+      "selectAll": "Seleccionar todos",
+      "searchPlaceholder": "Buscar {{role}}...",
+      "registered": "Registrado",
+      "viewDetails": "Ver detalles",
+      "editUser": "Editar usuario",
+      "deleteUser": "Eliminar usuario",
+      "birthDate": "Fecha Nacimiento",
+      "gender": "Género",
+      "noUsersFound": "No se encontraron usuarios",
+      "noUsersInRole": "No hay {{role}}",
+      "tryDifferentSearch": "Intenta cambiar el término de búsqueda",
+      "noUsersRegistered": "Aún no se han registrado {{role}} en el sistema",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar {{count}} usuario(s)?\n\nEsta acción no se puede deshacer.",
+      "stats": {
+        "reservations": "Reservas",
+        "spent": "Gastado",
+        "services": "Servicios",
+        "revenue": "Ingresos",
+        "users": "Usuarios"
+      },
+      "errors": {
+        "loadError": "Error al cargar usuarios",
+        "deleteError": "Error al eliminar usuarios"
+      },
+      "modal": {
+        "personalInfo": "Información Personal",
+        "systemStatus": "Estado del Sistema",
+        "lastAccess": "Último acceso",
+        "statistics": "Estadísticas",
+        "totalReservations": "Total Reservas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas",
+        "totalSpent": "Total Gastado",
+        "completedServices": "Completados",
+        "pendingServices": "Pendientes",
+        "totalUsers": "Total Usuarios",
+        "usersToday": "Usuarios Hoy",
+        "reservationsToday": "Reservas Hoy",
+        "rating": "Calificación"
+      }
+    },
+    "reservations": {
+      "title": "Gestión de Reservas",
+      "subtitle": "Administra todas las reservas del sistema",
+      "stats": {
+        "total": "Total",
+        "active": "Activas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas",
+        "filtered": "Filtradas"
+      },
+      "filters": {
+        "all": "Todos los estados"
+      },
+      "search": "Buscar por ID, cliente, empleada, ubicación, plan...",
+      "selectedCount": "{{n}} reserva(s) seleccionada(s)",
+      "clearSelection": "Limpiar selección",
+      "delete": "Eliminar",
+      "selectAll": "Seleccionar todas",
+      "reservaCount": "{{n}} reserva",
+      "reservaCountPlural": "{{n}} reservas",
+      "viewDetails": "Ver detalles",
+      "editReservation": "Editar reserva",
+      "deleteReservation": "Eliminar reserva",
+      "location": "Ubicación",
+      "total": "Total",
+      "description": "Descripción",
+      "noReservationsFound": "No se encontraron reservas",
+      "noReservations": "No hay reservas",
+      "tryDifferentFilters": "Intenta cambiar los filtros de búsqueda",
+      "noReservationsYet": "Aún no se han registrado reservas en el sistema",
+      "showing": "Mostrando {{from}} - {{to}} de {{total}} reservas",
+      "errorLoading": "Error al cargar reservas",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar {{n}} reserva(s)?",
+      "errors": {
+        "loadError": "Error al cargar reservas",
+        "deleteError": "Error al eliminar las reservas",
+        "unknown": "Error desconocido"
+      },
+      "modal": {
+        "reservationId": "Reserva #{{id}}",
+        "fullDetails": "Detalles completos de la reserva",
+        "statusAndSchedule": "Estado y Horario",
+        "systemRecord": "Registro del Sistema",
+        "created": "Creada",
+        "updated": "Actualizada",
+        "clientInfo": "Información del Cliente",
+        "fullName": "Nombre completo",
+        "email": "Correo electrónico",
+        "phone": "Teléfono",
+        "clientSince": "Cliente desde",
+        "assignedEmployee": "Empleada Asignada",
+        "rating": "Calificación",
+        "servicePlan": "Plan de Servicio",
+        "duration": "Duración: {{minutes}} minutos",
+        "serviceLocation": "Ubicación del Servicio",
+        "name": "Nombre",
+        "type": "Tipo",
+        "address": "Dirección",
+        "description": "Descripción",
+        "totalPrice": "Precio Total",
+        "editReservation": "Editar Reserva"
+      }
+    },
+    "plans": {
+      "title": "Gestión de Planes",
+      "subtitle": "Administra todos los planes de servicio",
+      "createPlan": "Crear Plan",
+      "filters": {
+        "allStates": "Todos los estados",
+        "active": "Activos",
+        "inactive": "Inactivos"
+      },
+      "search": "Buscar por nombre, descripción, servicios, precio...",
+      "selectedCount": "{{n}} plan(es) seleccionado(s)",
+      "clearSelection": "Limpiar selección",
+      "delete": "Eliminar",
+      "selectAll": "Seleccionar todos",
+      "noServices": "Sin servicios",
+      "notSpecified": "No especificado",
+      "invalidPrice": "Precio inválido",
+      "errorLoading": "Error al cargar planes",
+      "errorUnknown": "Error desconocido",
+      "errorToggle": "Error al cambiar estado del plan",
+      "errorDelete": "Error al eliminar planes",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar {{n}} plan(es)?",
+      "viewDetails": "Ver detalles",
+      "editPlan": "Editar plan",
+      "deletePlan": "Eliminar plan",
+      "validity": "Vigencia",
+      "schedule": "Horario",
+      "services": "Servicios",
+      "description": "Descripción",
+      "noPlansFound": "No se encontraron planes",
+      "noPlans": "No hay planes",
+      "tryDifferentFilters": "Intenta cambiar los filtros de búsqueda",
+      "noPlansYet": "Aún no se han creado planes en el sistema",
+      "createFirstPlan": "Crear Primer Plan",
+      "modal": {
+        "fullDetails": "Detalles completos del plan",
+        "statusAndPrice": "Estado y Precio",
+        "systemRecord": "Registro del Sistema",
+        "created": "Creado",
+        "updated": "Actualizado",
+        "planValidity": "Vigencia del Plan",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de finalización",
+        "serviceHours": "Horarios de Servicio",
+        "startTime": "Hora de inicio",
+        "endTime": "Hora de finalización",
+        "associatedServices": "Servicios Asociados",
+        "planDescription": "Descripción del Plan",
+        "editPlan": "Editar Plan",
+        "deactivate": "Desactivar",
+        "activate": "Activar"
+      }
+    },
+    "createPlan": {
+      "title": "Nuevo Plan",
+      "subtitle": "Crea un nuevo plan de servicio",
+      "basicInfo": "Información Básica",
+      "planValidity": "Vigencia del Plan",
+      "serviceHours": "Horarios de Servicio",
+      "associatedServices": "Servicios Asociados",
+      "planDescription": "Descripción del Plan",
+      "planName": "Nombre del plan",
+      "planNamePlaceholder": "Ej: Plan Básico, Plan Premium, Mantenimiento Mensual...",
+      "price": "Precio",
+      "pricePlaceholder": "Ej: 50000",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de finalización",
+      "startTime": "Hora de inicio",
+      "endTime": "Hora de finalización",
+      "selectServices": "Selecciona los servicios incluidos:",
+      "addCustomService": "Agregar servicio personalizado:",
+      "customServicePlaceholder": "Escribe un servicio personalizado...",
+      "selectedServices": "Servicios seleccionados",
+      "detailedDescription": "Descripción detallada",
+      "descriptionPlaceholder": "Describe las características, beneficios y detalles importantes del plan...",
+      "characters": "caracteres",
+      "submitBtn": "Crear Plan",
+      "successTitle": "¡Plan creado exitosamente!",
+      "successRedirect": "Redirigiendo a la gestión de planes...",
+      "errors": {
+        "nameRequired": "El nombre del plan es obligatorio",
+        "nameMaxLength": "El nombre no puede exceder 100 caracteres",
+        "pricePositive": "El precio debe ser un número positivo",
+        "endDateAfterStart": "La fecha final debe ser posterior a la fecha de inicio",
+        "endTimeAfterStart": "La hora final debe ser posterior a la hora de inicio",
+        "noToken": "No se encontró el token de autenticación",
+        "unknown": "Error desconocido al crear el plan"
+      }
+    },
+    "createUser": {
+      "title": "Crear Nuevo Usuario",
+      "subtitle": "Completa los datos para registrar un nuevo usuario en el sistema",
+      "personalInfo": "Información Personal",
+      "contactAccess": "Contacto y Acceso",
+      "roleAndStatus": "Rol y Estado",
+      "lastNameLabel": "Apellido",
+      "documentLabel": "Documento",
+      "documentPlaceholder": "Número de documento",
+      "personTypeLabel": "Tipo de Persona",
+      "birthDateLabel": "Fecha de Nacimiento",
+      "roleLabel": "Rol",
+      "namePlaceholder": "Ingresa el nombre",
+      "lastNamePlaceholder": "Ingresa el apellido",
+      "passwordPlaceholder": "Mínimo 6 caracteres",
+      "passwordNote": "La contraseña se usa para crear la cuenta en Supabase Auth.",
+      "submitBtn": "Crear Usuario",
+      "successTitle": "¡Usuario creado exitosamente!",
+      "successRedirect": "Redirigiendo a la lista de usuarios...",
+      "errors": {
+        "nameRequired": "El nombre es obligatorio",
+        "lastNameRequired": "El apellido es obligatorio",
+        "emailRequired": "El correo es obligatorio",
+        "emailInvalid": "El correo no es válido",
+        "passwordRequired": "La contraseña es obligatoria",
+        "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+        "phoneRequired": "El teléfono es obligatorio",
+        "createError": "Error al crear el usuario"
+      }
+    },
+    "pqrs": {
+      "title": "Gestión de PQRS",
+      "subtitle": "Administra las peticiones, quejas, reclamos y sugerencias de los clientes",
+      "types": {
+        "peticion": "Petición",
+        "queja": "Queja",
+        "reclamo": "Reclamo",
+        "sugerencia": "Sugerencia"
+      },
+      "statuses": {
+        "all": "Todos los estados",
+        "pendiente": "Pendientes",
+        "en_proceso": "En Proceso",
+        "resuelto": "Resueltos",
+        "cerrado": "Cerrados"
+      },
+      "priorities": {
+        "baja": "Baja",
+        "media": "Media",
+        "alta": "Alta"
+      },
+      "stats": {
+        "pending": "Pendientes",
+        "inProgress": "En Proceso",
+        "resolved": "Resueltos",
+        "closed": "Cerrados"
+      },
+      "allPriorities": "Todas las prioridades",
+      "tableHeaders": {
+        "type": "Tipo",
+        "client": "Cliente",
+        "description": "Descripción",
+        "priority": "Prioridad",
+        "status": "Estado",
+        "date": "Fecha",
+        "actions": "Acciones"
+      },
+      "search": "Buscar por descripción, cliente...",
+      "empty": "No se encontraron PQRS",
+      "loading": "Cargando PQRS...",
+      "errorLoading": "Error al cargar PQRS",
+      "errorUnknown": "Error desconocido",
+      "respond": "Responder",
+      "showing": "Mostrando {{from}} a {{to}} de {{total}} PQRS",
+      "page": "Página {{current}} de {{total}}",
+      "responsePlaceholder": "Por favor ingresa una respuesta",
+      "userNotFound": "No se encontró información del usuario",
+      "responseSuccess": "Respuesta enviada exitosamente",
+      "responseError": "Error al enviar respuesta",
+      "modal": {
+        "title": "Responder PQRS",
+        "type": "Tipo",
+        "priority": "Prioridad",
+        "client": "Cliente",
+        "creationDate": "Fecha de Creación",
+        "description": "Descripción",
+        "status": "Estado",
+        "response": "Respuesta",
+        "responsePlaceholder": "Escribe tu respuesta aquí...",
+        "previousResponse": "Respuesta Anterior",
+        "respondedBy": "Respondido por",
+        "date": "Fecha",
+        "sending": "Enviando...",
+        "sendResponse": "Enviar Respuesta"
+      }
+    },
+    "editReservation": {
+      "title": "Editar Reserva",
+      "back": "Volver a Reservas"
+    },
+    "editUser": {
+      "title": "Editar Usuario",
+      "back": "Volver a Usuarios"
+    },
+    "editPlan": {
+      "title": "Editar Plan",
+      "back": "Volver a Planes"
+    }
+  },
+  "cliente": {
+    "theme": {
+      "subtitle": "Mi Panel Personal",
+      "breadcrumbPrefix": "Mi Panel"
+    },
+    "menu": {
+      "home": "Inicio",
+      "reservations": "Mis Reservas",
+      "locations": "Mis Ubicaciones",
+      "ratings": "Calificaciones",
+      "support": "Soporte",
+      "notifications": "Notificaciones"
+    },
+    "dashboard": {
+      "greeting": "¡Hola, {{name}}! ✨",
+      "subtitle": "Agenda tu próximo servicio de limpieza",
+      "myReservations": "Mis Reservas",
+      "activeCount": "{{n}} activas",
+      "myLocations": "Mis Ubicaciones",
+      "activeLocations": "{{n}} activas",
+      "completed": "Completados",
+      "completedServices": "servicios finalizados",
+      "viewReservations": "Ver reservas",
+      "viewLocations": "Ver ubicaciones",
+      "viewHistory": "Ver historial",
+      "viewAll": "Ver todas las reservas",
+      "newReservation": "Crear nueva reserva",
+      "manageLocations": "Gestionar ubicaciones",
+      "addLocation": "Agregar Ubicación",
+      "firstReservation": "Hacer primera reserva",
+      "upcomingReservations": "Próximas Reservas",
+      "myLocationsSection": "Mis Ubicaciones",
+      "frequentEmployees": "Empleadas Frecuentes",
+      "noUpcoming": "No tienes reservas próximas",
+      "noLocations": "No tienes ubicaciones registradas",
+      "noEmployees": "Aún no has contratado empleadas",
+      "type": "Tipo:",
+      "address": "Dirección:",
+      "servicesCount": "{{n}} servicios",
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "errorUnknown": "Error desconocido",
+      "errorLoading": "Error al cargar datos",
+      "noValidJSON": "El servidor no devolvió JSON válido",
+      "userNotFound": "No se encontró información del usuario"
+    },
+    "reservations": {
+      "title": "Mis Reservas",
+      "subtitle": "Gestiona tus servicios de limpieza",
+      "newReservation": "Nueva Reserva",
+      "filters": {
+        "all": "Todas las reservas",
+        "pending": "Pendientes",
+        "confirmed": "Confirmadas",
+        "inProgress": "En Proceso",
+        "completed": "Completadas",
+        "cancelled": "Canceladas"
+      },
+      "search": "Buscar por empleada, ubicación, plan...",
+      "noResults": "No se encontraron reservas",
+      "empty": "No tienes reservas",
+      "tryFilters": "Intenta cambiar los filtros de búsqueda",
+      "createFirstCTA": "Crea tu primera reserva de servicio de limpieza",
+      "createFirst": "Crear Primera Reserva",
+      "customPlan": "Plan personalizado",
+      "stats": {
+        "total": "Total",
+        "active": "Activas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas"
+      },
+      "errorLoading": "Error al cargar reservas",
+      "errorUnknown": "Error desconocido",
+      "userNotFound": "No se encontró información del usuario",
+      "retry": "Reintentar",
+      "editReservation": "Editar reserva",
+      "description": "Descripción:"
+    },
+    "createReservation": {
+      "title": "Crear Nueva Reserva",
+      "subtitle": "Reserva tu servicio de limpieza paso a paso",
+      "backToReservations": "Volver a Reservas",
+      "steps": {
+        "employee": "Empleada",
+        "employeeDesc": "Seleccionar empleada",
+        "plan": "Plan",
+        "planDesc": "Elegir plan de servicio",
+        "schedule": "Horario",
+        "scheduleDesc": "Seleccionar horario único",
+        "dates": "Fechas",
+        "datesDesc": "Elegir fechas disponibles",
+        "details": "Detalles",
+        "detailsDesc": "Ubicación y extras",
+        "confirmation": "Confirmación",
+        "confirmationDesc": "Revisar y confirmar"
+      },
+      "selectEmployee": {
+        "title": "Selecciona una Empleada",
+        "subtitle": "Elige la empleada que realizará tu servicio de limpieza",
+        "noEmployees": "No hay empleadas disponibles"
+      },
+      "selectPlan": {
+        "title": "Selecciona un Plan",
+        "employee": "Empleada:",
+        "planDefines": "El plan define las horas de trabajo y servicios incluidos",
+        "perDay": "/ día",
+        "workHours": "{{n}}h de trabajo",
+        "available": "Disponible: {{start}} - {{end}}",
+        "servicesIncluded": "Servicios incluidos:"
+      },
+      "selectSchedule": {
+        "title": "Selecciona el Horario",
+        "plan": "Plan:",
+        "subtitle": "Este horario se aplicará a todos los días que reserves",
+        "hoursOfService": "{{n}} horas de servicio",
+        "saturdaySurcharge": "Sobrecargo sábados después del mediodía",
+        "surchargeAmount": "+{{amount}} por día",
+        "noSchedules": "No hay horarios disponibles para este plan"
+      },
+      "selectDates": {
+        "title": "Selecciona las Fechas",
+        "selectedSchedule": "Horario seleccionado:",
+        "subtitle": "Puedes seleccionar entre 1 y 30 días. Días seleccionados: {{n}}",
+        "discount": "Descuento por cantidad de días: {{desc}}",
+        "surcharge": "Sobrecargo"
+      },
+      "discounts": {
+        "none": "Sin descuento",
+        "3pct": "3% de descuento",
+        "5pct": "5% de descuento",
+        "7pct": "7% de descuento",
+        "10pct": "10% de descuento",
+        "10pctMax": "10% de descuento (máximo)"
+      },
+      "calendar": {
+        "days": ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+        "legend": {
+          "selected": "Seleccionado",
+          "available": "Disponible",
+          "saturday": "Sábado (posible sobrecargo)",
+          "unavailable": "No disponible",
+          "today": "Hoy"
+        }
+      },
+      "details": {
+        "title": "Detalles del Servicio",
+        "subtitle": "Selecciona ubicación y servicios adicionales",
+        "locationTitle": "Ubicación del Servicio",
+        "floors": "{{n}} piso(s)",
+        "bathrooms": "{{n}} baño(s)",
+        "extraFloorsCharge": "+{{amount}} por pisos adicionales",
+        "extraTasks": "Tareas Adicionales",
+        "extraTasksPrice": "(Opcionales - $15.000 cada una)",
+        "allTasksIncluded": "Todas las tareas están incluidas en este plan"
+      },
+      "pricing": {
+        "title": "Resumen de Costos",
+        "planBase": "Plan base ({{n}} días)",
+        "extraTasks": "Tareas extra ({{n}})",
+        "extraFloors": "Pisos adicionales ({{n}})",
+        "saturdaySurcharge": "Sobrecargo sábados",
+        "subtotal": "Subtotal",
+        "dayDiscount": "Descuento por días ({{n}}%)",
+        "total": "Total",
+        "totalToPay": "TOTAL A PAGAR",
+        "perDay": "Equivale a {{amount}} por día",
+        "splitInfo": "Se dividirán en {{n}} reservas de {{amount}} cada una"
+      },
+      "confirm": {
+        "title": "Confirmar Reserva",
+        "subtitle": "Revisa todos los detalles antes de confirmar tu reserva",
+        "assignedEmployee": "Empleada Asignada",
+        "stars": "{{n}} estrellas",
+        "planAndSchedule": "Plan y Horario",
+        "schedule": "Horario:",
+        "workHours": "{{n}} horas de trabajo",
+        "serviceDates": "Fechas del Servicio ({{n}} días)",
+        "surcharge": "Sobrecargo",
+        "location": "Ubicación",
+        "floors": "{{n}} piso(s)",
+        "bathrooms": "{{n}} baño(s)",
+        "extraTasks": "Tareas Adicionales ({{n}})",
+        "paymentSummary": "Resumen de Pago",
+        "important": "Importante",
+        "importantMessage": "Se crearán {{n}} reservas individuales con el mismo horario ({{start}} - {{end}}). Podrás modificar cada reserva individualmente después de crearlas."
+      },
+      "nav": {
+        "previous": "Anterior",
+        "continue": "Continuar",
+        "processing": "Procesando...",
+        "confirmAndPay": "Confirmar y Pagar"
+      },
+      "terms": {
+        "securePayment": "El pago se procesa de manera segura",
+        "cancel24h": "Puedes cancelar hasta 24 horas antes del servicio",
+        "onTimeArrival": "La empleada llegará en el horario acordado",
+        "basicMaterials": "Todas las tareas incluyen materiales básicos",
+        "saturdaySurcharge": "Los sábados después del mediodía tienen sobrecargo"
+      },
+      "errorModal": {
+        "title": "Error",
+        "close": "Cerrar"
+      },
+      "errors": {
+        "loadEmployees": "Error al cargar empleadas",
+        "loadPlans": "Error al cargar planes",
+        "loadLocations": "Error al cargar ubicaciones",
+        "loadAvailability": "Error al cargar disponibilidad",
+        "loadSchedules": "Error al cargar horarios",
+        "loadExtraTasks": "Error al cargar tareas extra",
+        "calculatePrice": "Error al calcular precio",
+        "createReservations": "Error al crear reservas"
+      }
+    },
+    "locations": {
+      "title": "Mis Ubicaciones",
+      "subtitle": "Gestiona los lugares donde necesitas servicios de limpieza",
+      "newLocation": "Nueva Ubicación",
+      "stats": {
+        "total": "Total",
+        "active": "Activas",
+        "inactive": "Inactivas"
+      },
+      "search": "Buscar por nombre, lugar, descripción...",
+      "filterType": {
+        "all": "Todos los tipos"
+      },
+      "filterState": {
+        "all": "Todos los estados",
+        "active": "Activas",
+        "inactive": "Inactivas"
+      },
+      "selectedCount": "{{n}} ubicación(es) seleccionada(s)",
+      "clearSelection": "Limpiar selección",
+      "selectAll": "Seleccionar todas",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar {{n}} ubicación(es)?",
+      "noResults": "No se encontraron ubicaciones",
+      "empty": "No tienes ubicaciones registradas",
+      "emptyMessage": "Registra tu primera ubicación para comenzar a recibir servicios",
+      "createFirst": "Crear Primera Ubicación",
+      "errorLoading": "Error al cargar ubicaciones",
+      "editModal": {
+        "title": "Editar Ubicación",
+        "nameLabel": "Nombre de la ubicación *",
+        "namePlaceholder": "Ej: Casa Principal",
+        "typeLabel": "Tipo de lugar",
+        "selectType": "Selecciona un tipo",
+        "sizeLabel": "Tamaño (m²)",
+        "bathroomsLabel": "Baños",
+        "floorsLabel": "Pisos",
+        "descriptionLabel": "Descripción",
+        "descriptionPlaceholder": "Agrega detalles adicionales...",
+        "activeCheckbox": "Ubicación activa",
+        "nameRequired": "El nombre es obligatorio"
+      },
+      "modal": {
+        "placeName": "Nombre del lugar",
+        "size": "Tamaño",
+        "bathrooms": "Baños",
+        "floors": "Pisos",
+        "location": "Ubicación",
+        "technicalInfo": "Información técnica:",
+        "mapTip": "Puedes hacer zoom y moverte por el mapa para ver la ubicación exacta",
+        "createdDate": "Fecha de creación",
+        "updatedDate": "Última actualización"
+      },
+      "map": {
+        "error": "Error cargando el mapa",
+        "loading": "Cargando mapa...",
+        "noCoordinates": "Coordenadas no disponibles",
+        "savedLocation": "Ubicación guardada"
+      },
+      "placeTypes": {
+        "Casa": "Casa",
+        "Apartamento": "Apartamento",
+        "Oficina": "Oficina",
+        "Local Comercial": "Local Comercial",
+        "Bodega": "Bodega",
+        "Otro": "Otro"
+      },
+      "retry": "Reintentar",
+      "userNotFound": "No se encontró información del usuario",
+      "errorUnknown": "Error desconocido",
+      "deleteError": "Error al eliminar ubicaciones",
+      "updateError": "Error al actualizar ubicación",
+      "notSpecified": "No especificado",
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "viewDetails": "Ver detalles",
+      "editLocation": "Editar ubicación",
+      "deleteLocation": "Eliminar ubicación",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "cancel": "Cancelar",
+      "saving": "Guardando...",
+      "saveChanges": "Guardar Cambios",
+      "description": "Descripción",
+      "area": "Área",
+      "category": "Categoría",
+      "tryOtherFilters": "Intenta cambiar los filtros de búsqueda",
+      "bathroomSingular": "baño",
+      "bathroomPlural": "baños",
+      "floorSingular": "piso",
+      "floorPlural": "pisos",
+      "mapTipFull": "Puedes hacer zoom y moverte por el mapa. El marcador azul muestra la ubicación exacta guardada."
+    },
+    "createLocation": {
+      "title": "Nueva Ubicación",
+      "subtitle": "Registra una nueva ubicación para servicios de limpieza",
+      "sections": {
+        "basic": "Información Básica",
+        "characteristics": "Características",
+        "location": "Ubicación",
+        "instructions": "Instrucciones Para El Servicio"
+      },
+      "nameLabel": "Nombre de la ubicación *",
+      "namePlaceholder": "Ej: Casa principal, Apartamento centro...",
+      "typeLabel": "Tipo de ubicación",
+      "types": {
+        "house": "Casa",
+        "houseDesc": "Vivienda unifamiliar",
+        "apartment": "Apartamento",
+        "apartmentDesc": "Unidad residencial en edificio",
+        "office": "Oficina",
+        "officeDesc": "Espacio de trabajo",
+        "commercial": "Local Comercial",
+        "commercialDesc": "Establecimiento comercial",
+        "other": "Otro",
+        "otherDesc": "Otro tipo de ubicación"
+      },
+      "sizeLabel": "Tamaño (m²)",
+      "sizePlaceholder": "Ej: 80",
+      "bathroomsLabel": "Baños",
+      "bathroomsSelect": {
+        "placeholder": "Seleccionar",
+        "one": "1 baño",
+        "two": "2 baños",
+        "three": "3 baños",
+        "four": "4 baños",
+        "fiveOrMore": "5 o más baños"
+      },
+      "floorsLabel": "Pisos",
+      "floorsSelect": {
+        "placeholder": "Seleccionar",
+        "one": "1 piso",
+        "two": "2 pisos",
+        "three": "3 pisos",
+        "four": "4 pisos",
+        "five": "5 pisos"
+      },
+      "addressLabel": "Dirección",
+      "addressPlaceholder": "Busca o escribe la dirección...",
+      "selectedLocation": "Ubicación seleccionada",
+      "buildingLabel": "Nombre del edificio/lugar",
+      "buildingPlaceholder": "Ej: Edificio Torres del Poblado, Casa Blanca...",
+      "unitLabel": "Apartamento/Unidad",
+      "unitPlaceholder": "Ej: 301, A-15...",
+      "blockLabel": "Bloque/Torre",
+      "blockPlaceholder": "Ej: Torre A, Bloque 2...",
+      "referencesLabel": "Referencias para llegar",
+      "referencesPlaceholder": "Ej: Casa esquinera con antejardín...",
+      "descriptionLabel": "Descripción y observaciones",
+      "descriptionPlaceholder": "Comparte información importante para el servicio...",
+      "activeCheckbox": "Ubicación activa (disponible para programar servicios)",
+      "charCount": "{{n}}/{{max}} caracteres",
+      "submit": "Crear Ubicación",
+      "submitting": "Creando...",
+      "success": "¡Ubicación creada exitosamente!",
+      "redirecting": "Redirigiendo a tus ubicaciones...",
+      "updatingLocation": "Actualizando ubicación...",
+      "errorLoadingMap": "Error cargando el mapa",
+      "reloadPage": "Recargar página",
+      "validation": {
+        "nameRequired": "El nombre de la ubicación es obligatorio",
+        "nameMaxLength": "El nombre no puede exceder 100 caracteres",
+        "sizeRange": "El tamaño debe ser un número entre 1 y 500 metros cuadrados",
+        "bathroomRange": "El número de baños debe estar entre 1 y 5",
+        "floorRange": "El número de pisos debe estar entre 1 y 5",
+        "userNotFound": "No se encontró información del usuario"
+      },
+      "geolocation": {
+        "notSupported": "Tu navegador no soporta geolocalización",
+        "denied": "Permiso de ubicación denegado",
+        "unavailable": "Ubicación no disponible",
+        "timeout": "Timeout obteniendo ubicación"
+      },
+      "geocodingUnavailable": "Geocoding API no disponible",
+      "mapInitError": "Error al inicializar el mapa"
+    },
+    "ratings": {
+      "title": "Mis Calificaciones",
+      "subtitle": "Califica los servicios recibidos",
+      "newRating": "Nueva Calificación",
+      "stats": {
+        "total": "Total",
+        "service": "Servicio",
+        "employees": "Empleadas",
+        "fiveStars": "5 Estrellas"
+      },
+      "modal": {
+        "title": "Nueva Calificación",
+        "selectReservation": "Selecciona la reserva a calificar *",
+        "rateService": "Califica el servicio *",
+        "rateEmployee": "Califica a {{name}}",
+        "commentLabel": "Comentario (opcional)",
+        "commentPlaceholder": "Cuéntanos sobre tu experiencia...",
+        "starsOf5": "{{n}} de 5 estrellas"
+      },
+      "empty": "No hay calificaciones aún",
+      "emptyMessage": "Califica tus servicios completados",
+      "noPending": "No tienes reservas completadas pendientes de calificar",
+      "alerts": {
+        "selectRequired": "Por favor selecciona una reserva y califica el servicio",
+        "created": "¡Calificación creada exitosamente!",
+        "confirmDelete": "¿Estás seguro de eliminar esta calificación?",
+        "deleted": "Calificación eliminada exitosamente"
+      },
+      "loading": "Cargando calificaciones...",
+      "errorLoading": "Error al cargar",
+      "saving": "Guardando...",
+      "saveRating": "Guardar Calificación",
+      "loadingReservations": "Cargando reservas...",
+      "noPlan": "Sin plan",
+      "noPlanAssigned": "Sin plan asignado",
+      "noLocation": "Sin ubicación",
+      "unrated": "Sin calificar",
+      "noDate": "Fecha no disponible",
+      "employeeLabel": "Empleada:"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "subtitle": "Mantente informado sobre el estado de tus reservas",
+      "stats": {
+        "total": "Total",
+        "unread": "No leídas",
+        "read": "Leídas"
+      },
+      "filters": {
+        "all": "Todas",
+        "unread": "No leídas",
+        "read": "Leídas"
+      },
+      "markAllRead": "Marcar todas como leídas",
+      "time": {
+        "justNow": "Hace un momento",
+        "minutes_one": "Hace {{count}} minuto",
+        "minutes_other": "Hace {{count}} minutos",
+        "hours_one": "Hace {{count}} hora",
+        "hours_other": "Hace {{count}} horas",
+        "days_one": "Hace {{count}} día",
+        "days_other": "Hace {{count}} días"
+      },
+      "planLabel": "Plan:",
+      "employeeLabel": "Empleada:",
+      "empty": {
+        "all": "No hay notificaciones",
+        "allDetail": "Aún no tienes ninguna notificación",
+        "unread": "No tienes notificaciones sin leer",
+        "read": "No tienes notificaciones leídas"
+      },
+      "errorLoading": "Error al cargar notificaciones",
+      "loading": "Cargando notificaciones...",
+      "confirmDelete": "¿Estás seguro de eliminar esta notificación?"
+    },
+    "pqrs": {
+      "title": "Soporte (PQRS)",
+      "subtitle": "Peticiones, Quejas, Reclamos y Sugerencias",
+      "newPQRS": "Nuevo PQRS",
+      "stats": {
+        "total": "Total",
+        "pending": "Pendientes",
+        "inProgress": "En Proceso",
+        "resolved": "Resueltos"
+      },
+      "filters": {
+        "all": "Todos",
+        "pending": "Pendientes",
+        "inProgress": "En Proceso",
+        "resolved": "Resueltos"
+      },
+      "types": {
+        "peticion": "Petición",
+        "queja": "Queja",
+        "reclamo": "Reclamo",
+        "sugerencia": "Sugerencia"
+      },
+      "priorities": {
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta"
+      },
+      "empty": "No hay PQRS",
+      "emptyWithFilter": "No hay PQRS con estado \"{{status}}\"",
+      "descriptionLabel": "Descripción:",
+      "responseLabel": "Respuesta:",
+      "createdLabel": "Creado:",
+      "resolvedLabel": "Resuelto:",
+      "attendedBy": "Atendido por:",
+      "confirmDelete": "¿Estás seguro de eliminar este PQRS?",
+      "modal": {
+        "title": "Crear Nuevo PQRS",
+        "typeLabel": "Tipo",
+        "priorityLabel": "Prioridad",
+        "descriptionLabel": "Descripción",
+        "descriptionPlaceholder": "Describe tu petición, queja, reclamo o sugerencia...",
+        "cancel": "Cancelar",
+        "create": "Crear PQRS"
+      },
+      "errors": {
+        "userNotFound": "No se encontró información del usuario",
+        "loadError": "Error al cargar PQRS",
+        "createError": "Error al crear PQRS",
+        "deleteError": "Error al eliminar PQRS"
+      }
+    }
+  },
+  "empleada": {
+    "theme": {
+      "subtitle": "Panel Empleada",
+      "breadcrumbPrefix": "Panel Empleada"
+    },
+    "menu": {
+      "home": "Inicio",
+      "services": "Mis Servicios",
+      "ratings": "Calificaciones",
+      "notifications": "Notificaciones"
+    },
+    "dashboard": {
+      "panelReady": "Tu panel de trabajo está listo",
+      "memberSince": "Miembro desde: {{date}}",
+      "ranking": {
+        "excellent": "Excelente",
+        "veryGood": "Muy Buena",
+        "good": "Buena",
+        "improving": "En Mejora"
+      },
+      "services": {
+        "title": "Mis Servicios",
+        "pending": "Pendientes",
+        "assigned": "Servicios asignados",
+        "viewServices": "Ver servicios"
+      },
+      "schedule": {
+        "title": "Horarios",
+        "available": "Disponible",
+        "manage": "Gestiona tu disponibilidad",
+        "configure": "Configurar horarios"
+      },
+      "performance": {
+        "title": "Mi Rendimiento",
+        "averageRating": "Calificación Promedio",
+        "excellentMsg": "¡Excelente trabajo! Sigues siendo una de las mejores empleadas.",
+        "veryGoodMsg": "Muy buen rendimiento. Sigue así para alcanzar la excelencia.",
+        "goodMsg": "Buen trabajo. Hay oportunidades de mejora.",
+        "improvingMsg": "Enfócate en mejorar la calidad del servicio para subir tu ranking.",
+        "monthlyServices": "Servicios Mes",
+        "newClients": "Clientes Nuevos"
+      },
+      "quickAccess": {
+        "title": "Accesos Rápidos",
+        "viewRatings": "Ver Calificaciones",
+        "clientFeedback": "Revisa feedback de clientes",
+        "notifications": "Notificaciones",
+        "systemMessages": "Mensajes del sistema",
+        "myProfile": "Mi Perfil",
+        "updateInfo": "Actualizar información"
+      },
+      "status": {
+        "title": "Estado: Lista para Trabajar",
+        "message": "Tu panel está configurado y listo. Revisa tus servicios asignados para comenzar.",
+        "profileActive": "Perfil Activo",
+        "availableForServices": "Disponible para Servicios"
+      },
+      "tips": {
+        "title": "Consejos para Mejorar",
+        "tip1": "Mantén tu perfil actualizado con tu disponibilidad",
+        "tip2": "Responde rápido a las notificaciones de nuevos servicios",
+        "tip3": "Pide feedback a tus clientes para mejorar",
+        "tip4": "Sé puntual y profesional en cada servicio"
+      },
+      "errorLoading": "Error al cargar datos",
+      "unknownError": "Error desconocido"
+    },
+    "services": {
+      "title": "Mis Servicios Asignados",
+      "subtitle": "Gestiona los servicios de limpieza que tienes programados",
+      "stats": {
+        "total": "Total",
+        "pending": "Pendientes",
+        "inProgress": "En Progreso",
+        "completed": "Completados"
+      },
+      "status": {
+        "pending": "Pendiente",
+        "inProgress": "En Progreso",
+        "completed": "Completado",
+        "cancelled": "Cancelado"
+      },
+      "filters": {
+        "all": "Todos los estados",
+        "pending": "Pendientes",
+        "inProgress": "En Progreso",
+        "completed": "Completados",
+        "cancelled": "Cancelados"
+      },
+      "search": "Buscar por cliente, ubicación, plan...",
+      "noName": "Ubicación sin nombre",
+      "clientLabel": "Cliente:",
+      "noResults": "No se encontraron servicios",
+      "empty": "No tienes servicios asignados",
+      "emptyFilterMessage": "Intenta cambiar los filtros de búsqueda",
+      "emptyMessage": "Cuando se te asignen servicios, aparecerán aquí",
+      "errorLoading": "Error al cargar servicios",
+      "errorGoogleMaps": "Error cargando Google Maps",
+      "loadingMap": "Cargando mapa...",
+      "errorLoadingMap": "Error cargando el mapa",
+      "coordinatesUnavailable": "Coordenadas no disponibles",
+      "notSpecified": "No especificado",
+      "types": {
+        "house": "Casa",
+        "apartment": "Apartamento",
+        "office": "Oficina",
+        "commercial": "Local Comercial",
+        "other": "Otro"
+      },
+      "bathrooms": "Baños",
+      "floors": "Pisos",
+      "size": "Tamaño",
+      "modal": {
+        "serviceLocation": "Ubicación del servicio",
+        "scheduledDate": "Fecha programada",
+        "schedule": "Horario",
+        "clientInfo": "Información del cliente",
+        "clientName": "Nombre",
+        "cleaningPlan": "Plan de limpieza",
+        "servicesIncluded": "Servicios incluidos:",
+        "locationDetails": "Detalles de la ubicación",
+        "place": "Lugar",
+        "additionalDescription": "Descripción adicional",
+        "mapLocation": "Ubicación en el mapa",
+        "additionalNotes": "Notas adicionales"
+      }
+    },
+    "ratings": {
+      "title": "Mis Calificaciones",
+      "subtitle": "Revisa las calificaciones que han dejado tus clientes",
+      "stats": {
+        "averageGeneral": "Promedio General",
+        "total": "Total",
+        "ratingsReceived": "Calificaciones recibidas",
+        "service": "Servicio",
+        "serviceQuality": "Calidad del servicio",
+        "employee": "Empleada",
+        "personalAttention": "Atención personal"
+      },
+      "recentTitle": "Calificaciones Recientes",
+      "serviceRating": "Servicio: {{n}}/5",
+      "employeeRating": "Empleada: {{n}}/5",
+      "empty": {
+        "title": "Aún no tienes calificaciones",
+        "message": "Las calificaciones de tus clientes aparecerán aquí"
+      }
+    }
+  }
+}

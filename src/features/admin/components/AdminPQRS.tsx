@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import { formatDate, formatDateTime } from "@/utils/dateUtils";
 import { 
@@ -65,25 +66,22 @@ interface PQRSResponse {
 }
 
 const TIPOS_PQRS = [
-  { value: "peticion", label: "Petición", color: "blue", icon: MessageSquare },
-  { value: "queja", label: "Queja", color: "red", icon: AlertCircle },
-  { value: "reclamo", label: "Reclamo", color: "orange", icon: XCircle },
-  { value: "sugerencia", label: "Sugerencia", color: "green", icon: CheckCircle },
+  { value: "peticion", color: "blue", icon: MessageSquare },
+  { value: "queja", color: "red", icon: AlertCircle },
+  { value: "reclamo", color: "orange", icon: XCircle },
+  { value: "sugerencia", color: "green", icon: CheckCircle },
 ];
 
-const ESTADOS = [
-  { value: "todos", label: "Todos los estados" },
-  { value: "pendiente", label: "Pendientes", color: "yellow" },
-  { value: "en_proceso", label: "En Proceso", color: "blue" },
-  { value: "resuelto", label: "Resueltos", color: "green" },
-  { value: "cerrado", label: "Cerrados", color: "gray" },
-];
+const ESTADOS_VALUES = ["todos", "pendiente", "en_proceso", "resuelto", "cerrado"];
 
-const PRIORIDADES = [
-  { value: "baja", label: "Baja", color: "gray" },
-  { value: "media", label: "Media", color: "yellow" },
-  { value: "alta", label: "Alta", color: "red" },
-];
+const ESTADOS_COLORS: Record<string, string> = {
+  pendiente: "yellow",
+  en_proceso: "blue",
+  resuelto: "green",
+  cerrado: "gray",
+};
+
+const PRIORIDADES_VALUES = ["baja", "media", "alta"];
 
 function AdminPQRS() {
   const [data, setData] = useState<PQRSResponse | null>(null);
@@ -99,6 +97,7 @@ function AdminPQRS() {
   const [estadoRespuesta, setEstadoRespuesta] = useState("resuelto");
   const [respondiendo, setRespondiendo] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -135,7 +134,7 @@ function AdminPQRS() {
       setError(null);
     } catch (err) {
       console.error('Error al cargar PQRS:', err);
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('admin.pqrs.errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -182,7 +181,7 @@ function AdminPQRS() {
 
   const handleEnviarRespuesta = async () => {
     if (!selectedPQRS || !respuestaText.trim()) {
-      alert("Por favor ingresa una respuesta");
+      alert(t('admin.pqrs.responsePlaceholder'));
       return;
     }
 
@@ -192,7 +191,7 @@ function AdminPQRS() {
       const userStr = localStorage.getItem("user");
       
       if (!userStr) {
-        alert("No se encontró información del usuario");
+        alert(t('admin.pqrs.userNotFound'));
         return;
       }
 
@@ -220,10 +219,10 @@ function AdminPQRS() {
       setShowModal(false);
       setSelectedPQRS(null);
       setRespuestaText("");
-      alert("Respuesta enviada exitosamente");
+      alert(t('admin.pqrs.responseSuccess'));
     } catch (err) {
       console.error("Error al responder:", err);
-      alert("Error al enviar respuesta");
+      alert(t('admin.pqrs.responseError'));
     } finally {
       setRespondiendo(false);
     }
@@ -303,7 +302,7 @@ function AdminPQRS() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#195083] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando PQRS...</p>
+          <p className="mt-4 text-gray-600">{t('admin.pqrs.loading')}</p>
         </div>
       </div>
     );
@@ -314,7 +313,7 @@ function AdminPQRS() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center text-red-600">
           <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-          <p className="text-lg font-semibold">Error al cargar PQRS</p>
+          <p className="text-lg font-semibold">{t('admin.pqrs.errorLoading')}</p>
           <p className="text-sm mt-2">{error}</p>
         </div>
       </div>
@@ -328,10 +327,10 @@ function AdminPQRS() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              Gestión de PQRS
+              {t('admin.pqrs.title')}
             </h1>
             <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              Administra las peticiones, quejas, reclamos y sugerencias de los clientes
+              {t('admin.pqrs.subtitle')}
             </p>
           </div>
         </div>
@@ -341,7 +340,7 @@ function AdminPQRS() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="text-center">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('common.total')}</p>
               <p className="text-lg sm:text-2xl font-bold text-[#195083]">
                 {data?.estadisticas.total || 0}
               </p>
@@ -349,7 +348,7 @@ function AdminPQRS() {
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-yellow-100">
             <div className="text-center">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Pendientes</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.pqrs.stats.pending')}</p>
               <p className="text-lg sm:text-2xl font-bold text-yellow-600">
                 {data?.estadisticas.pendientes || 0}
               </p>
@@ -357,7 +356,7 @@ function AdminPQRS() {
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-blue-100">
             <div className="text-center">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">En Proceso</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.pqrs.stats.inProgress')}</p>
               <p className="text-lg sm:text-2xl font-bold text-blue-600">
                 {data?.estadisticas.en_proceso || 0}
               </p>
@@ -365,7 +364,7 @@ function AdminPQRS() {
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-green-100">
             <div className="text-center">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Resueltos</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.pqrs.stats.resolved')}</p>
               <p className="text-lg sm:text-2xl font-bold text-green-600">
                 {data?.estadisticas.resueltos || 0}
               </p>
@@ -373,7 +372,7 @@ function AdminPQRS() {
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 col-span-2 sm:col-span-1">
             <div className="text-center">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">Cerrados</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.pqrs.stats.closed')}</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-600">
                 {data?.estadisticas.cerrados || 0}
               </p>
@@ -390,7 +389,7 @@ function AdminPQRS() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Buscar por descripción, cliente..."
+                  placeholder={t('admin.pqrs.search')}
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-gray-900 placeholder:text-gray-500"
@@ -407,9 +406,9 @@ function AdminPQRS() {
                   onChange={(e) => setFiltroEstado(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent appearance-none cursor-pointer text-gray-900"
                 >
-                  {ESTADOS.map((estado) => (
-                    <option key={estado.value} value={estado.value}>
-                      {estado.label}
+                  {ESTADOS_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`admin.pqrs.statuses.${value}`, { defaultValue: value })}
                     </option>
                   ))}
                 </select>
@@ -425,10 +424,10 @@ function AdminPQRS() {
                   onChange={(e) => setFiltroPrioridad(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent appearance-none cursor-pointer text-gray-900"
                 >
-                  <option value="todos">Todas las prioridades</option>
-                  {PRIORIDADES.map((prioridad) => (
-                    <option key={prioridad.value} value={prioridad.value}>
-                      {prioridad.label}
+                  <option value="todos">{t('admin.pqrs.allPriorities')}</option>
+                  {PRIORIDADES_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`admin.pqrs.priorities.${value}`)}
                     </option>
                   ))}
                 </select>
@@ -442,7 +441,7 @@ function AdminPQRS() {
           {currentItems.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-700">No se encontraron PQRS</p>
+              <p className="text-gray-700">{t('admin.pqrs.empty')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -450,25 +449,25 @@ function AdminPQRS() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Tipo
+                      {t('admin.pqrs.tableHeaders.type')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Cliente
+                      {t('admin.pqrs.tableHeaders.client')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Descripción
+                      {t('admin.pqrs.tableHeaders.description')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Prioridad
+                      {t('admin.pqrs.tableHeaders.priority')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Estado
+                      {t('admin.pqrs.tableHeaders.status')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Fecha
+                      {t('admin.pqrs.tableHeaders.date')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Acciones
+                      {t('admin.pqrs.tableHeaders.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -477,7 +476,7 @@ function AdminPQRS() {
                     <tr key={pqrs.id} className="hover:bg-gray-50">
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoColor(pqrs.tipo)}`}>
-                          {TIPOS_PQRS.find(t => t.value === pqrs.tipo)?.label || pqrs.tipo}
+                          {t(`admin.pqrs.types.${pqrs.tipo}`, { defaultValue: pqrs.tipo })}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
@@ -498,13 +497,13 @@ function AdminPQRS() {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPrioridadColor(pqrs.prioridad)}`}>
-                          {PRIORIDADES.find(p => p.value === pqrs.prioridad)?.label || pqrs.prioridad}
+                          {t(`admin.pqrs.priorities.${pqrs.prioridad}`, { defaultValue: pqrs.prioridad })}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoColor(pqrs.estado)}`}>
                           {getEstadoIcon(pqrs.estado)}
-                          {ESTADOS.find(e => e.value === pqrs.estado)?.label || pqrs.estado}
+                          {t(`admin.pqrs.statuses.${pqrs.estado}`, { defaultValue: pqrs.estado })}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -519,7 +518,7 @@ function AdminPQRS() {
                           className="text-[#195083] hover:text-[#2563eb] flex items-center gap-1"
                         >
                           <Eye className="w-4 h-4" />
-                          Responder
+                          {t('admin.pqrs.respond')}
                         </button>
                       </td>
                     </tr>
@@ -534,7 +533,7 @@ function AdminPQRS() {
             <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, pqrsFiltrados.length)} de {pqrsFiltrados.length} PQRS
+                  {t('admin.pqrs.showing', { from: indexOfFirstItem + 1, to: Math.min(indexOfLastItem, pqrsFiltrados.length), total: pqrsFiltrados.length })}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -545,7 +544,7 @@ function AdminPQRS() {
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <span className="text-sm text-gray-700">
-                    Página {currentPage} de {totalPages}
+                    {t('admin.pqrs.page', { current: currentPage, total: totalPages })}
                   </span>
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
@@ -566,7 +565,7 @@ function AdminPQRS() {
           <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-[#195083]">Responder PQRS</h2>
+                <h2 className="text-2xl font-bold text-[#195083]">{t('admin.pqrs.modal.title')}</h2>
                 <button
                   onClick={() => {
                     setShowModal(false);
@@ -583,33 +582,33 @@ function AdminPQRS() {
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Tipo</p>
+                    <p className="text-sm text-gray-600 mb-1">{t('admin.pqrs.modal.type')}</p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoColor(selectedPQRS.tipo)}`}>
-                      {TIPOS_PQRS.find(t => t.value === selectedPQRS.tipo)?.label || selectedPQRS.tipo}
+                      {t(`admin.pqrs.types.${selectedPQRS.tipo}`, { defaultValue: selectedPQRS.tipo })}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Prioridad</p>
+                    <p className="text-sm text-gray-600 mb-1">{t('admin.pqrs.modal.priority')}</p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPrioridadColor(selectedPQRS.prioridad)}`}>
-                      {PRIORIDADES.find(p => p.value === selectedPQRS.prioridad)?.label || selectedPQRS.prioridad}
+                      {t(`admin.pqrs.priorities.${selectedPQRS.prioridad}`, { defaultValue: selectedPQRS.prioridad })}
                     </span>
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-1">Cliente</p>
+                  <p className="text-sm text-gray-600 mb-1">{t('admin.pqrs.modal.client')}</p>
                   <p className="text-sm font-medium">
                     {selectedPQRS.usuario?.nombre} {selectedPQRS.usuario?.apellido} ({selectedPQRS.usuario?.email})
                   </p>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-1">Fecha de Creación</p>
+                  <p className="text-sm text-gray-600 mb-1">{t('admin.pqrs.modal.creationDate')}</p>
                   <p className="text-sm font-medium">{formatDate(selectedPQRS.fecha_creacion)}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Descripción</p>
+                  <p className="text-sm text-gray-600 mb-1">{t('admin.pqrs.modal.description')}</p>
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedPQRS.descripcion}</p>
                 </div>
               </div>
@@ -617,16 +616,16 @@ function AdminPQRS() {
               {/* Formulario de Respuesta */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estado
+                  {t('admin.pqrs.modal.status')}
                 </label>
                 <select
                   value={estadoRespuesta}
                   onChange={(e) => setEstadoRespuesta(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent"
                 >
-                  {ESTADOS.filter(e => e.value !== "todos").map((estado) => (
-                    <option key={estado.value} value={estado.value}>
-                      {estado.label}
+                  {ESTADOS_VALUES.filter(v => v !== "todos").map((value) => (
+                    <option key={value} value={value}>
+                      {t(`admin.pqrs.statuses.${value}`)}
                     </option>
                   ))}
                 </select>
@@ -634,13 +633,13 @@ function AdminPQRS() {
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Respuesta
+                  {t('admin.pqrs.modal.response')}
                 </label>
                 <textarea
                   value={respuestaText}
                   onChange={(e) => setRespuestaText(e.target.value)}
                   rows={6}
-                  placeholder="Escribe tu respuesta aquí..."
+                  placeholder={t('admin.pqrs.modal.responsePlaceholder')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent resize-none"
                 />
               </div>
@@ -648,16 +647,16 @@ function AdminPQRS() {
               {/* Respuesta anterior si existe */}
               {selectedPQRS.respuesta && (
                 <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                  <p className="text-sm font-medium text-blue-900 mb-2">Respuesta Anterior</p>
+                  <p className="text-sm font-medium text-blue-900 mb-2">{t('admin.pqrs.modal.previousResponse')}</p>
                   <p className="text-sm text-blue-800 whitespace-pre-wrap">{selectedPQRS.respuesta}</p>
                   {selectedPQRS.empleada && (
                     <p className="text-xs text-blue-600 mt-2">
-                      Respondido por: {selectedPQRS.empleada.nombre} {selectedPQRS.empleada.apellido}
+                      {t('admin.pqrs.modal.respondedBy')}: {selectedPQRS.empleada.nombre} {selectedPQRS.empleada.apellido}
                     </p>
                   )}
                   {selectedPQRS.fecha_resolucion && (
                     <p className="text-xs text-blue-600">
-                      Fecha: {formatDate(selectedPQRS.fecha_resolucion)}
+                      {t('admin.pqrs.modal.date')}: {formatDate(selectedPQRS.fecha_resolucion)}
                     </p>
                   )}
                 </div>
@@ -673,7 +672,7 @@ function AdminPQRS() {
                   }}
                   className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleEnviarRespuesta}
@@ -683,12 +682,12 @@ function AdminPQRS() {
                   {respondiendo ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Enviando...
+                      {t('admin.pqrs.modal.sending')}
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Enviar Respuesta
+                      {t('admin.pqrs.modal.sendResponse')}
                     </>
                   )}
                 </button>

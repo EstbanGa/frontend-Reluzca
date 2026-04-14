@@ -1,8 +1,10 @@
 
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { Calendar, Wrench, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function TempPage() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
@@ -22,15 +24,15 @@ function TempPage() {
         {/* Main Content */}
         <div className="space-y-4">
           <h1 className="text-3xl font-bold text-gray-900">
-            ¡Estamos trabajando! 
+            {t('common.temp.working')} 
           </h1>
           
           <p className="text-lg text-gray-600 leading-relaxed">
-            Esta sección estará disponible muy pronto
+            {t('common.temp.comingSoon')}
           </p>
           
           <p className="text-sm text-gray-500">
-            Estamos preparando una experiencia increíble para ti
+            {t('common.temp.preparingExperience')}
           </p>
         </div>
 
@@ -51,7 +53,7 @@ function TempPage() {
               style={{ width: '75%' }}
             ></div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">75% completado</p>
+          <p className="text-xs text-gray-500 mt-2">{t('common.temp.progress')}</p>
         </div>
 
         {/* Tool Icon */}

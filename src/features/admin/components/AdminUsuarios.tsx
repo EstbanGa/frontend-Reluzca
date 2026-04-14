@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
 import { 
@@ -98,6 +99,7 @@ function AdminUsuarios() {
   const [data, setData] = useState<UsuariosData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const [searchTerms, setSearchTerms] = useState({
     admin: '',
     cliente: '',
@@ -142,7 +144,7 @@ function AdminUsuarios() {
       ]);
 
       if (!adminsResponse.ok || !clientesResponse.ok || !empleadasResponse.ok) {
-        throw new Error('Error al cargar datos de usuarios');
+        throw new Error(t('admin.users.errors.loadError'));
       }
 
       const [adminsData, clientesData, empleadasData] = await Promise.all([
@@ -201,7 +203,7 @@ function AdminUsuarios() {
   };
 
   const handleDelete = async (ids: string[]) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar ${ids.length} usuario(s)?\n\nEsta acción no se puede deshacer.`)) {
+    if (!window.confirm(t('admin.users.confirmDelete', { count: ids.length }))) {
       return;
     }
 
@@ -230,14 +232,14 @@ function AdminUsuarios() {
       setSelectedUsuarios({ admin: [], cliente: [], empleada: [] });
     } catch (err) {
       console.error('Error al eliminar usuarios:', err);
-      alert(err instanceof Error ? err.message : "Error al eliminar usuarios");
+      alert(err instanceof Error ? err.message : t('admin.users.errors.deleteError'));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const formatCreated = (dateString: string | null | undefined) => {
-    if (!dateString) return 'No disponible';
+    if (!dateString) return t('common.noData');
     return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'short',
@@ -259,13 +261,13 @@ function AdminUsuarios() {
         return {
           color: 'bg-green-100 text-green-800 border-green-200',
           icon: UserCheck,
-          label: 'Activo'
+          label: t('common.active')
         };
       case 'inactivo':
         return {
           color: 'bg-red-100 text-red-800 border-red-200',
           icon: UserX,
-          label: 'Inactivo'
+          label: t('common.inactive')
         };
       default:
         return {
@@ -301,11 +303,11 @@ function AdminUsuarios() {
         return (
           <div className="grid grid-cols-2 gap-2 mt-3">
             <div className="text-center p-2 bg-blue-50 rounded">
-              <p className="text-xs text-gray-600">Reservas</p>
+              <p className="text-xs text-gray-600">{t('admin.users.stats.reservations')}</p>
               <p className="text-sm font-bold text-blue-600">{stats.total_reservas || 0}</p>
             </div>
             <div className="text-center p-2 bg-green-50 rounded">
-              <p className="text-xs text-gray-600">Gastado</p>
+              <p className="text-xs text-gray-600">{t('admin.users.stats.spent')}</p>
               <p className="text-xs font-bold text-green-600">{formatCurrency(stats.gasto_total || 0)}</p>
             </div>
           </div>
@@ -314,11 +316,11 @@ function AdminUsuarios() {
         return (
           <div className="grid grid-cols-2 gap-2 mt-3">
             <div className="text-center p-2 bg-green-50 rounded">
-              <p className="text-xs text-gray-600">Servicios</p>
+              <p className="text-xs text-gray-600">{t('admin.users.stats.services')}</p>
               <p className="text-sm font-bold text-green-600">{stats.total_servicios || 0}</p>
             </div>
             <div className="text-center p-2 bg-blue-50 rounded">
-              <p className="text-xs text-gray-600">Ingresos</p>
+              <p className="text-xs text-gray-600">{t('admin.users.stats.revenue')}</p>
               <p className="text-xs font-bold text-blue-600">{formatCurrency(stats.ingresos_generados || 0)}</p>
             </div>
           </div>
@@ -327,11 +329,11 @@ function AdminUsuarios() {
         return (
           <div className="grid grid-cols-2 gap-2 mt-3">
             <div className="text-center p-2 bg-purple-50 rounded">
-              <p className="text-xs text-gray-600">Usuarios</p>
+              <p className="text-xs text-gray-600">{t('admin.users.stats.users')}</p>
               <p className="text-sm font-bold text-purple-600">{stats.total_usuarios_sistema || 0}</p>
             </div>
             <div className="text-center p-2 bg-orange-50 rounded">
-              <p className="text-xs text-gray-600">Reservas</p>
+              <p className="text-xs text-gray-600">{t('admin.users.stats.reservations')}</p>
               <p className="text-sm font-bold text-orange-600">{stats.total_reservas_sistema || 0}</p>
             </div>
           </div>
@@ -383,7 +385,7 @@ function AdminUsuarios() {
                 </h2>
                 <p className="text-sm text-gray-600">
                   {filteredUsuarios.length !== usuarios.length && 
-                    `${filteredUsuarios.length} de ${usuarios.length} mostrados`}
+                    `${filteredUsuarios.length} ${t('admin.users.of')} ${usuarios.length} ${t('admin.users.shown')}`}
                 </p>
               </div>
             </div>
@@ -392,20 +394,20 @@ function AdminUsuarios() {
             {selectedIds.length > 0 && (
               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <span className={`text-sm font-medium ${config.color}`}>
-                  {selectedIds.length} seleccionados
+                  {selectedIds.length} {t('admin.users.selected')}
                 </span>
                 <button
                   onClick={() => setSelectedUsuarios(prev => ({ ...prev, [rol]: [] }))}
                   className="text-gray-500 hover:text-gray-700 text-sm"
                 >
-                  Limpiar
+                  {t('admin.users.clear')}
                 </button>
                 <button
                   onClick={() => handleDelete(selectedIds)}
                   disabled={deleteLoading}
                   className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
-                  Eliminar
+                  {t('common.delete')}
                 </button>
               </div>
             )}
@@ -418,7 +420,7 @@ function AdminUsuarios() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <input
                   type="text"
-                  placeholder={`Buscar ${title.toLowerCase()}...`}
+                  placeholder={t('admin.users.searchPlaceholder', { role: title.toLowerCase() })}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm"
                   value={searchTerms[rol]}
                   onChange={(e) => handleSearch(rol, e.target.value)}
@@ -446,7 +448,7 @@ function AdminUsuarios() {
                   )}
                 </button>
                 <span className={`text-sm font-medium ${config.color}`}>
-                  Seleccionar todos ({filteredUsuarios.length})
+                  {t('admin.users.selectAll')} ({filteredUsuarios.length})
                 </span>
               </div>
 
@@ -506,7 +508,7 @@ function AdminUsuarios() {
                               )}
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <Calendar className="h-3 w-3" />
-                                <span>Registrado: {formatCreated(usuario.fecha_registro)}</span>
+                                <span>{t('admin.users.registered')}: {formatCreated(usuario.fecha_registro)}</span>
                               </div>
                             </div>
                           </div>
@@ -516,7 +518,7 @@ function AdminUsuarios() {
                           <button
                             onClick={() => openModal(usuario)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Ver detalles"
+                            title={t('admin.users.viewDetails')}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -524,7 +526,7 @@ function AdminUsuarios() {
                           <button
                             onClick={() => handleEditUsuario(usuario.id)}
                             className="p-2 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                            title="Editar usuario"
+                            title={t('admin.users.editUser')}
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
@@ -533,7 +535,7 @@ function AdminUsuarios() {
                             onClick={() => handleDelete([usuario.id])}
                             disabled={deleteLoading}
                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                            title="Eliminar usuario"
+                            title={t('admin.users.deleteUser')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -546,7 +548,7 @@ function AdminUsuarios() {
                           <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
                             <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs text-gray-600">Dirección</p>
+                              <p className="text-xs text-gray-600">{t('common.address')}</p>
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {usuario.direccion}
                               </p>
@@ -558,7 +560,7 @@ function AdminUsuarios() {
                           <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
                             <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs text-gray-600">Fecha Nacimiento</p>
+                              <p className="text-xs text-gray-600">{t('admin.users.birthDate')}</p>
                               <p className="text-sm font-medium text-gray-900">
                                 {formatDate(usuario.fecha_nacimiento)}
                               </p>
@@ -570,7 +572,7 @@ function AdminUsuarios() {
                           <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
                             <Users className="h-4 w-4 text-gray-500 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs text-gray-600">Género</p>
+                              <p className="text-xs text-gray-600">{t('admin.users.gender')}</p>
                               <p className="text-sm font-medium text-gray-900 capitalize">
                                 {usuario.genero}
                               </p>
@@ -592,12 +594,12 @@ function AdminUsuarios() {
                 <IconComponent className={`h-6 w-6 ${config.color}`} />
               </div>
               <h3 className="text-base font-semibold text-gray-900 mb-2">
-                {searchTerms[rol] ? 'No se encontraron usuarios' : `No hay ${title.toLowerCase()}`}
+                {searchTerms[rol] ? t('admin.users.noUsersFound') : t('admin.users.noUsersInRole', { role: title.toLowerCase() })}
               </h3>
               <p className="text-sm text-gray-600">
                 {searchTerms[rol] 
-                  ? 'Intenta cambiar el término de búsqueda'
-                  : `Aún no se han registrado ${title.toLowerCase()} en el sistema`
+                  ? t('admin.users.tryDifferentSearch')
+                  : t('admin.users.noUsersRegistered', { role: title.toLowerCase() })
                 }
               </p>
             </div>
@@ -620,14 +622,14 @@ function AdminUsuarios() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar usuarios</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('admin.users.errors.loadError')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchAllUsuarios}
           className="bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -640,14 +642,20 @@ function AdminUsuarios() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              Gestión de Usuarios
+              {t('admin.users.title')}
             </h1>
             <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              Administra todos los usuarios del sistema
+              {t('admin.users.subtitle')}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-[#F5F0E7]" />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/admin/usuarios/crear')}
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
+            >
+              <Users className="h-4 w-4" />
+              {t('admin.users.createUser')}
+            </button>
           </div>
         </div>
       </div>
@@ -656,7 +664,7 @@ function AdminUsuarios() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
         <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs text-gray-600 mb-0.5">Total</p>
+            <p className="text-xs text-gray-600 mb-0.5">{t('common.total')}</p>
             <p className="text-base sm:text-xl font-bold text-[#195083]">
               {data?.estadisticas.total || 0}
             </p>
@@ -664,7 +672,7 @@ function AdminUsuarios() {
         </div>
         <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs text-gray-600 mb-0.5">Admins</p>
+            <p className="text-xs text-gray-600 mb-0.5">{t('admin.users.admins')}</p>
             <p className="text-base sm:text-xl font-bold text-purple-600">
               {data?.estadisticas.admins || 0}
             </p>
@@ -672,7 +680,7 @@ function AdminUsuarios() {
         </div>
         <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs text-gray-600 mb-0.5">Clientes</p>
+            <p className="text-xs text-gray-600 mb-0.5">{t('admin.users.clients')}</p>
             <p className="text-base sm:text-xl font-bold text-blue-600">
               {data?.estadisticas.clientes || 0}
             </p>
@@ -680,7 +688,7 @@ function AdminUsuarios() {
         </div>
         <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs text-gray-600 mb-0.5">Empleadas</p>
+            <p className="text-xs text-gray-600 mb-0.5">{t('admin.users.employees')}</p>
             <p className="text-base sm:text-xl font-bold text-green-600">
               {data?.estadisticas.empleadas || 0}
             </p>
@@ -688,7 +696,7 @@ function AdminUsuarios() {
         </div>
         <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-gray-100 col-span-2 sm:col-span-3 lg:col-span-1">
           <div className="text-center">
-            <p className="text-xs text-gray-600 mb-0.5">Activos</p>
+            <p className="text-xs text-gray-600 mb-0.5">{t('common.active')}</p>
             <p className="text-base sm:text-xl font-bold text-green-500">
               {data?.estadisticas.activos || 0}
             </p>
@@ -699,9 +707,9 @@ function AdminUsuarios() {
       {/* Las 3 secciones de usuarios */}
       {data && (
         <div className="space-y-8">
-          {renderUsuarioSection('admin', data.admins, 'Administradores')}
-          {renderUsuarioSection('cliente', data.clientes, 'Clientes')}
-          {renderUsuarioSection('empleada', data.empleadas, 'Empleadas')}
+          {renderUsuarioSection('admin', data.admins, t('admin.users.administrators'))}
+          {renderUsuarioSection('cliente', data.clientes, t('admin.users.clients'))}
+          {renderUsuarioSection('empleada', data.empleadas, t('admin.users.employees'))}
         </div>
       )}
 
@@ -743,7 +751,7 @@ function AdminUsuarios() {
               {/* Información básica */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-3">Información Personal</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">{t('admin.users.modal.personalInfo')}</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-gray-500" />
@@ -771,7 +779,7 @@ function AdminUsuarios() {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-3">Estado del Sistema</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">{t('admin.users.modal.systemStatus')}</h4>
                   <div className="space-y-2">
                     {(() => {
                       const estadoConfig = getEstadoConfig(selectedUsuario.estado);
@@ -786,9 +794,9 @@ function AdminUsuarios() {
                       );
                     })()}
                     <div className="text-sm text-gray-600">
-                      <p>Registrado: {formatCreated(selectedUsuario.fecha_registro)}</p>
+                      <p>{t('admin.users.registered')}: {formatCreated(selectedUsuario.fecha_registro)}</p>
                       {selectedUsuario.last_login && (
-                        <p>Último acceso: {formatCreated(selectedUsuario.last_login)}</p>
+                        <p>{t('admin.users.modal.lastAccess')}: {formatCreated(selectedUsuario.last_login)}</p>
                       )}
                     </div>
                   </div>
@@ -800,7 +808,7 @@ function AdminUsuarios() {
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Dirección
+                    {t('common.address')}
                   </h4>
                   <p className="text-gray-700">{selectedUsuario.direccion}</p>
                 </div>
@@ -811,31 +819,31 @@ function AdminUsuarios() {
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Estadísticas
+                    {t('admin.users.modal.statistics')}
                   </h4>
                   
                   {selectedUsuario.rol === 'cliente' && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Total Reservas</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.totalReservations')}</p>
                         <p className="text-lg font-bold text-blue-600">
                           {selectedUsuario.estadisticas.total_reservas || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Completadas</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.completed')}</p>
                         <p className="text-lg font-bold text-green-600">
                           {selectedUsuario.estadisticas.reservas_completadas || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-red-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Canceladas</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.cancelled')}</p>
                         <p className="text-lg font-bold text-red-600">
                           {selectedUsuario.estadisticas.reservas_canceladas || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Total Gastado</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.totalSpent')}</p>
                         <p className="text-sm font-bold text-yellow-600">
                           {formatCurrency(selectedUsuario.estadisticas.gasto_total || 0)}
                         </p>
@@ -846,25 +854,25 @@ function AdminUsuarios() {
                   {selectedUsuario.rol === 'empleada' && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Servicios</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.stats.services')}</p>
                         <p className="text-lg font-bold text-green-600">
                           {selectedUsuario.estadisticas.total_servicios || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Completados</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.completedServices')}</p>
                         <p className="text-lg font-bold text-blue-600">
                           {selectedUsuario.estadisticas.servicios_completados || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Pendientes</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.pendingServices')}</p>
                         <p className="text-lg font-bold text-yellow-600">
                           {selectedUsuario.estadisticas.servicios_pendientes || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-purple-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Ingresos</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.stats.revenue')}</p>
                         <p className="text-sm font-bold text-purple-600">
                           {formatCurrency(selectedUsuario.estadisticas.ingresos_generados || 0)}
                         </p>
@@ -875,25 +883,25 @@ function AdminUsuarios() {
                   {selectedUsuario.rol === 'admin' && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div className="text-center p-3 bg-purple-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Total Usuarios</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.totalUsers')}</p>
                         <p className="text-lg font-bold text-purple-600">
                           {selectedUsuario.estadisticas.total_usuarios_sistema || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-orange-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Total Reservas</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.totalReservations')}</p>
                         <p className="text-lg font-bold text-orange-600">
                           {selectedUsuario.estadisticas.total_reservas_sistema || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Usuarios Hoy</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.usersToday')}</p>
                         <p className="text-lg font-bold text-green-600">
                           {selectedUsuario.estadisticas.usuarios_creados_hoy || 0}
                         </p>
                       </div>
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Reservas Hoy</p>
+                        <p className="text-sm text-gray-600">{t('admin.users.modal.reservationsToday')}</p>
                         <p className="text-lg font-bold text-blue-600">
                           {selectedUsuario.estadisticas.reservas_creadas_hoy || 0}
                         </p>
@@ -908,7 +916,7 @@ function AdminUsuarios() {
                 <div className="bg-yellow-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500" />
-                    Calificación
+                    {t('admin.users.modal.rating')}
                   </h4>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center">
@@ -940,13 +948,13 @@ function AdminUsuarios() {
                   className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
                   <Edit3 className="h-4 w-4" />
-                  Editar Usuario
+                  {t('admin.users.editUser')}
                 </button>
                 <button
                   onClick={closeModal}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
-                  Cerrar
+                  {t('common.close')}
                 </button>
               </div>
             </div>

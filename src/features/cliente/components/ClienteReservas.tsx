@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
@@ -72,6 +73,7 @@ function ClienteReservas() {
   const [busqueda, setBusqueda] = useState('');
   const [reservasFiltradas, setReservasFiltradas] = useState<Reserva[]>([]);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchReservas();
@@ -90,7 +92,7 @@ function ClienteReservas() {
       // Obtener el usuario_id desde localStorage
       const userStr = localStorage.getItem("user");
       if (!userStr) {
-        throw new Error("No se encontró información del usuario");
+        throw new Error(t('cliente.reservations.userNotFound'));
       }
       
       const user = JSON.parse(userStr);
@@ -113,7 +115,7 @@ function ClienteReservas() {
       const result = await response.json();
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('cliente.reservations.errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -161,37 +163,37 @@ function ClienteReservas() {
         return {
           color: 'bg-green-100 text-green-800',
           icon: CheckCircle,
-          label: 'Completada'
+          label: t('common.statuses.completada')
         };
       case 'confirmada':
         return {
           color: 'bg-blue-100 text-blue-800',
           icon: Clock,
-          label: 'Confirmada'
+          label: t('common.statuses.confirmada')
         };
       case 'en_proceso':
         return {
           color: 'bg-yellow-100 text-yellow-800',
           icon: Clock,
-          label: 'En Proceso'
+          label: t('common.statuses.en_proceso')
         };
       case 'cancelada':
         return {
           color: 'bg-red-100 text-red-800',
           icon: XCircle,
-          label: 'Cancelada'
+          label: t('common.statuses.cancelada')
         };
       case 'pendiente':
         return {
           color: 'bg-gray-100 text-gray-800',
           icon: AlertCircle,
-          label: 'Pendiente'
+          label: t('common.statuses.pendiente')
         };
       default:
         return {
           color: 'bg-gray-100 text-gray-800',
           icon: AlertCircle,
-          label: estado
+          label: t(`common.statuses.${estado}`, { defaultValue: estado })
         };
     }
   };
@@ -229,14 +231,14 @@ function ClienteReservas() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar reservas</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('cliente.reservations.errorLoading')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchReservas}
           className="bg-[#4894AD] text-white px-4 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('cliente.reservations.retry')}
         </button>
       </div>
     );
@@ -249,10 +251,10 @@ function ClienteReservas() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              Mis Reservas
+              {t('cliente.reservations.title')}
             </h1>
             <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              Gestiona tus servicios de limpieza
+              {t('cliente.reservations.subtitle')}
             </p>
           </div>
           <button 
@@ -260,7 +262,7 @@ function ClienteReservas() {
             className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2 flex-shrink-0"
           >
             <Plus size={18} />
-            Nueva Reserva
+            {t('cliente.reservations.newReservation')}
           </button>
         </div>
       </div>
@@ -269,7 +271,7 @@ function ClienteReservas() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.total')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#4894AD]">
               {data.estadisticas.total}
             </p>
@@ -277,7 +279,7 @@ function ClienteReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Activas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.active')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">
               {data.estadisticas.activas}
             </p>
@@ -285,7 +287,7 @@ function ClienteReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Completadas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.completed')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
               {data.estadisticas.completadas}
             </p>
@@ -293,7 +295,7 @@ function ClienteReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Canceladas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.cancelled')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
               {data.estadisticas.canceladas}
             </p>
@@ -311,7 +313,7 @@ function ClienteReservas() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
               <input
                 type="text"
-                placeholder="Buscar por empleada, ubicación, plan..."
+                placeholder={t('cliente.reservations.search')}
                 className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
@@ -326,12 +328,12 @@ function ClienteReservas() {
               onChange={(e) => setFiltroEstado(e.target.value)}
               className="w-full sm:w-auto px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              <option value="todas" className="text-gray-900">Todas las reservas</option>
-              <option value="pendiente" className="text-gray-900">Pendientes</option>
-              <option value="confirmada" className="text-gray-900">Confirmadas</option>
-              <option value="en_proceso" className="text-gray-900">En Proceso</option>
-              <option value="completada" className="text-gray-900">Completadas</option>
-              <option value="cancelada" className="text-gray-900">Canceladas</option>
+              <option value="todas" className="text-gray-900">{t('cliente.reservations.filters.all')}</option>
+              <option value="pendiente" className="text-gray-900">{t('cliente.reservations.filters.pending')}</option>
+              <option value="confirmada" className="text-gray-900">{t('cliente.reservations.filters.confirmed')}</option>
+              <option value="en_proceso" className="text-gray-900">{t('cliente.reservations.filters.inProgress')}</option>
+              <option value="completada" className="text-gray-900">{t('cliente.reservations.filters.completed')}</option>
+              <option value="cancelada" className="text-gray-900">{t('cliente.reservations.filters.cancelled')}</option>
             </select>
           </div>
         </div>
@@ -374,7 +376,7 @@ function ClienteReservas() {
                         <button
                           onClick={() => handleEditarReserva(reserva.id)}
                           className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"
-                          title="Editar reserva"
+                          title={t('cliente.reservations.editReservation')}
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
@@ -428,7 +430,7 @@ function ClienteReservas() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 text-sm truncate">
-                          {reserva.plan?.nombre || 'Plan personalizado'}
+                          {reserva.plan?.nombre || t('cliente.reservations.customPlan')}
                         </p>
                         {reserva.precio_total && (
                           <p className="text-xs text-gray-600">
@@ -443,7 +445,7 @@ function ClienteReservas() {
                   {reserva.descripcion && (
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-gray-700">
-                        <span className="font-medium">Descripción:</span> {reserva.descripcion}
+                        <span className="font-medium">{t('cliente.reservations.description')}</span> {reserva.descripcion}
                       </p>
                     </div>
                   )}
@@ -455,12 +457,12 @@ function ClienteReservas() {
           <div className="text-center py-8 sm:py-12">
             <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-              {busqueda || filtroEstado !== 'todas' ? 'No se encontraron reservas' : 'No tienes reservas'}
+              {busqueda || filtroEstado !== 'todas' ? t('cliente.reservations.noResults') : t('cliente.reservations.empty')}
             </h3>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
               {busqueda || filtroEstado !== 'todas' 
-                ? 'Intenta cambiar los filtros de búsqueda'
-                : 'Crea tu primera reserva para comenzar a disfrutar de nuestros servicios'
+                ? t('cliente.reservations.tryFilters')
+                : t('cliente.reservations.createFirstCTA')
               }
             </p>
             {(!busqueda && filtroEstado === 'todas') && (
@@ -469,7 +471,7 @@ function ClienteReservas() {
                 className="bg-[#4894AD] text-white px-6 py-3 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
               >
                 <Plus size={18} />
-                Crear Primera Reserva
+                {t('cliente.reservations.createFirst')}
               </button>
             )}
           </div>

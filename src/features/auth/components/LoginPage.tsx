@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/services/http/client';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Home, AlertCircle, CheckCircle } from 'lucide-react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface LoginResponse {
   access_token: string;
@@ -22,6 +24,7 @@ interface LoginResponse {
 
 export default function SignInPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -41,13 +44,13 @@ export default function SignInPage() {
 
   const validateForm = (): boolean => {
     if (!form.email.trim()) {
-      setMessage('El correo electrónico es requerido');
+      setMessage(t('auth.login.errors.emailRequired'));
       setMessageType('error');
       return false;
     }
 
     if (!form.password) {
-      setMessage('La contraseña es requerida');
+      setMessage(t('auth.login.errors.passwordRequired'));
       setMessageType('error');
       return false;
     }
@@ -55,7 +58,7 @@ export default function SignInPage() {
     // Validación básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) {
-      setMessage('Por favor ingresa un correo electrónico válido');
+      setMessage(t('auth.login.errors.invalidEmail'));
       setMessageType('error');
       return false;
     }
@@ -72,7 +75,7 @@ export default function SignInPage() {
     setMessage('');
 
     try {
-      const response: LoginResponse = await apiFetch('/api/auth/login/json', {
+      const response: LoginResponse = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +98,7 @@ export default function SignInPage() {
       
       localStorage.setItem('user', JSON.stringify(userResponse));
 
-      setMessage('Inicio de sesión exitoso');
+      setMessage(t('auth.login.success'));
       setMessageType('success');
 
       // Redireccionar según el rol después de 1.5 segundos
@@ -114,13 +117,13 @@ export default function SignInPage() {
       console.error('❌ Error en login:', error);
       const err = error as { message?: string; status?: number };
       
-      let errorMessage = 'Error al iniciar sesión. Inténtalo nuevamente.';
+      let errorMessage = t('auth.login.errors.generic');
       let errorType: 'error' | 'warning' = 'error';
       
       // Verificar si el error contiene HTML (error de Django sin procesar)
       if (typeof err.message === 'string' && err.message.includes('<!DOCTYPE html>')) {
         console.error('Error de servidor Django detectado');
-        errorMessage = 'Error del servidor. Por favor inténtalo más tarde.';
+        errorMessage = t('auth.login.errors.server');
         
         // Log completo para desarrollo
         if (process.env.NODE_ENV === 'development') {
@@ -136,20 +139,20 @@ export default function SignInPage() {
       } else if (err.status) {
         switch (err.status) {
           case 401:
-            errorMessage = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+            errorMessage = t('auth.login.errors.credentials');
             break;
           case 403:
-            errorMessage = 'Tu cuenta está pendiente de verificación. Revisa tu correo.';
+            errorMessage = t('auth.login.errors.pendingVerification');
             errorType = 'warning';
             break;
           case 500:
-            errorMessage = 'Error del servidor. Inténtalo más tarde.';
+            errorMessage = t('auth.login.errors.serverLate');
             break;
           case 404:
-            errorMessage = 'Servicio no encontrado. Contacta con soporte.';
+            errorMessage = t('auth.login.errors.notFound');
             break;
           default:
-            errorMessage = 'Error de conexión. Verifica tu internet e inténtalo nuevamente.';
+            errorMessage = t('auth.login.errors.connection');
         }
       }
       
@@ -175,14 +178,17 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen bg-[#FCF7F0] flex items-center justify-center p-4">
-      {/* Botón de regreso al inicio */}
-      <a 
-        href="https://reluzca.com/" 
-        className="fixed top-6 left-6 flex items-center space-x-2 text-[#4894AD] hover:text-[#195083] transition-colors z-10 group"
-      >
-        <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        <span className="font-medium">Volver al inicio</span>
-      </a>
+      {/* Top bar */}
+      <div className="fixed top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between z-10">
+        <a 
+          href="https://reluzca.com/" 
+          className="flex items-center space-x-2 text-[#4894AD] hover:text-[#195083] transition-colors group"
+        >
+          <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="font-medium">{t('auth.backToHome')}</span>
+        </a>
+        <LanguageSwitcher />
+      </div>
 
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
@@ -190,8 +196,8 @@ export default function SignInPage() {
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
             <Mail className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Iniciar Sesión</h1>
-          <p className="text-white/80 text-sm">Accede a tu cuenta Reluzca</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('auth.login.title')}</h1>
+          <p className="text-white/80 text-sm">{t('auth.login.subtitle')}</p>
         </div>
 
         {/* Form */}
@@ -200,7 +206,7 @@ export default function SignInPage() {
             {/* Email */}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-[#195083]">
-                Correo electrónico *
+                {t('auth.login.emailLabel')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -214,7 +220,7 @@ export default function SignInPage() {
                              text-[#195083] placeholder-gray-500 
                              focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                              outline-none transition-all disabled:bg-gray-100"
-                  placeholder="tu@email.com"
+                  placeholder={t('auth.login.emailPlaceholder')}
                   disabled={loading}
                   required
                   autoComplete="email"
@@ -225,7 +231,7 @@ export default function SignInPage() {
             {/* Password */}
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-[#195083]">
-                Contraseña *
+                {t('auth.login.passwordLabel')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4894AD]/70" />
@@ -239,7 +245,7 @@ export default function SignInPage() {
                              text-[#195083] placeholder-gray-500 
                              focus:ring-2 focus:ring-[#4894AD] focus:border-transparent 
                              outline-none transition-all disabled:bg-gray-100"
-                  placeholder="Tu contraseña"
+                  placeholder={t('auth.login.passwordPlaceholder')}
                   disabled={loading}
                   required
                   autoComplete="current-password"
@@ -268,11 +274,11 @@ export default function SignInPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Iniciando sesión...</span>
+                  <span>{t('auth.login.submitting')}</span>
                 </div>
               ) : (
                 <>
-                  <span>Iniciar Sesión</span>
+                  <span>{t('auth.login.submit')}</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -299,19 +305,19 @@ export default function SignInPage() {
               type="button"
               className="text-[#4894AD] hover:text-[#195083] text-sm font-medium transition-colors hover:underline"
             >
-              ¿Olvidaste tu contraseña?
+              {t('auth.login.forgotPassword')}
             </button>
           </div>
 
           {/* Sign Up Link */}
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
-              ¿No tienes cuenta?{' '}
+              {t('auth.login.noAccount')}{' '}
               <Link
                 to="/auth/sign_up"
                 className="text-[#4894AD] hover:text-[#195083] font-medium transition-colors hover:underline"
               >
-                Crear cuenta
+                {t('auth.login.createAccount')}
               </Link>
             </p>
           </div>
@@ -327,7 +333,7 @@ export default function SignInPage() {
 
       {/* Footer */}
       <footer className="absolute bottom-4 text-center w-full text-xs text-gray-500">
-        © {new Date().getFullYear()} Reluzca. Todos los derechos reservados.
+        {t('common.footer.copyright', { year: new Date().getFullYear() })}
       </footer>
     </div>
   );

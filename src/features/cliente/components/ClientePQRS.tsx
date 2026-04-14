@@ -1,22 +1,9 @@
 
 import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { FileText, Plus, Trash2, AlertCircle, CheckCircle, Clock, XCircle, MessageSquare } from "lucide-react";
 import { API_BASE_URL } from "@/config/env";
-
-// Tipos y constantes
-const TIPOS_PQRS = [
-  { value: "peticion", label: "Petición", color: "blue" },
-  { value: "queja", label: "Queja", color: "red" },
-  { value: "reclamo", label: "Reclamo", color: "orange" },
-  { value: "sugerencia", label: "Sugerencia", color: "green" },
-];
-
-const PRIORIDADES = [
-  { value: "baja", label: "Baja", color: "gray" },
-  { value: "media", label: "Media", color: "yellow" },
-  { value: "alta", label: "Alta", color: "red" },
-];
 
 interface PQRSData {
   pqrs: Array<{
@@ -46,6 +33,21 @@ interface PQRSData {
 }
 
 function PQRSPage() {
+  const { t } = useTranslation();
+
+  const TIPOS_PQRS = [
+    { value: "peticion", label: t('cliente.pqrs.types.peticion'), color: "blue" },
+    { value: "queja", label: t('cliente.pqrs.types.queja'), color: "red" },
+    { value: "reclamo", label: t('cliente.pqrs.types.reclamo'), color: "orange" },
+    { value: "sugerencia", label: t('cliente.pqrs.types.sugerencia'), color: "green" },
+  ];
+
+  const PRIORIDADES = [
+    { value: "baja", label: t('cliente.pqrs.priorities.low'), color: "gray" },
+    { value: "media", label: t('cliente.pqrs.priorities.medium'), color: "yellow" },
+    { value: "alta", label: t('cliente.pqrs.priorities.high'), color: "red" },
+  ];
+
   const [data, setData] = useState<PQRSData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -70,7 +72,7 @@ function PQRSPage() {
     try {
       const userStr = localStorage.getItem("user");
       if (!userStr) {
-        setError("No se encontró información del usuario");
+        setError(t('cliente.pqrs.errors.userNotFound'));
         return;
       }
 
@@ -78,14 +80,14 @@ function PQRSPage() {
       const response = await fetch(`${API_BASE_URL}/api/pqrs/usuario/${user.id}`);
       
       if (!response.ok) {
-        throw new Error("Error al cargar PQRS");
+        throw new Error(t('cliente.pqrs.errors.loadError'));
       }
 
       const result = await response.json();
       setData(result);
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setError(error.message || "Error al cargar PQRS");
+      setError(error.message || t('cliente.pqrs.errors.loadError'));
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ function PQRSPage() {
     try {
       const userStr = localStorage.getItem("user");
       if (!userStr) {
-        setError("No se encontró información del usuario");
+        setError(t('cliente.pqrs.errors.userNotFound'));
         return;
       }
 
@@ -115,7 +117,7 @@ function PQRSPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Error al crear PQRS");
+        throw new Error(t('cliente.pqrs.errors.createError'));
       }
 
       // Reset form and close modal
@@ -126,12 +128,12 @@ function PQRSPage() {
       fetchPQRS();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setError(error.message || "Error al crear PQRS");
+      setError(error.message || t('cliente.pqrs.errors.createError'));
     }
   };
 
   const handleDelete = async (pqrsId: string) => {
-    if (!confirm("¿Estás seguro de eliminar este PQRS?")) return;
+    if (!confirm(t('cliente.pqrs.confirmDelete'))) return;
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/pqrs/${pqrsId}`, {
@@ -139,13 +141,13 @@ function PQRSPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Error al eliminar PQRS");
+        throw new Error(t('cliente.pqrs.errors.deleteError'));
       }
 
       fetchPQRS();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setError(error.message || "Error al eliminar PQRS");
+      setError(error.message || t('cliente.pqrs.errors.deleteError'));
     }
   };
 
@@ -211,7 +213,7 @@ function PQRSPage() {
   const formatFecha = (fechaISO: string | null) => {
     if (!fechaISO) return "N/A";
     const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString("es-ES", {
+    return fecha.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -239,10 +241,10 @@ function PQRSPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <FileText className="h-8 w-8 text-[#4894AD]" />
-              Soporte (PQRS)
+              {t('cliente.pqrs.title')}
             </h1>
             <p className="text-gray-600 mt-1">
-              Peticiones, Quejas, Reclamos y Sugerencias
+              {t('cliente.pqrs.subtitle')}
             </p>
           </div>
           <button
@@ -250,7 +252,7 @@ function PQRSPage() {
             className="bg-[#4894AD] text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#3a7a91] transition-colors"
           >
             <Plus className="h-5 w-5" />
-            Nuevo PQRS
+            {t('cliente.pqrs.newPQRS')}
           </button>
         </div>
 
@@ -264,19 +266,19 @@ function PQRSPage() {
         {data && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">Total</div>
+              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.total')}</div>
               <div className="text-2xl font-bold text-gray-900">{data.estadisticas.total}</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">Pendientes</div>
+              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.pending')}</div>
               <div className="text-2xl font-bold text-yellow-600">{data.estadisticas.pendientes}</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">En Proceso</div>
+              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.inProgress')}</div>
               <div className="text-2xl font-bold text-blue-600">{data.estadisticas.en_proceso}</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">Resueltos</div>
+              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.resolved')}</div>
               <div className="text-2xl font-bold text-green-600">{data.estadisticas.resueltos}</div>
             </div>
           </div>
@@ -293,7 +295,7 @@ function PQRSPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              Todos
+              {t('cliente.pqrs.filters.all')}
             </button>
             <button
               onClick={() => setFiltroEstado("pendiente")}
@@ -303,7 +305,7 @@ function PQRSPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              Pendientes
+              {t('cliente.pqrs.filters.pending')}
             </button>
             <button
               onClick={() => setFiltroEstado("en_proceso")}
@@ -313,7 +315,7 @@ function PQRSPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              En Proceso
+              {t('cliente.pqrs.filters.inProgress')}
             </button>
             <button
               onClick={() => setFiltroEstado("resuelto")}
@@ -323,7 +325,7 @@ function PQRSPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              Resueltos
+              {t('cliente.pqrs.filters.resolved')}
             </button>
           </div>
         </div>
@@ -333,7 +335,7 @@ function PQRSPage() {
           {pqrsFiltrados.length === 0 ? (
             <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No hay PQRS {filtroEstado !== "todos" ? `con estado "${filtroEstado}"` : ""}</p>
+              <p className="text-gray-600">{filtroEstado !== "todos" ? t('cliente.pqrs.emptyWithFilter', { status: t('common.statuses.' + filtroEstado) }) : t('cliente.pqrs.empty')}</p>
             </div>
           ) : (
             pqrsFiltrados.map((pqrs) => (
@@ -350,14 +352,14 @@ function PQRSPage() {
                           {TIPOS_PQRS.find((t) => t.value === pqrs.tipo)?.label || pqrs.tipo}
                         </span>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getEstadoColor(pqrs.estado)}`}>
-                          {pqrs.estado.replace("_", " ")}
+                          {t('common.statuses.' + pqrs.estado, pqrs.estado.replace("_", " "))}
                         </span>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPrioridadColor(pqrs.prioridad)}`}>
                           {PRIORIDADES.find((p) => p.value === pqrs.prioridad)?.label || pqrs.prioridad}
                         </span>
                       </div>
                       <p className="text-sm text-gray-500">
-                        Creado: {pqrs.fecha_creacion ? formatFecha(pqrs.fecha_creacion) : 'N/A'}
+                        {t('cliente.pqrs.createdLabel')} {pqrs.fecha_creacion ? formatFecha(pqrs.fecha_creacion) : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -371,7 +373,7 @@ function PQRSPage() {
 
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Descripción:</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">{t('cliente.pqrs.descriptionLabel')}</h3>
                     <p className="text-gray-700">{pqrs.descripcion}</p>
                   </div>
 
@@ -379,12 +381,12 @@ function PQRSPage() {
                     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                       <div className="flex items-center gap-2 mb-2">
                         <MessageSquare className="h-5 w-5 text-green-600" />
-                        <h3 className="font-semibold text-green-900">Respuesta:</h3>
+                        <h3 className="font-semibold text-green-900">{t('cliente.pqrs.responseLabel')}</h3>
                       </div>
                       <p className="text-green-800">{pqrs.respuesta}</p>
                       {pqrs.fecha_resolucion && (
                         <p className="text-sm text-green-600 mt-2">
-                          Resuelto: {formatFecha(pqrs.fecha_resolucion)}
+                          {t('cliente.pqrs.resolvedLabel')} {formatFecha(pqrs.fecha_resolucion)}
                         </p>
                       )}
                     </div>
@@ -392,7 +394,7 @@ function PQRSPage() {
 
                   {pqrs.empleada && (
                     <div className="text-sm text-gray-600">
-                      Atendido por: {pqrs.empleada.nombre} {pqrs.empleada.apellido}
+                      {t('cliente.pqrs.attendedBy')} {pqrs.empleada.nombre} {pqrs.empleada.apellido}
                     </div>
                   )}
                 </div>
@@ -408,13 +410,13 @@ function PQRSPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Crear Nuevo PQRS
+                {t('cliente.pqrs.modal.title')}
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo
+                    {t('cliente.pqrs.modal.typeLabel')}
                   </label>
                   <select
                     value={formData.tipo}
@@ -432,7 +434,7 @@ function PQRSPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prioridad
+                    {t('cliente.pqrs.modal.priorityLabel')}
                   </label>
                   <select
                     value={formData.prioridad}
@@ -450,14 +452,14 @@ function PQRSPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción
+                    {t('cliente.pqrs.modal.descriptionLabel')}
                   </label>
                   <textarea
                     value={formData.descripcion}
                     onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4894AD]"
                     rows={6}
-                    placeholder="Describe tu petición, queja, reclamo o sugerencia..."
+                    placeholder={t('cliente.pqrs.modal.descriptionPlaceholder')}
                     required
                   />
                 </div>
@@ -471,13 +473,13 @@ function PQRSPage() {
                     }}
                     className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    Cancelar
+                    {t('cliente.pqrs.modal.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-6 py-2 bg-[#4894AD] text-white rounded-lg hover:bg-[#3a7a91] transition-colors"
                   >
-                    Crear PQRS
+                    {t('cliente.pqrs.modal.create')}
                   </button>
                 </div>
               </form>

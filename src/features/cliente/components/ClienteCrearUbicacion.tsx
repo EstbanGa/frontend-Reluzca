@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   MapPin,
   Home,
@@ -22,12 +23,12 @@ import {
 } from "lucide-react";
 
 // Tipos predefinidos de ubicaciones
-const TIPOS_LUGAR = [
-  { value: 'casa', label: 'Casa', icon: Home, description: 'Vivienda unifamiliar' },
-  { value: 'apartamento', label: 'Apartamento', icon: Building2, description: 'Unidad residencial en edificio' },
-  { value: 'oficina', label: 'Oficina', icon: Briefcase, description: 'Espacio de trabajo' },
-  { value: 'local_comercial', label: 'Local Comercial', icon: Store, description: 'Establecimiento comercial' },
-  { value: 'otro', label: 'Otro', icon: MapPin, description: 'Otro tipo de ubicación' }
+const TIPOS_LUGAR_VALUES = [
+  { value: 'casa', key: 'house', icon: Home },
+  { value: 'apartamento', key: 'apartment', icon: Building2 },
+  { value: 'oficina', key: 'office', icon: Briefcase },
+  { value: 'local_comercial', key: 'commercial', icon: Store },
+  { value: 'otro', key: 'other', icon: MapPin }
 ];
 
 const defaultCenter = {
@@ -101,6 +102,7 @@ const useGoogleMaps = () => {
 
 function CrearUbicacion() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isLoaded: mapsLoaded, loadError } = useGoogleMaps();
   
   // Refs para manejo de Google Maps
@@ -264,7 +266,7 @@ function CrearUbicacion() {
       setMapInitialized(true);
 
     } catch (err) {
-      setError('Error al inicializar el mapa');
+      setError(t('cliente.createLocation.mapInitError'));
     }
   }, [mapsLoaded, mapInitialized, isReverseGeocoding]);
 
@@ -321,7 +323,7 @@ function CrearUbicacion() {
       const err = error as { message?: string };
       if (err.message?.includes('REQUEST_DENIED')) {
         // API no habilitada - usuario puede ingresar coordenadas manualmente
-        setError('Geocoding API no disponible. Puedes seleccionar la ubicación en el mapa o usar "Mi Ubicación".');
+        setError(t('cliente.createLocation.geocodingUnavailable'));
       }
     } finally {
       setIsGeocodingFromAddress(false);
@@ -413,7 +415,7 @@ function CrearUbicacion() {
   // Detectar ubicación actual
   const detectCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setError('Tu navegador no soporta geolocalización');
+      setError(t('cliente.createLocation.geolocation.notSupported'));
       return;
     }
 
@@ -446,17 +448,17 @@ function CrearUbicacion() {
         setMapLoading(false);
       },
       (error) => {
-        let errorMessage = 'No se pudo obtener tu ubicación actual';
+        let errorMessage = t('cliente.createLocation.geolocation.unavailable');
         
         switch(error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Permiso de ubicación denegado';
+            errorMessage = t('cliente.createLocation.geolocation.denied');
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Ubicación no disponible';
+            errorMessage = t('cliente.createLocation.geolocation.unavailable');
             break;
           case error.TIMEOUT:
-            errorMessage = 'Timeout obteniendo ubicación';
+            errorMessage = t('cliente.createLocation.geolocation.timeout');
             break;
         }
         
@@ -498,28 +500,28 @@ function CrearUbicacion() {
     
     // Validaciones del lado del cliente
     if (!formData.nombre.trim()) {
-      setError('El nombre de la ubicación es obligatorio');
+      setError(t('cliente.createLocation.validation.nameRequired'));
       return;
     }
 
     if (formData.nombre.trim().length > 100) {
-      setError('El nombre no puede exceder 100 caracteres');
+      setError(t('cliente.createLocation.validation.nameMaxLength'));
       return;
     }
 
     // Validar campos numéricos si están presentes
     if (formData.tamaño && (isNaN(Number(formData.tamaño)) || Number(formData.tamaño) <= 0 || Number(formData.tamaño) > 500)) {
-      setError('El tamaño debe ser un número entre 1 y 500 metros cuadrados');
+      setError(t('cliente.createLocation.validation.sizeRange'));
       return;
     }
 
     if (formData.baños && (isNaN(Number(formData.baños)) || Number(formData.baños) < 1 || Number(formData.baños) > 5)) {
-      setError('El número de baños debe estar entre 1 y 5');
+      setError(t('cliente.createLocation.validation.bathroomRange'));
       return;
     }
 
     if (formData.pisos && (isNaN(Number(formData.pisos)) || Number(formData.pisos) < 1 || Number(formData.pisos) > 5)) {
-      setError('El número de pisos debe estar entre 1 y 5');
+      setError(t('cliente.createLocation.validation.floorRange'));
       return;
     }
 
@@ -538,7 +540,7 @@ function CrearUbicacion() {
     // Obtener id_usuario del localStorage
     const userStr = localStorage.getItem('user');
     if (!userStr) {
-      setError('No se encontró información del usuario');
+      setError(t('cliente.createLocation.validation.userNotFound'));
       return;
     }
     const user = JSON.parse(userStr);
@@ -610,8 +612,8 @@ function CrearUbicacion() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">¡Ubicación creada exitosamente!</h2>
-          <p className="text-gray-600 mb-4">Redirigiendo a tus ubicaciones...</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t('cliente.createLocation.success')}</h2>
+          <p className="text-gray-600 mb-4">{t('cliente.createLocation.redirecting')}</p>
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4894AD] mx-auto"></div>
         </div>
       </div>
@@ -623,13 +625,13 @@ function CrearUbicacion() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white rounded-xl p-8 shadow-lg text-center max-w-md w-full mx-4">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Error cargando el mapa</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t('cliente.createLocation.errorLoadingMap')}</h2>
           <p className="text-gray-600 mb-4">{loadError}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-[#4894AD] text-white px-4 py-2 rounded-lg hover:bg-[#195083]"
           >
-            Recargar página
+            {t('cliente.createLocation.reloadPage')}
           </button>
         </div>
       </div>
@@ -650,10 +652,10 @@ function CrearUbicacion() {
             </button>
             <div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-[#FCF7F0]">
-                Nueva Ubicación
+                {t('cliente.createLocation.title')}
               </h1>
               <p className="text-[#FCF7F0]/80 text-sm sm:text-base mt-1">
-                Registra una nueva ubicación para servicios de limpieza
+                {t('cliente.createLocation.subtitle')}
               </p>
             </div>
           </div>
@@ -670,7 +672,7 @@ function CrearUbicacion() {
                 onClick={() => setError(null)}
                 className="text-red-600 text-sm mt-2 hover:text-red-800"
               >
-                Cerrar
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -681,34 +683,34 @@ function CrearUbicacion() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Home className="h-5 w-5 text-[#4894AD]" />
-              Información Básica
+              {t('cliente.createLocation.sections.basic')}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre de la ubicación *
+                  {t('cliente.createLocation.nameLabel')}
                 </label>
                 <input
                   type="text"
                   value={formData.nombre}
                   onChange={(e) => handleInputChange('nombre', e.target.value)}
-                  placeholder="Ej: Casa principal, Apartamento centro..."
+                  placeholder={t('cliente.createLocation.namePlaceholder')}
                   maxLength={100}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.nombre.length}/100 caracteres
+                  {t('cliente.createLocation.charCount', { n: formData.nombre.length, max: 100 })}
                 </p>
               </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de ubicación
+                  {t('cliente.createLocation.typeLabel')}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                  {TIPOS_LUGAR.map((tipo) => {
+                  {TIPOS_LUGAR_VALUES.map((tipo) => {
                     const Icon = tipo.icon;
                     return (
                       <button
@@ -722,7 +724,7 @@ function CrearUbicacion() {
                         }`}
                       >
                         <Icon className="h-6 w-6 mx-auto mb-1" />
-                        <span className="text-xs font-medium">{tipo.label}</span>
+                        <span className="text-xs font-medium">{t(`cliente.createLocation.types.${tipo.key}`)}</span>
                       </button>
                     );
                   })}
@@ -735,20 +737,20 @@ function CrearUbicacion() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Ruler className="h-5 w-5 text-[#4894AD]" />
-              Características
+              {t('cliente.createLocation.sections.characteristics')}
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Ruler className="h-4 w-4" />
-                  Tamaño (m²)
+                  {t('cliente.createLocation.sizeLabel')}
                 </label>
                 <input
                   type="number"
                   value={formData.tamaño}
                   onChange={(e) => handleInputChange('tamaño', e.target.value)}
-                  placeholder="Ej: 80"
+                  placeholder={t('cliente.createLocation.sizePlaceholder')}
                   min="1"
                   max="500"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
@@ -758,38 +760,38 @@ function CrearUbicacion() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Bath className="h-4 w-4" />
-                  Baños
+                  {t('cliente.createLocation.bathroomsLabel')}
                 </label>
                 <select
                   value={formData.baños}
                   onChange={(e) => handleInputChange('baños', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 bg-white"
                 >
-                  <option value="">Seleccionar</option>
-                  <option value="1">1 baño</option>
-                  <option value="2">2 baños</option>
-                  <option value="3">3 baños</option>
-                  <option value="4">4 baños</option>
-                  <option value="5">5 o más baños</option>
+                  <option value="">{t('cliente.createLocation.bathroomsSelect.placeholder')}</option>
+                  <option value="1">{t('cliente.createLocation.bathroomsSelect.one')}</option>
+                  <option value="2">{t('cliente.createLocation.bathroomsSelect.two')}</option>
+                  <option value="3">{t('cliente.createLocation.bathroomsSelect.three')}</option>
+                  <option value="4">{t('cliente.createLocation.bathroomsSelect.four')}</option>
+                  <option value="5">{t('cliente.createLocation.bathroomsSelect.fiveOrMore')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Layers className="h-4 w-4" />
-                  Pisos
+                  {t('cliente.createLocation.floorsLabel')}
                 </label>
                 <select
                   value={formData.pisos}
                   onChange={(e) => handleInputChange('pisos', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 bg-white"
                 >
-                  <option value="">Seleccionar</option>
-                  <option value="1">1 piso</option>
-                  <option value="2">2 pisos</option>
-                  <option value="3">3 pisos</option>
-                  <option value="4">4 pisos</option>
-                  <option value="5">5 pisos</option>
+                  <option value="">{t('cliente.createLocation.floorsSelect.placeholder')}</option>
+                  <option value="1">{t('cliente.createLocation.floorsSelect.one')}</option>
+                  <option value="2">{t('cliente.createLocation.floorsSelect.two')}</option>
+                  <option value="3">{t('cliente.createLocation.floorsSelect.three')}</option>
+                  <option value="4">{t('cliente.createLocation.floorsSelect.four')}</option>
+                  <option value="5">{t('cliente.createLocation.floorsSelect.five')}</option>
                 </select>
               </div>
             </div>
@@ -799,13 +801,13 @@ function CrearUbicacion() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <MapPin className="h-5 w-5 text-[#4894AD]" />
-              Ubicación
+              {t('cliente.createLocation.sections.location')}
             </h2>
 
             {/* Campo de dirección */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dirección
+                {t('cliente.createLocation.addressLabel')}
               </label>
               <div className="flex gap-2">
                 <input
@@ -813,7 +815,7 @@ function CrearUbicacion() {
                   type="text"
                   value={formData.direccion}
                   onChange={(e) => handleAddressChange(e.target.value)}
-                  placeholder="Busca o escribe la dirección..."
+                  placeholder={t('cliente.createLocation.addressPlaceholder')}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
                 />
               </div>
@@ -825,7 +827,7 @@ function CrearUbicacion() {
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <h3 className="font-medium text-blue-800 mb-1">Ubicación seleccionada</h3>
+                    <h3 className="font-medium text-blue-800 mb-1">{t('cliente.createLocation.selectedLocation')}</h3>
                     <p className="text-blue-700 text-sm mb-2">{formData.direccion}</p>
                     <div className="text-xs text-blue-600 grid grid-cols-2 gap-2">
                       <span>Latitud: {markerPosition.lat.toFixed(6)}</span>
@@ -842,7 +844,7 @@ function CrearUbicacion() {
                 <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
                   <div className="flex items-center gap-2 text-[#4894AD]">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm">Actualizando ubicación...</span>
+                    <span className="text-sm">{t('cliente.createLocation.updatingLocation')}</span>
                   </div>
                 </div>
               )}
@@ -851,7 +853,7 @@ function CrearUbicacion() {
                 <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Cargando mapa...</span>
+                    <span>{t('common.loading')}</span>
                   </div>
                 </div>
               ) : (
@@ -867,13 +869,13 @@ function CrearUbicacion() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Building className="h-4 w-4" />
-                Nombre del edificio/lugar
+                {t('cliente.createLocation.buildingLabel')}
               </label>
               <input
                 type="text"
                 value={formData.nombre_lugar}
                 onChange={(e) => handleInputChange('nombre_lugar', e.target.value)}
-                placeholder="Ej: Edificio Torres del Poblado, Casa Blanca..."
+                placeholder={t('cliente.createLocation.buildingPlaceholder')}
                 maxLength={100}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
               />
@@ -883,26 +885,26 @@ function CrearUbicacion() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Apartamento/Unidad
+                  {t('cliente.createLocation.unitLabel')}
                 </label>
                 <input
                   type="text"
                   value={formData.numero_apartamento}
                   onChange={(e) => handleInputChange('numero_apartamento', e.target.value)}
-                  placeholder="Ej: 301, A-15..."
+                  placeholder={t('cliente.createLocation.unitPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bloque/Torre
+                  {t('cliente.createLocation.blockLabel')}
                 </label>
                 <input
                   type="text"
                   value={formData.bloque}
                   onChange={(e) => handleInputChange('bloque', e.target.value)}
-                  placeholder="Ej: Torre A, Bloque 2..."
+                  placeholder={t('cliente.createLocation.blockPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
                 />
               </div>
@@ -911,12 +913,12 @@ function CrearUbicacion() {
             {/* Referencias */}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Referencias para llegar
+                {t('cliente.createLocation.referencesLabel')}
               </label>
               <textarea
                 value={formData.referencias}
                 onChange={(e) => handleInputChange('referencias', e.target.value)}
-                placeholder="Ej: Casa esquinera con antejardín, frente al supermercado, portón verde..."
+                placeholder={t('cliente.createLocation.referencesPlaceholder')}
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500 resize-none"
               />
@@ -927,24 +929,24 @@ function CrearUbicacion() {
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <FileText className="h-5 w-5 text-[#4894AD]" />
-              Instrucciones Para El Servicio
+              {t('cliente.createLocation.sections.instructions')}
             </h2>
             
             {/* Descripción */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descripción y observaciones
+                {t('cliente.createLocation.descriptionLabel')}
               </label>
               <textarea
                 value={formData.descripcion}
                 onChange={(e) => handleInputChange('descripcion', e.target.value)}
-                placeholder="Comparte información importante para el servicio: mascotas, restricciones, horarios especiales, etc."
+                placeholder={t('cliente.createLocation.descriptionPlaceholder')}
                 rows={4}
                 maxLength={1000}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500 resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.descripcion.length}/1000 caracteres
+                {t('cliente.createLocation.charCount', { n: formData.descripcion.length, max: 1000 })}
               </p>
             </div>
 
@@ -958,7 +960,7 @@ function CrearUbicacion() {
                 className="h-4 w-4 text-[#4894AD] border-gray-300 rounded focus:ring-[#4894AD]"
               />
               <label htmlFor="estado" className="text-sm font-medium text-gray-700">
-                Ubicación activa (disponible para programar servicios)
+                {t('cliente.createLocation.activeCheckbox')}
               </label>
             </div>
           </div>
@@ -970,7 +972,7 @@ function CrearUbicacion() {
               onClick={() => navigate('/cliente/ubicaciones/index')}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -982,7 +984,7 @@ function CrearUbicacion() {
               ) : (
                 <Save className="h-5 w-5" />
               )}
-              {loading ? 'Creando...' : 'Crear Ubicación'}
+              {loading ? t('cliente.createLocation.submitting') : t('cliente.createLocation.submit')}
             </button>
           </div>
         </form>

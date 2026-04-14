@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
@@ -123,6 +124,7 @@ const useGoogleMaps = () => {
 
 // Componente de mapa interactivo con marcador fijo
 const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) => {
+  const { t } = useTranslation();
   const { isLoaded, loadError } = useGoogleMaps();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -163,7 +165,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) =>
         position: position,
         map: map,
         draggable: false, // El marcador no se puede mover
-        title: ubicacion.formatted_address || ubicacion.direccion || 'Ubicación guardada',
+        title: ubicacion.formatted_address || ubicacion.direccion || t('cliente.locations.map.savedLocation'),
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -181,10 +183,11 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) =>
       // Crear InfoWindow con la dirección
       const address = ubicacion.formatted_address || ubicacion.direccion;
       if (address) {
+        const savedLocationLabel = t('cliente.locations.map.savedLocation');
         const infoWindow = new google.maps.InfoWindow({
           content: `
             <div style="padding: 8px; max-width: 200px;">
-              <strong style="color: #4894AD;">Ubicación guardada</strong><br/>
+              <strong style="color: #4894AD;">${savedLocationLabel}</strong><br/>
               <span style="font-size: 14px; color: #666;">${address}</span>
             </div>
           `
@@ -213,7 +216,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) =>
       <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center text-gray-500">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="text-sm">Error cargando el mapa</p>
+          <p className="text-sm">{t('cliente.locations.map.error')}</p>
         </div>
       </div>
     );
@@ -224,7 +227,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) =>
       <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="flex items-center gap-2 text-gray-600">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Cargando mapa...</span>
+          <span className="text-sm">{t('cliente.locations.map.loading')}</span>
         </div>
       </div>
     );
@@ -235,7 +238,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) =>
       <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center text-gray-500">
           <MapPin className="h-8 w-8 mx-auto mb-2" />
-          <p className="text-sm">Coordenadas no disponibles</p>
+          <p className="text-sm">{t('cliente.locations.map.noCoordinates')}</p>
         </div>
       </div>
     );
@@ -251,6 +254,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: Ubicacion['ubicacion'] }) =>
 };
 
 function ClienteUbicaciones() {
+  const { t } = useTranslation();
   const [data, setData] = useState<UbicacionesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -279,8 +283,8 @@ function ClienteUbicaciones() {
 
   // Función auxiliar para mostrar el tamaño
   const formatTamano = (tamano: Ubicacion['tamaño']) => {
-    if (!tamano) return 'No especificado';
-    return tamano.display || 'No especificado';
+    if (!tamano) return t('cliente.locations.notSpecified');
+    return tamano.display || t('cliente.locations.notSpecified');
   };
 
   useEffect(() => {
@@ -300,7 +304,7 @@ function ClienteUbicaciones() {
       // Obtener usuario_id del localStorage
       const userStr = localStorage.getItem("user");
       if (!userStr) {
-        throw new Error("No se encontró información del usuario");
+        throw new Error(t('cliente.locations.userNotFound'));
       }
       
       const user = JSON.parse(userStr);
@@ -319,7 +323,7 @@ function ClienteUbicaciones() {
       const result = await response.json();
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('cliente.locations.errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -373,7 +377,7 @@ function ClienteUbicaciones() {
   };
 
   const handleDelete = async (ids: string[]) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar ${ids.length} ubicación(es)?`)) {
+    if (!window.confirm(t('cliente.locations.confirmDelete', { n: ids.length }))) {
       return;
     }
 
@@ -401,7 +405,7 @@ function ClienteUbicaciones() {
       await fetchUbicaciones();
       setSelectedUbicaciones([]);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al eliminar ubicaciones");
+      alert(err instanceof Error ? err.message : t('cliente.locations.deleteError'));
     } finally {
       setDeleteLoading(false);
     }
@@ -433,7 +437,7 @@ function ClienteUbicaciones() {
 
     // Validaciones
     if (!editFormData.nombre.trim()) {
-      setEditError('El nombre es obligatorio');
+      setEditError(t('cliente.locations.editModal.nameRequired'));
       return;
     }
 
@@ -480,7 +484,7 @@ function ClienteUbicaciones() {
 
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(result.detail || 'Error al actualizar ubicación');
+        throw new Error(result.detail || t('cliente.locations.updateError'));
       }
 
       // Refrescar datos
@@ -488,7 +492,7 @@ function ClienteUbicaciones() {
       handleCloseEditModal();
       
     } catch (err) {
-      setEditError(err instanceof Error ? err.message : 'Error al actualizar ubicación');
+      setEditError(err instanceof Error ? err.message : t('cliente.locations.updateError'));
     } finally {
       setEditLoading(false);
     }
@@ -521,14 +525,14 @@ function ClienteUbicaciones() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar ubicaciones</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('cliente.locations.errorLoading')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchUbicaciones}
           className="bg-[#4894AD] text-white px-4 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('cliente.locations.retry')}
         </button>
       </div>
     );
@@ -541,10 +545,10 @@ function ClienteUbicaciones() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              Mis Ubicaciones
+              {t('cliente.locations.title')}
             </h1>
             <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              Gestiona los lugares donde necesitas servicios de limpieza
+              {t('cliente.locations.subtitle')}
             </p>
           </div>
           <div className="flex gap-2 flex-shrink-0">
@@ -553,7 +557,7 @@ function ClienteUbicaciones() {
               className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2"
             >
               <Plus size={18} />
-              Nueva Ubicación
+              {t('cliente.locations.newLocation')}
             </button>
           </div>
         </div>
@@ -563,7 +567,7 @@ function ClienteUbicaciones() {
       <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.locations.stats.total')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#4894AD]">
               {data.estadisticas.total}
             </p>
@@ -571,7 +575,7 @@ function ClienteUbicaciones() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Activas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.locations.stats.active')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
               {data.estadisticas.activas}
             </p>
@@ -579,7 +583,7 @@ function ClienteUbicaciones() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Inactivas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.locations.stats.inactive')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
               {data.estadisticas.inactivas}
             </p>
@@ -595,7 +599,7 @@ function ClienteUbicaciones() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por nombre, lugar, descripción..."
+              placeholder={t('cliente.locations.search')}
               className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
@@ -609,9 +613,9 @@ function ClienteUbicaciones() {
               onChange={(e) => setFiltroTipo(e.target.value)}
               className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              <option value="todos">Todos los tipos</option>
+              <option value="todos">{t('cliente.locations.filterType.all')}</option>
               {TIPOS_LUGAR.map(tipo => (
-                <option key={tipo} value={tipo}>{tipo}</option>
+                <option key={tipo} value={tipo}>{t(`cliente.locations.placeTypes.${tipo}`)}</option>
               ))}
             </select>
 
@@ -620,9 +624,9 @@ function ClienteUbicaciones() {
               onChange={(e) => setFiltroEstado(e.target.value)}
               className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              <option value="todos">Todos los estados</option>
-              <option value="activas">Activas</option>
-              <option value="inactivas">Inactivas</option>
+              <option value="todos">{t('cliente.locations.filterState.all')}</option>
+              <option value="activas">{t('cliente.locations.filterState.active')}</option>
+              <option value="inactivas">{t('cliente.locations.filterState.inactive')}</option>
             </select>
           </div>
         </div>
@@ -633,7 +637,7 @@ function ClienteUbicaciones() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-blue-700 font-medium">
-              {selectedUbicaciones.length} ubicación(es) seleccionada(s)
+              {t('cliente.locations.selectedCount', { n: selectedUbicaciones.length })}
             </span>
           </div>
           <div className="flex gap-2">
@@ -641,7 +645,7 @@ function ClienteUbicaciones() {
               onClick={() => setSelectedUbicaciones([])}
               className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded text-sm"
             >
-              Limpiar selección
+              {t('cliente.locations.clearSelection')}
             </button>
             <button
               onClick={() => handleDelete(selectedUbicaciones)}
@@ -653,7 +657,7 @@ function ClienteUbicaciones() {
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Eliminar
+              {t('cliente.locations.delete')}
             </button>
           </div>
         </div>
@@ -676,7 +680,7 @@ function ClienteUbicaciones() {
                 )}
               </button>
               <span className="text-sm text-gray-600 font-medium">
-                Seleccionar todas
+                {t('cliente.locations.selectAll')}
               </span>
             </div>
 
@@ -711,7 +715,7 @@ function ClienteUbicaciones() {
                             {ubicacion.nombre}
                           </h3>
                           <div className="flex items-center gap-2 text-sm text-gray-600 mt-1 flex-wrap">
-                            <span className="capitalize">{tipoInfo.label}</span>
+                            <span className="capitalize">{t(`cliente.locations.placeTypes.${tipoInfo.value}`)}</span>
                             {ubicacion.nombre_lugar && (
                               <>
                                 <span className="hidden sm:inline">•</span>
@@ -725,13 +729,13 @@ function ClienteUbicaciones() {
                       {/* Botones - Debajo del nombre en móvil, al lado en desktop */}
                       <div className="flex items-center gap-2 flex-shrink-0 sm:mt-0 mt-2 justify-start sm:justify-end">
                         <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${ubicacion.estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          {ubicacion.estado ? 'Activa' : 'Inactiva'}
+                          {ubicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                         </span>
                         
                         <button
                           onClick={() => openModal(ubicacion)}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Ver detalles"
+                          title={t('cliente.locations.viewDetails')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -739,7 +743,7 @@ function ClienteUbicaciones() {
                         <button
                           onClick={() => handleOpenEditModal(ubicacion)}
                           className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"
-                          title="Editar ubicación"
+                          title={t('cliente.locations.editLocation')}
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
@@ -748,7 +752,7 @@ function ClienteUbicaciones() {
                           onClick={() => handleDelete([ubicacion.id])}
                           disabled={deleteLoading}
                           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Eliminar ubicación"
+                          title={t('cliente.locations.deleteLocation')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -767,14 +771,14 @@ function ClienteUbicaciones() {
                       {ubicacion.baños && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <Bath className="h-4 w-4" />
-                          <span>{ubicacion.baños} baño{ubicacion.baños !== 1 ? 's' : ''}</span>
+                          <span>{ubicacion.baños} {ubicacion.baños !== 1 ? t('cliente.locations.bathroomPlural') : t('cliente.locations.bathroomSingular')}</span>
                         </div>
                       )}
                       
                       {ubicacion.pisos && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <Layers className="h-4 w-4" />
-                          <span>{ubicacion.pisos} piso{ubicacion.pisos !== 1 ? 's' : ''}</span>
+                          <span>{ubicacion.pisos} {ubicacion.pisos !== 1 ? t('cliente.locations.floorPlural') : t('cliente.locations.floorSingular')}</span>
                         </div>
                       )}
                       
@@ -802,14 +806,14 @@ function ClienteUbicaciones() {
             <MapPin className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
               {busqueda || filtroTipo !== 'todos' || filtroEstado !== 'todos' 
-                ? 'No se encontraron ubicaciones' 
-                : 'No tienes ubicaciones registradas'
+                ? t('cliente.locations.noResults') 
+                : t('cliente.locations.empty')
               }
             </h3>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
               {busqueda || filtroTipo !== 'todos' || filtroEstado !== 'todos'
-                ? 'Intenta cambiar los filtros de búsqueda'
-                : 'Registra tu primera ubicación para comenzar a programar servicios'
+                ? t('cliente.locations.tryOtherFilters')
+                : t('cliente.locations.emptyMessage')
               }
             </p>
             {(!busqueda && filtroTipo === 'todos' && filtroEstado === 'todos') && (
@@ -818,7 +822,7 @@ function ClienteUbicaciones() {
                 className="bg-[#4894AD] text-white px-6 py-3 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
               >
                 <Plus size={18} />
-                Crear Primera Ubicación
+                {t('cliente.locations.createFirst')}
               </button>
             )}
           </div>
@@ -848,7 +852,7 @@ function ClienteUbicaciones() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{selectedUbicacion.nombre}</h2>
-                    <p className="text-gray-600 capitalize">{getTipoInfo(selectedUbicacion.tipo_lugar || 'otro').label}</p>
+                    <p className="text-gray-600 capitalize">{t(`cliente.locations.placeTypes.${selectedUbicacion.tipo_lugar || 'Otro'}`)}</p>
                   </div>
                 </div>
                 <button
@@ -865,7 +869,7 @@ function ClienteUbicaciones() {
                 <div className="flex items-center gap-3">
                   <span className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${selectedUbicacion.estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {selectedUbicacion.estado ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                    {selectedUbicacion.estado ? 'Activa' : 'Inactiva'}
+                    {selectedUbicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                   </span>
                 </div>
 
@@ -875,7 +879,7 @@ function ClienteUbicaciones() {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        Nombre del lugar
+                        {t('cliente.locations.modal.placeName')}
                       </h4>
                       <p className="text-gray-700">{selectedUbicacion.nombre_lugar}</p>
                     </div>
@@ -885,13 +889,13 @@ function ClienteUbicaciones() {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                         <Ruler className="h-4 w-4" />
-                        Tamaño
+                        {t('cliente.locations.modal.size')}
                       </h4>
                       <p className="text-gray-700">{formatTamano(selectedUbicacion.tamaño)}</p>
                       {selectedUbicacion.tamaño.metros && selectedUbicacion.tamaño.categoria && (
                         <div className="mt-2 text-sm text-gray-600">
-                          <p>• Área: {selectedUbicacion.tamaño.metros} {selectedUbicacion.tamaño.unidad}</p>
-                          <p>• Categoría: {selectedUbicacion.tamaño.categoria.charAt(0).toUpperCase() + selectedUbicacion.tamaño.categoria.slice(1)}</p>
+                          <p>• {t('cliente.locations.area')}: {selectedUbicacion.tamaño.metros} {selectedUbicacion.tamaño.unidad}</p>
+                          <p>• {t('cliente.locations.category')}: {selectedUbicacion.tamaño.categoria.charAt(0).toUpperCase() + selectedUbicacion.tamaño.categoria.slice(1)}</p>
                         </div>
                       )}
                     </div>
@@ -901,9 +905,9 @@ function ClienteUbicaciones() {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                         <Bath className="h-4 w-4" />
-                        Baños
+                        {t('cliente.locations.modal.bathrooms')}
                       </h4>
-                      <p className="text-gray-700">{selectedUbicacion.baños} baño{selectedUbicacion.baños !== 1 ? 's' : ''}</p>
+                      <p className="text-gray-700">{selectedUbicacion.baños} {selectedUbicacion.baños !== 1 ? t('cliente.locations.bathroomPlural') : t('cliente.locations.bathroomSingular')}</p>
                     </div>
                   )}
 
@@ -911,9 +915,9 @@ function ClienteUbicaciones() {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                         <Layers className="h-4 w-4" />
-                        Pisos
+                        {t('cliente.locations.modal.floors')}
                       </h4>
-                      <p className="text-gray-700">{selectedUbicacion.pisos} piso{selectedUbicacion.pisos !== 1 ? 's' : ''}</p>
+                      <p className="text-gray-700">{selectedUbicacion.pisos} {selectedUbicacion.pisos !== 1 ? t('cliente.locations.floorPlural') : t('cliente.locations.floorSingular')}</p>
                     </div>
                   )}
                 </div>
@@ -923,7 +927,7 @@ function ClienteUbicaciones() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <Map className="h-4 w-4" />
-                      Ubicación
+                      {t('cliente.locations.modal.location')}
                     </h4>
                     
                     {/* Dirección usando formatted_address */}
@@ -943,9 +947,9 @@ function ClienteUbicaciones() {
                     {/* Información técnica */}
                     {selectedUbicacion.ubicacion.lat && selectedUbicacion.ubicacion.lng && (
                       <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-200">
-                        <p className="font-medium mb-1">Información técnica:</p>
+                        <p className="font-medium mb-1">{t('cliente.locations.modal.technicalInfo')}</p>
                         <p className="mt-2 text-xs text-gray-500">
-                          💡 Puedes hacer zoom y moverte por el mapa. El marcador azul muestra la ubicación exacta guardada.
+                          💡 {t('cliente.locations.mapTipFull')}
                         </p>
                       </div>
                     )}
@@ -955,7 +959,7 @@ function ClienteUbicaciones() {
                 {/* Descripción */}
                 {selectedUbicacion.descripcion && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Descripción</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">{t('cliente.locations.description')}</h4>
                     <p className="text-gray-700 leading-relaxed">{selectedUbicacion.descripcion}</p>
                   </div>
                 )}
@@ -965,7 +969,7 @@ function ClienteUbicaciones() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Fecha de creación
+                      {t('cliente.locations.modal.createdDate')}
                     </h4>
                     <p className="text-gray-700">{formatDate(selectedUbicacion.created_at)}</p>
                   </div>
@@ -991,7 +995,7 @@ function ClienteUbicaciones() {
                     className="flex-1 bg-[#4894AD] text-white px-4 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm flex items-center justify-center gap-2"
                   >
                     <Edit3 className="h-4 w-4" />
-                    Editar
+                    {t('cliente.locations.edit')}
                   </button>
                   <button
                     onClick={() => {
@@ -1006,7 +1010,7 @@ function ClienteUbicaciones() {
                     ) : (
                       <Trash2 className="h-4 w-4" />
                     )}
-                    Eliminar
+                    {t('cliente.locations.delete')}
                   </button>
                 </div>
               </div>
@@ -1032,7 +1036,7 @@ function ClienteUbicaciones() {
                     <Edit3 className="h-6 w-6 text-[#4894AD]" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Editar Ubicación</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{t('cliente.locations.editModal.title')}</h2>
                     <p className="text-sm text-gray-600 mt-1">{editingUbicacion.nombre}</p>
                   </div>
                 </div>
@@ -1057,31 +1061,31 @@ function ClienteUbicaciones() {
                 {/* Nombre */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre de la ubicación *
+                    {t('cliente.locations.editModal.nameLabel')}
                   </label>
                   <input
                     type="text"
                     value={editFormData.nombre}
                     onChange={(e) => setEditFormData({...editFormData, nombre: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent placeholder:text-gray-700 text-gray-900"
-                    placeholder="Ej: Casa Principal"
+                    placeholder={t('cliente.locations.editModal.namePlaceholder')}
                   />
                 </div>
 
                 {/* Tipo de lugar */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de lugar
+                    {t('cliente.locations.editModal.typeLabel')}
                   </label>
                   <select
                     value={editFormData.tipo_lugar}
                     onChange={(e) => setEditFormData({...editFormData, tipo_lugar: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900"
                   >
-                    <option value="">Selecciona un tipo</option>
+                    <option value="">{t('cliente.locations.editModal.selectType')}</option>
                     {TIPOS_LUGAR.map((tipo) => (
                       <option key={tipo} value={tipo}>
-                        {tipo}
+                        {t(`cliente.locations.placeTypes.${tipo}`)}
                       </option>
                     ))}
                   </select>
@@ -1092,7 +1096,7 @@ function ClienteUbicaciones() {
                   {/* Tamaño */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tamaño (m²)
+                      {t('cliente.locations.editModal.sizeLabel')}
                     </label>
                     <input
                       type="number"
@@ -1107,7 +1111,7 @@ function ClienteUbicaciones() {
                   {/* Baños */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Baños
+                      {t('cliente.locations.editModal.bathroomsLabel')}
                     </label>
                     <input
                       type="number"
@@ -1122,7 +1126,7 @@ function ClienteUbicaciones() {
                   {/* Pisos */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pisos
+                      {t('cliente.locations.editModal.floorsLabel')}
                     </label>
                     <input
                       type="number"
@@ -1138,14 +1142,14 @@ function ClienteUbicaciones() {
                 {/* Descripción */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción
+                    {t('cliente.locations.editModal.descriptionLabel')}
                   </label>
                   <textarea
                     value={editFormData.descripcion}
                     onChange={(e) => setEditFormData({...editFormData, descripcion: e.target.value})}
                     rows={3}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent resize-none placeholder:text-gray-700 text-gray-900"
-                    placeholder="Agrega detalles adicionales sobre esta ubicación..."
+                    placeholder={t('cliente.locations.editModal.descriptionPlaceholder')}
                   />
                 </div>
 
@@ -1159,7 +1163,7 @@ function ClienteUbicaciones() {
                     className="w-4 h-4 text-[#4894AD] border-gray-300 rounded focus:ring-[#4894AD]"
                   />
                   <label htmlFor="editEstado" className="text-sm font-medium text-gray-700">
-                    Ubicación activa
+                    {t('cliente.locations.editModal.activeCheckbox')}
                   </label>
                 </div>
 
@@ -1170,7 +1174,7 @@ function ClienteUbicaciones() {
                     disabled={editLoading}
                     className="flex-1 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm disabled:opacity-50"
                   >
-                    Cancelar
+                    {t('cliente.locations.cancel')}
                   </button>
                   <button
                     onClick={handleSaveEdit}
@@ -1180,12 +1184,12 @@ function ClienteUbicaciones() {
                     {editLoading ? (
                       <>
                         <RefreshCw className="h-4 w-4 animate-spin" />
-                        Guardando...
+                        {t('cliente.locations.saving')}
                       </>
                     ) : (
                       <>
                         <Save className="h-4 w-4" />
-                        Guardar Cambios
+                        {t('cliente.locations.saveChanges')}
                       </>
                     )}
                   </button>

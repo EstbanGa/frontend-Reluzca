@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
+import { useTranslation } from "react-i18next";
 import { 
   Star, Plus, Trash2, RefreshCw, AlertCircle,
   Calendar, User, MessageSquare, X, Check
@@ -43,6 +44,7 @@ interface ReservaPendiente {
 }
 
 function CalificacionesPage() {
+  const { t } = useTranslation();
   const [data, setData] = useState<CalificacionesData | null>(null);
   const [reservasPendientes, setReservasPendientes] = useState<ReservaPendiente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ function CalificacionesPage() {
 
   const handleSubmitCalificacion = async () => {
     if (!selectedReserva || calificacionServicio === 0) {
-      alert("Por favor selecciona una reserva y califica el servicio");
+      alert(t('cliente.ratings.alerts.selectRequired'));
       return;
     }
     setSubmitting(true);
@@ -142,28 +144,28 @@ function CalificacionesPage() {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Error al crear calificación');
       }
-      alert('¡Calificación creada exitosamente!');
+      alert(t('cliente.ratings.alerts.created'));
       handleCloseCreateModal();
       fetchCalificaciones();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al crear calificación');
+      alert(err instanceof Error ? err.message : t('cliente.pqrs.errors.createError'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteCalificacion = async (calificacionId: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta calificación?')) return;
+    if (!confirm(t('cliente.ratings.alerts.confirmDelete'))) return;
     try {
       const response = await fetch(`${API_BASE_URL}/api/calificaciones/${calificacionId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
-      if (!response.ok) throw new Error('Error al eliminar calificación');
-      alert('Calificación eliminada exitosamente');
+      if (!response.ok) throw new Error(t('cliente.pqrs.errors.deleteError'));
+      alert(t('cliente.ratings.alerts.deleted'));
       fetchCalificaciones();
     } catch (err) {
-      alert('Error al eliminar calificación');
+      alert(t('cliente.pqrs.errors.deleteError'));
     }
   };
 
@@ -201,7 +203,7 @@ function CalificacionesPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <RefreshCw className="h-12 w-12 text-[#4894AD] mx-auto animate-spin mb-4" />
-          <p className="text-lg text-gray-600">Cargando calificaciones...</p>
+          <p className="text-lg text-gray-600">{t('cliente.ratings.loading')}</p>
         </div>
       </div>
     );
@@ -211,14 +213,14 @@ function CalificacionesPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Error al cargar</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{t('cliente.ratings.errorLoading')}</h2>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchCalificaciones}
           className="bg-[#4894AD] text-white px-4 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium flex items-center gap-2"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -233,10 +235,10 @@ function CalificacionesPage() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              Mis Calificaciones
+              {t('cliente.ratings.title')}
             </h1>
             <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              Califica los servicios recibidos
+              {t('cliente.ratings.subtitle')}
             </p>
           </div>
           <button 
@@ -244,7 +246,7 @@ function CalificacionesPage() {
             className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2 flex-shrink-0"
           >
             <Plus size={18} />
-            Nueva Calificación
+            {t('cliente.ratings.newRating')}
           </button>
         </div>
       </div>
@@ -253,7 +255,7 @@ function CalificacionesPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.total')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#4894AD]">
               {data.estadisticas.total}
             </p>
@@ -261,7 +263,7 @@ function CalificacionesPage() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Servicio</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.service')}</p>
             <div className="flex items-center justify-center gap-1">
               <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
               <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">
@@ -272,7 +274,7 @@ function CalificacionesPage() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Empleadas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.employees')}</p>
             <div className="flex items-center justify-center gap-1">
               <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
               <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">
@@ -283,7 +285,7 @@ function CalificacionesPage() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">5 Estrellas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.fiveStars')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
               {data.estadisticas.por_calificacion[5] || 0}
             </p>
@@ -305,10 +307,10 @@ function CalificacionesPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
-                        {cal.reserva?.fecha ? formatDate(cal.reserva.fecha) : 'Fecha no disponible'}
+                        {cal.reserva?.fecha ? formatDate(cal.reserva.fecha) : t('cliente.ratings.noDate')}
                       </h3>
                       <p className="text-sm text-gray-600 mt-1">
-                        {cal.reserva?.plan?.nombre || 'Sin plan asignado'}
+                        {cal.reserva?.plan?.nombre || t('cliente.ratings.noPlanAssigned')}
                       </p>
                     </div>
                   </div>
@@ -329,7 +331,7 @@ function CalificacionesPage() {
                       <Star className="h-4 w-4 text-yellow-600 fill-current" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 text-sm">Servicio</p>
+                      <p className="font-medium text-gray-900 text-sm">{t('cliente.ratings.stats.service')}</p>
                       {renderStars(cal.calificacion_servicio)}
                     </div>
                   </div>
@@ -359,7 +361,7 @@ function CalificacionesPage() {
                         <p className="font-medium text-gray-900 text-sm truncate">
                           {`${cal.reserva.empleada.nombre} ${cal.reserva.empleada.apellido}`}
                         </p>
-                        <p className="text-xs text-gray-500">Sin calificar</p>
+                        <p className="text-xs text-gray-500">{t('cliente.ratings.unrated')}</p>
                       </div>
                     </div>
                   )}
@@ -380,14 +382,14 @@ function CalificacionesPage() {
         ) : (
           <div className="bg-white rounded-xl p-8 sm:p-12 shadow-sm border border-gray-100 text-center">
             <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay calificaciones aún</h3>
-            <p className="text-gray-600 mb-4">Califica tus servicios completados</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('cliente.ratings.empty')}</h3>
+            <p className="text-gray-600 mb-4">{t('cliente.ratings.emptyMessage')}</p>
             <button 
               onClick={handleOpenCreateModal}
               className="bg-[#4894AD] text-white px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium inline-flex items-center gap-2"
             >
               <Plus size={18} />
-              Nueva Calificación
+              {t('cliente.ratings.newRating')}
             </button>
           </div>
         )}
@@ -398,7 +400,7 @@ function CalificacionesPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Nueva Calificación</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('cliente.ratings.modal.title')}</h2>
               <button onClick={handleCloseCreateModal} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                 <X size={20} />
               </button>
@@ -407,14 +409,14 @@ function CalificacionesPage() {
             {loadingPendientes ? (
               <div className="text-center py-8">
                 <RefreshCw className="h-8 w-8 text-[#4894AD] mx-auto animate-spin mb-4" />
-                <p className="text-gray-600">Cargando reservas...</p>
+                <p className="text-gray-600">{t('cliente.ratings.loadingReservations')}</p>
               </div>
             ) : (
               <div className="space-y-6">
                 {/* Selección de Reserva */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selecciona la reserva a calificar *
+                    {t('cliente.ratings.modal.selectReservation')}
                   </label>
                   {reservasPendientes.length > 0 ? (
                     <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
@@ -437,11 +439,11 @@ function CalificacionesPage() {
                                 {formatDate(reserva.fecha)} - {formatTime(reserva.hora_inicio)}
                               </p>
                               <p className="text-sm text-gray-600 mt-1">
-                                {reserva.plan?.nombre || 'Sin plan'} • {reserva.lugar?.nombre || 'Sin ubicación'}
+                                {reserva.plan?.nombre || t('cliente.ratings.noPlan')} • {reserva.lugar?.nombre || t('cliente.ratings.noLocation')}
                               </p>
                               {reserva.empleada && (
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Empleada: {reserva.empleada.nombre} {reserva.empleada.apellido}
+                                  {t('cliente.ratings.employeeLabel')} {reserva.empleada.nombre} {reserva.empleada.apellido}
                                 </p>
                               )}
                             </div>
@@ -452,18 +454,18 @@ function CalificacionesPage() {
                   ) : (
                     <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                       <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-600 text-sm">No tienes reservas completadas pendientes de calificar</p>
+                      <p className="text-gray-600 text-sm">{t('cliente.ratings.noPending')}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Calificación del Servicio */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Califica el servicio *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('cliente.ratings.modal.rateService')}</label>
                   <div className="flex items-center gap-2">
                     {renderStars(calificacionServicio, setCalificacionServicio)}
                     {calificacionServicio > 0 && (
-                      <span className="text-sm text-gray-600 ml-2">{calificacionServicio} de 5 estrellas</span>
+                      <span className="text-sm text-gray-600 ml-2">{t('cliente.ratings.modal.starsOf5', { n: calificacionServicio })}</span>
                     )}
                   </div>
                 </div>
@@ -472,12 +474,12 @@ function CalificacionesPage() {
                 {selectedReserva?.empleada && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Califica a {selectedReserva.empleada.nombre} {selectedReserva.empleada.apellido}
+                      {t('cliente.ratings.modal.rateEmployee', { name: `${selectedReserva.empleada.nombre} ${selectedReserva.empleada.apellido}` })}
                     </label>
                     <div className="flex items-center gap-2">
                       {renderStars(calificacionEmpleada, setCalificacionEmpleada)}
                       {calificacionEmpleada > 0 && (
-                        <span className="text-sm text-gray-600 ml-2">{calificacionEmpleada} de 5 estrellas</span>
+                        <span className="text-sm text-gray-600 ml-2">{t('cliente.ratings.modal.starsOf5', { n: calificacionEmpleada })}</span>
                       )}
                     </div>
                   </div>
@@ -485,11 +487,11 @@ function CalificacionesPage() {
 
                 {/* Comentario */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Comentario (opcional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('cliente.ratings.modal.commentLabel')}</label>
                   <textarea
                     value={comentario}
                     onChange={(e) => setComentario(e.target.value)}
-                    placeholder="Cuéntanos sobre tu experiencia..."
+                    placeholder={t('cliente.ratings.modal.commentPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent resize-none"
                     rows={4}
                   />
@@ -502,7 +504,7 @@ function CalificacionesPage() {
                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                     disabled={submitting}
                   >
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={handleSubmitCalificacion}
@@ -512,12 +514,12 @@ function CalificacionesPage() {
                     {submitting ? (
                       <>
                         <RefreshCw size={16} className="animate-spin" />
-                        Guardando...
+                        {t('cliente.ratings.saving')}
                       </>
                     ) : (
                       <>
                         <Check size={16} />
-                        Guardar Calificación
+                        {t('cliente.ratings.saveRating')}
                       </>
                     )}
                   </button>

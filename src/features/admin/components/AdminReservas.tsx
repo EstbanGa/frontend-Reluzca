@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { 
@@ -116,20 +117,14 @@ interface ReservasData {
   };
 }
 
-// Opciones de estado para el filtro
-const ESTADOS_RESERVA = [
-  { value: 'todos', label: 'Todos los estados' },
-  { value: 'pendiente', label: 'Pendiente' },
-  { value: 'confirmada', label: 'Confirmada' },
-  { value: 'en_proceso', label: 'En Proceso' },
-  { value: 'completada', label: 'Completada' },
-  { value: 'cancelada', label: 'Cancelada' }
-];
+// Opciones de estado para el filtro (values only, labels via i18n)
+const ESTADOS_RESERVA_VALUES = ['todos', 'pendiente', 'confirmada', 'en_proceso', 'completada', 'cancelada'];
 
 function AdminReservas() {
   const [data, setData] = useState<ReservasData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [busqueda, setBusqueda] = useState('');
@@ -175,7 +170,7 @@ function AdminReservas() {
       setData(result);
     } catch (err) {
       console.error('Error al cargar reservas:', err);
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('admin.reservations.errors.unknown'));
     } finally {
       setLoading(false);
     }
@@ -236,7 +231,7 @@ function AdminReservas() {
   };
 
   const handleDelete = async (ids: string[]) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar ${ids.length} reserva(s)?`)) {
+    if (!window.confirm(t('admin.reservations.confirmDelete', { count: ids.length }))) {
       return;
     }
 
@@ -265,7 +260,7 @@ function AdminReservas() {
       setSelectedReservas([]);
     } catch (err) {
       console.error('Error al eliminar reservas:', err);
-      alert(err instanceof Error ? err.message : "Error al eliminar reservas");
+      alert(err instanceof Error ? err.message : t('admin.reservations.errors.deleteError'));
     } finally {
       setDeleteLoading(false);
     }
@@ -319,31 +314,31 @@ function AdminReservas() {
         return {
           color: 'bg-green-100 text-green-800 border-green-200',
           icon: CheckCircle,
-          label: 'Completada'
+          label: t('common.statuses.completada')
         };
       case 'confirmada':
         return {
           color: 'bg-blue-100 text-blue-800 border-blue-200',
           icon: Clock,
-          label: 'Confirmada'
+          label: t('common.statuses.confirmada')
         };
       case 'en_proceso':
         return {
           color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
           icon: Clock,
-          label: 'En Proceso'
+          label: t('common.statuses.en_proceso')
         };
       case 'cancelada':
         return {
           color: 'bg-red-100 text-red-800 border-red-200',
           icon: XCircle,
-          label: 'Cancelada'
+          label: t('common.statuses.cancelada')
         };
       case 'pendiente':
         return {
           color: 'bg-gray-100 text-gray-800 border-gray-200',
           icon: AlertCircle,
-          label: 'Pendiente'
+          label: t('common.statuses.pendiente')
         };
       default:
         return {
@@ -381,14 +376,14 @@ function AdminReservas() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar reservas</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('admin.reservations.errors.loadError')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchReservas}
           className="bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -401,10 +396,10 @@ function AdminReservas() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              Gestión de Reservas
+              {t('admin.reservations.title')}
             </h1>
             <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              Administra todas las reservas del sistema
+              {t('admin.reservations.subtitle')}
             </p>
           </div>
         </div>
@@ -414,7 +409,7 @@ function AdminReservas() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('common.total')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#195083]">
               {data?.estadisticas.total || 0}
             </p>
@@ -422,7 +417,7 @@ function AdminReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Activas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.reservations.stats.active')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">
               {data?.estadisticas.activas || 0}
             </p>
@@ -430,7 +425,7 @@ function AdminReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Completadas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.reservations.stats.completed')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
               {data?.estadisticas.completadas || 0}
             </p>
@@ -438,7 +433,7 @@ function AdminReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Canceladas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.reservations.stats.cancelled')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
               {data?.estadisticas.canceladas || 0}
             </p>
@@ -446,7 +441,7 @@ function AdminReservas() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100 col-span-2 sm:col-span-3 lg:col-span-1">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Filtradas</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.reservations.stats.filtered')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-purple-600">
               {reservasFiltradas.length || 0}
             </p>
@@ -462,7 +457,7 @@ function AdminReservas() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por ID, cliente, empleada, ubicación, plan..."
+              placeholder={t('admin.reservations.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
               value={busqueda}
               onChange={(e) => handleSearch(e.target.value)}
@@ -476,8 +471,10 @@ function AdminReservas() {
               onChange={(e) => handleEstadoFilter(e.target.value)}
               className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              {ESTADOS_RESERVA.map(estado => (
-                <option key={estado.value} value={estado.value}>{estado.label}</option>
+              {ESTADOS_RESERVA_VALUES.map(value => (
+                <option key={value} value={value}>
+                  {value === 'todos' ? t('admin.reservations.filters.all') : t(`common.statuses.${value}`)}
+                </option>
               ))}
             </select>
           </div>
@@ -489,7 +486,7 @@ function AdminReservas() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-blue-700 font-medium">
-              {selectedReservas.length} reserva(s) seleccionada(s)
+              {t('admin.reservations.selectedCount', { n: selectedReservas.length })}
             </span>
           </div>
           <div className="flex gap-2">
@@ -497,7 +494,7 @@ function AdminReservas() {
               onClick={() => setSelectedReservas([])}
               className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded text-sm"
             >
-              Limpiar selección
+              {t('admin.reservations.clearSelection')}
             </button>
             <button
               onClick={() => handleDelete(selectedReservas)}
@@ -509,7 +506,7 @@ function AdminReservas() {
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Eliminar
+              {t('admin.reservations.delete')}
             </button>
           </div>
         </div>
@@ -532,7 +529,7 @@ function AdminReservas() {
                 )}
               </button>
               <span className="text-sm text-gray-600 font-medium">
-                Seleccionar todas
+                {t('admin.reservations.selectAll')}
               </span>
             </div>
 
@@ -565,7 +562,7 @@ function AdminReservas() {
                     <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
                       <div className="text-right hidden sm:block">
                         <p className="text-sm font-medium text-gray-900">
-                          {totalReservas} reserva{totalReservas !== 1 ? 's' : ''}
+                          {totalReservas !== 1 ? t('admin.reservations.reservaCountPlural', { n: totalReservas }) : t('admin.reservations.reservaCount', { n: totalReservas })}
                         </p>
                         <p className="text-sm font-bold text-[#195083]">
                           {formatCurrency(totalPrecio)}
@@ -640,7 +637,7 @@ function AdminReservas() {
                         <button
                           onClick={() => openModal(reserva)}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Ver detalles"
+                          title={t('admin.reservations.viewDetails')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -648,7 +645,7 @@ function AdminReservas() {
                         <button
                           onClick={() => handleEditReserva(reserva.id)}
                           className="p-2 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                          title="Editar reserva"
+                          title={t('admin.reservations.editReservation')}
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
@@ -657,7 +654,7 @@ function AdminReservas() {
                           onClick={() => handleDelete([reserva.id])}
                           disabled={deleteLoading}
                           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Eliminar reserva"
+                          title={t('admin.reservations.deleteReservation')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -694,7 +691,7 @@ function AdminReservas() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                              {reserva.lugar.nombre || 'Ubicación'}
+                              {reserva.lugar.nombre || t('admin.reservations.location')}
                             </p>
                             <p className="text-xs text-gray-600 truncate">
                               {reserva.lugar.tipo_lugar}
@@ -728,7 +725,7 @@ function AdminReservas() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-gray-900">
-                              Total
+                              {t('admin.reservations.total')}
                             </p>
                             <p className="text-sm font-bold text-blue-600">
                               {formatCurrency(reserva.precio_total)}
@@ -742,7 +739,7 @@ function AdminReservas() {
                     {reserva.descripcion && (
                       <div className="p-3 bg-blue-50 rounded-lg">
                         <p className="text-sm text-gray-700 line-clamp-2">
-                          <span className="font-medium">Descripción:</span> {reserva.descripcion}
+                          <span className="font-medium">{t('admin.reservations.description')}:</span> {reserva.descripcion}
                         </p>
                       </div>
                     )}
@@ -760,12 +757,12 @@ function AdminReservas() {
           <div className="text-center py-8 sm:py-12">
             <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-              {(busqueda || filtroEstado !== 'todos') ? 'No se encontraron reservas' : 'No hay reservas'}
+              {(busqueda || filtroEstado !== 'todos') ? t('admin.reservations.noReservationsFound') : t('admin.reservations.noReservations')}
             </h3>
             <p className="text-sm sm:text-base text-gray-600">
               {(busqueda || filtroEstado !== 'todos') 
-                ? 'Intenta cambiar los filtros de búsqueda'
-                : 'Aún no se han registrado reservas en el sistema'
+                ? t('admin.reservations.tryDifferentFilters')
+                : t('admin.reservations.noReservationsYet')
               }
             </p>
           </div>
@@ -777,7 +774,7 @@ function AdminReservas() {
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Mostrando {((data.paginacion.current_page - 1) * 10) + 1} - {Math.min(data.paginacion.current_page * 10, data.paginacion.total_items)} de {data.paginacion.total_items} reservas
+              {t('admin.reservations.showing', { from: ((data.paginacion.current_page - 1) * 10) + 1, to: Math.min(data.paginacion.current_page * 10, data.paginacion.total_items), total: data.paginacion.total_items })}
             </div>
             
             <div className="flex items-center gap-2">
@@ -843,8 +840,8 @@ function AdminReservas() {
                     <Calendar className="h-6 w-6 text-[#195083]" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Reserva #{selectedReserva.id.slice(-8)}</h2>
-                    <p className="text-gray-600">Detalles completos de la reserva</p>
+                    <h2 className="text-xl font-bold text-gray-900">{t('admin.reservations.modal.reservationId', { id: selectedReserva.id.slice(-8) })}</h2>
+                    <p className="text-gray-600">{t('admin.reservations.modal.fullDetails')}</p>
                   </div>
                 </div>
                 <button
@@ -860,7 +857,7 @@ function AdminReservas() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Estado y Horario
+                    {t('admin.reservations.modal.statusAndSchedule')}
                   </h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -881,11 +878,11 @@ function AdminReservas() {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Registro del Sistema</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">{t('admin.reservations.modal.systemRecord')}</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Creada: {formatDateForModal(selectedReserva.created_at)}</p>
+                    <p>{t('admin.reservations.modal.created')}: {formatDateForModal(selectedReserva.created_at)}</p>
                     {selectedReserva.updated_at !== selectedReserva.created_at && (
-                      <p>Actualizada: {formatDateForModal(selectedReserva.updated_at)}</p>
+                      <p>{t('admin.reservations.modal.updated')}: {formatDateForModal(selectedReserva.updated_at)}</p>
                     )}
                   </div>
                 </div>
@@ -896,11 +893,11 @@ function AdminReservas() {
                 <div className="bg-blue-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Información del Cliente
+                    {t('admin.reservations.modal.clientInfo')}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Nombre completo</p>
+                      <p className="text-sm text-gray-600">{t('admin.reservations.modal.fullName')}</p>
                       <p className="font-medium text-gray-900">
                         {selectedReserva.cliente.nombre} {selectedReserva.cliente.apellido}
                       </p>
@@ -908,7 +905,7 @@ function AdminReservas() {
                     <div>
                       <p className="text-sm text-gray-600 flex items-center gap-1">
                         <Mail className="h-3 w-3" />
-                        Correo electrónico
+                        {t('admin.reservations.modal.email')}
                       </p>
                       <p className="font-medium text-gray-900">{selectedReserva.cliente.correo}</p>
                     </div>
@@ -916,14 +913,14 @@ function AdminReservas() {
                       <div>
                         <p className="text-sm text-gray-600 flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          Teléfono
+                          {t('admin.reservations.modal.phone')}
                         </p>
                         <p className="font-medium text-gray-900">{selectedReserva.cliente.telefono}</p>
                       </div>
                     )}
                     {selectedReserva.cliente.fecha_registro && (
                       <div>
-                        <p className="text-sm text-gray-600">Cliente desde</p>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.clientSince')}</p>
                         <p className="font-medium text-gray-900">{formatDateForModal(selectedReserva.cliente.fecha_registro)}</p>
                       </div>
                     )}
@@ -938,7 +935,7 @@ function AdminReservas() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      Empleada Asignada
+                      {t('admin.reservations.modal.assignedEmployee')}
                     </h4>
                     <div className="space-y-2">
                       <p className="font-medium text-gray-900">
@@ -953,7 +950,7 @@ function AdminReservas() {
                       {selectedReserva.empleada.ranking && (
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                          <span className="text-sm font-medium text-gray-700">Calificación: {selectedReserva.empleada.ranking}</span>
+                          <span className="text-sm font-medium text-gray-700">{t('admin.reservations.modal.rating')}: {selectedReserva.empleada.ranking}</span>
                         </div>
                       )}
                     </div>
@@ -965,13 +962,13 @@ function AdminReservas() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      Plan de Servicio
+                      {t('admin.reservations.modal.servicePlan')}
                     </h4>
                     <div className="space-y-2">
                       <p className="font-medium text-gray-900">{selectedReserva.plan.nombre}</p>
                       <p className="text-sm text-gray-700">{formatCurrency(selectedReserva.plan.precio)}</p>
                       {selectedReserva.plan.duracion && (
-                        <p className="text-sm text-gray-600">Duración: {selectedReserva.plan.duracion} minutos</p>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.duration', { minutes: selectedReserva.plan.duracion })}</p>
                       )}
                       {selectedReserva.plan.descripcion && (
                         <p className="text-sm text-gray-600 mt-2">{selectedReserva.plan.descripcion}</p>
@@ -986,24 +983,24 @@ function AdminReservas() {
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Ubicación del Servicio
+                    {t('admin.reservations.modal.serviceLocation')}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {selectedReserva.lugar.nombre && (
                       <div>
-                        <p className="text-sm text-gray-600">Nombre</p>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.name')}</p>
                         <p className="font-medium text-gray-900">{selectedReserva.lugar.nombre}</p>
                       </div>
                     )}
                     {selectedReserva.lugar.tipo_lugar && (
                       <div>
-                        <p className="text-sm text-gray-600">Tipo</p>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.type')}</p>
                         <p className="font-medium text-gray-900 capitalize">{selectedReserva.lugar.tipo_lugar}</p>
                       </div>
                     )}
                     {selectedReserva.lugar.ubicacion?.formatted_address && (
                       <div className="sm:col-span-2">
-                        <p className="text-sm text-gray-600">Dirección</p>
+                        <p className="text-sm text-gray-600">{t('admin.reservations.modal.address')}</p>
                         <p className="font-medium text-gray-900">{selectedReserva.lugar.ubicacion.formatted_address}</p>
                       </div>
                     )}
@@ -1015,7 +1012,7 @@ function AdminReservas() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {selectedReserva.descripcion && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Descripción</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">{t('admin.reservations.modal.description')}</h4>
                     <p className="text-gray-700 leading-relaxed">{selectedReserva.descripcion}</p>
                   </div>
                 )}
@@ -1024,7 +1021,7 @@ function AdminReservas() {
                   <div className="bg-green-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      Precio Total
+                      {t('admin.reservations.modal.totalPrice')}
                     </h4>
                     <p className="text-2xl font-bold text-green-600">
                       {formatCurrency(selectedReserva.precio_total)}
@@ -1043,13 +1040,13 @@ function AdminReservas() {
                   className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
                   <Edit3 className="h-4 w-4" />
-                  Editar Reserva
+                  {t('admin.reservations.modal.editReservation')}
                 </button>
                 <button
                   onClick={closeModal}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
-                  Cerrar
+                  {t('common.close')}
                 </button>
               </div>
             </div>

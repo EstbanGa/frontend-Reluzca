@@ -10,6 +10,7 @@ import AdminLayout from '@/features/admin/components/AdminLayout';
 import AdminDashboard from '@/features/admin/components/AdminDashboard';
 import AdminUsuarios from '@/features/admin/components/AdminUsuarios';
 import AdminEditarUsuario from '@/features/admin/components/AdminEditarUsuario';
+import AdminCrearUsuario from '@/features/admin/components/AdminCrearUsuario';
 import AdminReservas from '@/features/admin/components/AdminReservas';
 import AdminEditarReserva from '@/features/admin/components/AdminEditarReserva';
 import AdminPlanes from '@/features/admin/components/AdminPlanes';
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="index" element={<AdminDashboard />} />
           <Route path="usuarios/index" element={<AdminUsuarios />} />
+          <Route path="usuarios/crear" element={<AdminCrearUsuario />} />
           <Route path="usuarios/editar" element={<AdminEditarUsuario />} />
           <Route path="reservas/index" element={<AdminReservas />} />
           <Route path="reservas/editar" element={<AdminEditarReserva />} />

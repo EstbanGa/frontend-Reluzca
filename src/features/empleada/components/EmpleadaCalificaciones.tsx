@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { 
   Star, 
@@ -51,6 +52,7 @@ interface Data {
 }
 
 function EmpleadaCalificaciones() {
+  const { t } = useTranslation();
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +87,7 @@ function EmpleadaCalificaciones() {
       setData(result);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('empleada.dashboard.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -131,10 +133,10 @@ function EmpleadaCalificaciones() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                Mis Calificaciones
+                {t('empleada.ratings.title')}
               </h1>
               <p className="text-white/90 text-sm">
-                Revisa las calificaciones que han dejado tus clientes
+                {t('empleada.ratings.subtitle')}
               </p>
             </div>
           </div>
@@ -147,7 +149,7 @@ function EmpleadaCalificaciones() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">Promedio General</p>
+                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.averageGeneral')}</p>
                 <Sparkles className="h-5 w-5 text-yellow-500" />
               </div>
               <p className="text-3xl font-bold text-[#4894AD]">
@@ -160,42 +162,42 @@ function EmpleadaCalificaciones() {
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">Total</p>
+                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.total')}</p>
                 <MessageSquare className="h-5 w-5 text-[#D95B26]" />
               </div>
               <p className="text-3xl font-bold text-[#D95B26]">
                 {data.estadisticas.total_calificaciones}
               </p>
-              <p className="text-xs text-gray-500 mt-2">Calificaciones recibidas</p>
+              <p className="text-xs text-gray-500 mt-2">{t('empleada.ratings.stats.ratingsReceived')}</p>
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">Servicio</p>
+                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.service')}</p>
                 <Star className="h-5 w-5 text-blue-500" />
               </div>
               <p className="text-3xl font-bold text-blue-600">
                 {data.estadisticas.promedio_servicio.toFixed(1)}
               </p>
-              <p className="text-xs text-gray-500 mt-2">Calidad del servicio</p>
+              <p className="text-xs text-gray-500 mt-2">{t('empleada.ratings.stats.serviceQuality')}</p>
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">Empleada</p>
+                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.employee')}</p>
                 <User className="h-5 w-5 text-green-500" />
               </div>
               <p className="text-3xl font-bold text-green-600">
                 {data.estadisticas.promedio_empleada.toFixed(1)}
               </p>
-              <p className="text-xs text-gray-500 mt-2">Atención personal</p>
+              <p className="text-xs text-gray-500 mt-2">{t('empleada.ratings.stats.personalAttention')}</p>
             </div>
           </div>
 
           {/* Lista de calificaciones */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">Calificaciones Recientes</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('empleada.ratings.recentTitle')}</h2>
             </div>
 
             <div className="divide-y divide-gray-100">
@@ -237,11 +239,11 @@ function EmpleadaCalificaciones() {
                     <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
                       <div className="flex items-center gap-1">
                         <Star className="h-3 w-3 text-blue-500" />
-                        Servicio: {calificacion.calificacion_servicio}/5
+                        {t('empleada.ratings.serviceRating', { n: calificacion.calificacion_servicio })}
                       </div>
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3 text-green-500" />
-                        Empleada: {calificacion.calificacion_empleada}/5
+                        {t('empleada.ratings.employeeRating', { n: calificacion.calificacion_empleada })}
                       </div>
                     </div>
                   </div>
@@ -252,10 +254,10 @@ function EmpleadaCalificaciones() {
                     <Star className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Aún no tienes calificaciones
+                    {t('empleada.ratings.empty.title')}
                   </h3>
                   <p className="text-gray-600">
-                    Las calificaciones de tus clientes aparecerán aquí
+                    {t('empleada.ratings.empty.message')}
                   </p>
                 </div>
               )}

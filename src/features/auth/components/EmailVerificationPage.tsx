@@ -1,6 +1,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '@/config/env';
 
 function VerifyEmailContent() {
@@ -9,6 +10,7 @@ function VerifyEmailContent() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Obtenemos el token desde los parámetros de búsqueda
   const token = searchParams.get('token');
@@ -19,7 +21,7 @@ function VerifyEmailContent() {
       if (!token || token.trim() === '') {
         console.error('Token no encontrado o vacío');
         setStatus('error');
-        setMessage('Token de verificación no encontrado en la URL');
+        setMessage(t('auth.verify.tokenNotFoundMsg'));
         return;
       }
 
@@ -43,12 +45,12 @@ function VerifyEmailContent() {
           data = await response.json();
         } catch (parseError) {
           console.error('Error parseando respuesta JSON:', parseError);
-          throw new Error('Respuesta inválida del servidor');
+          throw new Error(t('auth.verify.invalidResponse'));
         }
 
         if (response.ok) {
           setStatus('success');
-          setMessage(data.message || 'Correo verificado exitosamente');
+          setMessage(data.message || t('auth.verify.successMessage'));
           
           // Redirigir al login después de 3 segundos
           setTimeout(() => {
@@ -63,9 +65,9 @@ function VerifyEmailContent() {
         setStatus('error');
         
         if (error instanceof Error) {
-          setMessage(`Error de conexión: ${error.message}`);
+          setMessage(`${t('auth.verify.connectionError')}: ${error.message}`);
         } else {
-          setMessage('Error de conexión. Verifica tu conexión a internet e intenta nuevamente.');
+          setMessage(t('auth.verify.connectionErrorGeneric'));
         }
       } finally {
         setIsVerifying(false);
@@ -87,23 +89,22 @@ function VerifyEmailContent() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-red-600 mb-2">Token No Encontrado</h3>
+        <h3 className="text-xl font-semibold text-red-600 mb-2">{t('auth.verify.tokenNotFound')}</h3>
         <p className="text-gray-700 mb-6">
-          La URL de verificación no contiene un token válido. 
-          Por favor, verifica que hayas copiado correctamente el enlace del correo electrónico.
+          {t('auth.verify.tokenNotFoundDesc')}
         </p>
         <div className="space-y-3">
           <Link 
             to="/auth/sign_up"
             className="block bg-[#D95B26] text-white px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors duration-200"
           >
-            Registrarse Nuevamente
+            {t('auth.verify.registerAgain')}
           </Link>
           <Link 
             to="/auth/login"
             className="block bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
           >
-            Ir al Login
+            {t('auth.verify.goToLogin')}
           </Link>
         </div>
       </div>
@@ -115,7 +116,7 @@ function VerifyEmailContent() {
       {status === 'loading' && (
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4894AD] mx-auto mb-4"></div>
-          <p className="text-[#4894AD] text-lg">Verificando tu correo...</p>
+          <p className="text-[#4894AD] text-lg">{t('auth.verify.verifying')}</p>
           <p className="text-sm text-gray-500 mt-2">Token: {token.substring(0, 10)}...</p>
         </div>
       )}
@@ -127,16 +128,16 @@ function VerifyEmailContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-green-600 mb-2">¡Verificación Exitosa!</h3>
+          <h3 className="text-xl font-semibold text-green-600 mb-2">{t('auth.verify.successTitle')}</h3>
           <p className="text-gray-700 mb-6">{message}</p>
           <p className="text-sm text-gray-500 mb-4">
-            Serás redirigido al inicio de sesión en unos segundos...
+            {t('auth.verify.redirecting')}
           </p>
           <Link 
             to="/auth/login"
             className="inline-block bg-[#4894AD] text-white px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors duration-200"
           >
-            Ir al Login
+            {t('auth.verify.goToLogin')}
           </Link>
         </div>
       )}
@@ -148,26 +149,26 @@ function VerifyEmailContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-red-600 mb-2">Error de Verificación</h3>
+          <h3 className="text-xl font-semibold text-red-600 mb-2">{t('auth.verify.errorTitle')}</h3>
           <p className="text-gray-700 mb-6">{message}</p>
           <div className="space-y-3">
             <button 
               onClick={() => window.location.reload()}
               className="block w-full bg-[#4894AD] text-white px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors duration-200"
             >
-              Intentar Nuevamente
+              {t('auth.verify.tryAgain')}
             </button>
             <Link 
               to="/auth/sign_up"
               className="block bg-[#D95B26] text-white px-6 py-2 rounded-lg hover:bg-[#195083] transition-colors duration-200"
             >
-              Registrarse Nuevamente
+              {t('auth.verify.registerAgain')}
             </Link>
             <Link 
               to="/auth/login"
               className="block bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
             >
-              Ir al Login
+              {t('auth.verify.goToLogin')}
             </Link>
           </div>
         </div>
@@ -177,6 +178,7 @@ function VerifyEmailContent() {
 }
 
 export default function VerifyEmailPage() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FCF7F0] px-4">
       <div className="max-w-md w-full space-y-8">
@@ -185,7 +187,7 @@ export default function VerifyEmailPage() {
             Reluzca
           </h1>
           <h2 className="text-2xl font-bold text-[#4894AD] mb-2">
-            Verificación de Correo
+            {t('auth.verify.title')}
           </h2>
         </div>
 
@@ -193,7 +195,7 @@ export default function VerifyEmailPage() {
           <Suspense fallback={
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4894AD] mx-auto mb-4"></div>
-              <p className="text-[#4894AD] text-lg">Cargando...</p>
+              <p className="text-[#4894AD] text-lg">{t('common.loading')}</p>
             </div>
           }>
             <VerifyEmailContent />
@@ -205,7 +207,7 @@ export default function VerifyEmailPage() {
             to="/" 
             className="text-sm text-[#4894AD] hover:text-[#195083] transition-colors duration-200"
           >
-            ← Volver al inicio
+            ← {t('common.backToHome')}
           </Link>
         </div>
       </div>

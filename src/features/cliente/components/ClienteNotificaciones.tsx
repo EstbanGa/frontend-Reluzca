@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { withClienteRole } from "@/components/common/ProtectedRoute";
+import { useTranslation } from "react-i18next";
 import { Bell, BellOff, Check, CheckCheck, Trash2, RefreshCw, Calendar, Clock, AlertCircle, Info } from "lucide-react";
 import { API_BASE_URL } from "@/config/env";
 
@@ -54,6 +55,7 @@ const TIPO_COLORS: Record<string, string> = {
 };
 
 function ClienteNotificaciones() {
+  const { t } = useTranslation();
   const [data, setData] = useState<NotificacionesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +144,7 @@ function ClienteNotificaciones() {
   };
 
   const eliminarNotificacion = async (notificacionId: string) => {
-    if (!confirm("¿Estás seguro de eliminar esta notificación?")) return;
+    if (!confirm(t('cliente.notifications.confirmDelete'))) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/notificaciones/${notificacionId}`, {
@@ -177,12 +179,12 @@ function ClienteNotificaciones() {
     const horas = Math.floor(diff / 3600000);
     const dias = Math.floor(diff / 86400000);
 
-    if (minutos < 1) return "Hace un momento";
-    if (minutos < 60) return `Hace ${minutos} minuto${minutos !== 1 ? "s" : ""}`;
-    if (horas < 24) return `Hace ${horas} hora${horas !== 1 ? "s" : ""}`;
-    if (dias < 7) return `Hace ${dias} día${dias !== 1 ? "s" : ""}`;
+    if (minutos < 1) return t('cliente.notifications.time.justNow');
+    if (minutos < 60) return t('cliente.notifications.time.minutes', { count: minutos });
+    if (horas < 24) return t('cliente.notifications.time.hours', { count: horas });
+    if (dias < 7) return t('cliente.notifications.time.days', { count: dias });
     
-    return fecha.toLocaleDateString("es-ES", {
+    return fecha.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -194,7 +196,7 @@ function ClienteNotificaciones() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <RefreshCw className="w-12 h-12 text-[#4894AD] animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Cargando notificaciones...</p>
+          <p className="text-gray-600">{t('cliente.notifications.loading')}</p>
         </div>
       </div>
     );
@@ -205,14 +207,14 @@ function ClienteNotificaciones() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error al cargar notificaciones</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('cliente.notifications.errorLoading')}</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchNotificaciones}
             className="px-6 py-2 bg-[#4894AD] text-white rounded-lg hover:bg-[#3a7a8f] transition-colors flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="w-5 h-5" />
-            Reintentar
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -228,10 +230,10 @@ function ClienteNotificaciones() {
             <div>
               <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
                 <Bell className="w-8 h-8 text-[#4894AD]" />
-                Notificaciones
+                {t('cliente.notifications.title')}
               </h1>
               <p className="text-gray-600 mt-2">
-                Mantente informado sobre el estado de tus reservas
+                {t('cliente.notifications.subtitle')}
               </p>
             </div>
             <button
@@ -246,15 +248,15 @@ function ClienteNotificaciones() {
           {data && (
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="text-sm text-gray-600">Total</div>
+                <div className="text-sm text-gray-600">{t('cliente.notifications.stats.total')}</div>
                 <div className="text-2xl font-bold text-gray-800">{data.estadisticas.total}</div>
               </div>
               <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="text-sm text-gray-600">No leídas</div>
+                <div className="text-sm text-gray-600">{t('cliente.notifications.stats.unread')}</div>
                 <div className="text-2xl font-bold text-blue-600">{data.estadisticas.no_leidas}</div>
               </div>
               <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="text-sm text-gray-600">Leídas</div>
+                <div className="text-sm text-gray-600">{t('cliente.notifications.stats.read')}</div>
                 <div className="text-2xl font-bold text-green-600">{data.estadisticas.leidas}</div>
               </div>
             </div>
@@ -271,7 +273,7 @@ function ClienteNotificaciones() {
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                Todas
+                {t('cliente.notifications.filters.all')}
               </button>
               <button
                 onClick={() => setFiltro("no_leidas")}
@@ -281,7 +283,7 @@ function ClienteNotificaciones() {
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                No leídas
+                {t('cliente.notifications.filters.unread')}
               </button>
               <button
                 onClick={() => setFiltro("leidas")}
@@ -291,7 +293,7 @@ function ClienteNotificaciones() {
                     : "bg-white text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                Leídas
+                {t('cliente.notifications.filters.read')}
               </button>
             </div>
 
@@ -301,7 +303,7 @@ function ClienteNotificaciones() {
                 className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2"
               >
                 <CheckCheck className="w-5 h-5" />
-                Marcar todas como leídas
+                {t('cliente.notifications.markAllRead')}
               </button>
             )}
           </div>
@@ -362,7 +364,7 @@ function ClienteNotificaciones() {
                           <div className="grid grid-cols-2 gap-3">
                             <div className="flex items-center gap-2 text-gray-600">
                               <Calendar className="w-4 h-4" />
-                              <span>{new Date(notificacion.reserva.fecha).toLocaleDateString("es-ES")}</span>
+                              <span>{new Date(notificacion.reserva.fecha).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-600">
                               <Clock className="w-4 h-4" />
@@ -371,12 +373,12 @@ function ClienteNotificaciones() {
                           </div>
                           {notificacion.reserva.plan && (
                             <div className="mt-2 text-gray-700">
-                              <span className="font-medium">Plan:</span> {notificacion.reserva.plan.nombre}
+                              <span className="font-medium">{t('cliente.notifications.planLabel')}</span> {notificacion.reserva.plan.nombre}
                             </div>
                           )}
                           {notificacion.reserva.empleada && (
                             <div className="mt-1 text-gray-700">
-                              <span className="font-medium">Empleada:</span>{" "}
+                              <span className="font-medium">{t('cliente.notifications.employeeLabel')}</span>{" "}
                               {notificacion.reserva.empleada.nombre} {notificacion.reserva.empleada.apellido}
                             </div>
                           )}
@@ -396,14 +398,14 @@ function ClienteNotificaciones() {
             <div className="text-center py-16">
               <BellOff className="w-20 h-20 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No hay notificaciones
+                {t('cliente.notifications.empty.all')}
               </h3>
               <p className="text-gray-500">
                 {filtro === "todas"
-                  ? "Aún no tienes ninguna notificación"
+                  ? t('cliente.notifications.empty.allDetail')
                   : filtro === "no_leidas"
-                  ? "No tienes notificaciones sin leer"
-                  : "No tienes notificaciones leídas"}
+                  ? t('cliente.notifications.empty.unread')
+                  : t('cliente.notifications.empty.read')}
               </p>
             </div>
           )}

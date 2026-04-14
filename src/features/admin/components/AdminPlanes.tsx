@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { 
@@ -75,13 +76,10 @@ function AdminPlanes() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [toggleLoading, setToggleLoading] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Opciones de estado para el filtro
-  const ESTADOS_PLAN = [
-    { value: 'todos', label: 'Todos los estados' },
-    { value: 'activo', label: 'Activos' },
-    { value: 'inactivo', label: 'Inactivos' }
-  ];
+  const ESTADOS_PLAN_VALUES = ['todos', 'activo', 'inactivo'];
 
   useEffect(() => {
     fetchPlanes();
@@ -146,7 +144,7 @@ function AdminPlanes() {
       setError(null);
     } catch (err) {
       console.error('Error al cargar planes:', err);
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : t('admin.plans.errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -236,14 +234,14 @@ function AdminPlanes() {
       }
     } catch (err) {
       console.error('Error al cambiar estado del plan:', err);
-      alert(err instanceof Error ? err.message : "Error al cambiar estado del plan");
+      alert(err instanceof Error ? err.message : t('admin.plans.errorToggle'));
     } finally {
       setToggleLoading(null);
     }
   };
 
   const handleDelete = async (ids: string[]) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar ${ids.length} plan(es)?`)) {
+    if (!window.confirm(t('admin.plans.confirmDelete', { n: ids.length }))) {
       return;
     }
 
@@ -275,14 +273,14 @@ function AdminPlanes() {
       }
     } catch (err) {
       console.error('Error al eliminar planes:', err);
-      alert(err instanceof Error ? err.message : "Error al eliminar planes");
+      alert(err instanceof Error ? err.message : t('admin.plans.errorDelete'));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const formatCurrency = (amount: number | null | undefined) => {
-    if (!amount) return 'No especificado';
+    if (!amount) return t('admin.plans.notSpecified');
     try {
       return new Intl.NumberFormat('es-CO', {
         style: 'currency',
@@ -290,12 +288,12 @@ function AdminPlanes() {
         minimumFractionDigits: 0
       }).format(amount);
     } catch {
-      return 'Precio inválido';
+      return t('admin.plans.invalidPrice');
     }
   };
 
   const formatServicios = (servicios: string[] | string | null | undefined) => {
-    if (!servicios) return 'Sin servicios';
+    if (!servicios) return t('admin.plans.noServices');
     if (Array.isArray(servicios)) {
       return servicios.join(', ');
     }
@@ -333,14 +331,14 @@ function AdminPlanes() {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Error al cargar planes</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('admin.plans.errorLoading')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
         <button 
           onClick={fetchPlanes}
           className="bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
           <RefreshCw size={16} />
-          Reintentar
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -353,10 +351,10 @@ function AdminPlanes() {
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              Gestión de Planes
+              {t('admin.plans.title')}
             </h1>
             <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              Administra todos los planes de servicio
+              {t('admin.plans.subtitle')}
             </p>
           </div>
           <button
@@ -364,7 +362,7 @@ function AdminPlanes() {
             className="bg-[#D95B26] hover:bg-[#b8491f] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium text-sm sm:text-base flex items-center gap-2 transition-colors whitespace-nowrap"
           >
             <Plus size={20} />
-            Crear Plan
+            {t('admin.plans.createPlan')}
           </button>
         </div>
       </div>
@@ -373,7 +371,7 @@ function AdminPlanes() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('common.total')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#195083]">
               {data?.estadisticas.total || 0}
             </p>
@@ -381,7 +379,7 @@ function AdminPlanes() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Activos</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.plans.filters.active')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
               {data?.estadisticas.activos || 0}
             </p>
@@ -389,7 +387,7 @@ function AdminPlanes() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Inactivos</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.plans.filters.inactive')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
               {data?.estadisticas.inactivos || 0}
             </p>
@@ -397,7 +395,7 @@ function AdminPlanes() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Filtrados</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.reservations.stats.filtered')}</p>
             <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-purple-600">
               {planesFiltrados.length || 0}
             </p>
@@ -413,7 +411,7 @@ function AdminPlanes() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por nombre, descripción, servicios, precio..."
+              placeholder={t('admin.plans.search')}
               className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
               value={busqueda}
               onChange={(e) => handleSearch(e.target.value)}
@@ -427,8 +425,10 @@ function AdminPlanes() {
               onChange={(e) => handleEstadoFilter(e.target.value)}
               className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              {ESTADOS_PLAN.map(estado => (
-                <option key={estado.value} value={estado.value}>{estado.label}</option>
+              {ESTADOS_PLAN_VALUES.map(value => (
+                <option key={value} value={value}>
+                  {value === 'todos' ? t('admin.plans.filters.allStates') : value === 'activo' ? t('admin.plans.filters.active') : t('admin.plans.filters.inactive')}
+                </option>
               ))}
             </select>
           </div>
@@ -440,7 +440,7 @@ function AdminPlanes() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-blue-700 font-medium">
-              {selectedPlanes.length} plan(es) seleccionado(s)
+              {t('admin.plans.selectedCount', { n: selectedPlanes.length })}
             </span>
           </div>
           <div className="flex gap-2">
@@ -448,7 +448,7 @@ function AdminPlanes() {
               onClick={() => setSelectedPlanes([])}
               className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded text-sm"
             >
-              Limpiar selección
+              {t('admin.plans.clearSelection')}
             </button>
             <button
               onClick={() => handleDelete(selectedPlanes)}
@@ -460,7 +460,7 @@ function AdminPlanes() {
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Eliminar
+              {t('admin.plans.delete')}
             </button>
           </div>
         </div>
@@ -483,7 +483,7 @@ function AdminPlanes() {
                 )}
               </button>
               <span className="text-sm text-gray-600 font-medium">
-                Seleccionar todos
+                {t('admin.plans.selectAll')}
               </span>
             </div>
 
@@ -528,7 +528,7 @@ function AdminPlanes() {
                                 <ToggleLeft className="h-5 w-5 text-red-500 hover:text-red-600" />
                               )}
                               <span className={`text-xs font-medium ${plan.estado ? 'text-green-600' : 'text-red-600'}`}>
-                                {plan.estado ? 'Activo' : 'Inactivo'}
+                                {plan.estado ? t('common.active') : t('common.inactive')}
                               </span>
                             </button>
                           </div>
@@ -552,7 +552,7 @@ function AdminPlanes() {
                         <button
                           onClick={() => openModal(plan)}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Ver detalles"
+                          title={t('admin.plans.viewDetails')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -560,7 +560,7 @@ function AdminPlanes() {
                         <button
                           onClick={() => handleEditPlan(plan.id)}
                           className="p-2 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                          title="Editar plan"
+                          title={t('admin.plans.editPlan')}
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
@@ -569,7 +569,7 @@ function AdminPlanes() {
                           onClick={() => handleDelete([plan.id])}
                           disabled={deleteLoading}
                           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Eliminar plan"
+                          title={t('admin.plans.deletePlan')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -585,7 +585,7 @@ function AdminPlanes() {
                             <Calendar className="h-3 w-3 text-blue-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">Vigencia</p>
+                            <p className="text-sm font-medium text-gray-900">{t('admin.plans.validity')}</p>
                             <p className="text-xs text-gray-600">
                               {formatDate(plan.fecha_inicio)} - {formatDate(plan.fecha_final)}
                             </p>
@@ -600,7 +600,7 @@ function AdminPlanes() {
                             <Clock className="h-3 w-3 text-orange-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">Horario</p>
+                            <p className="text-sm font-medium text-gray-900">{t('admin.plans.schedule')}</p>
                             <p className="text-xs text-gray-600">
                               {formatTime(plan.hora_inicio)} - {formatTime(plan.hora_final)}
                             </p>
@@ -615,7 +615,7 @@ function AdminPlanes() {
                             <Tag className="h-3 w-3 text-green-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">Servicios</p>
+                            <p className="text-sm font-medium text-gray-900">{t('admin.plans.services')}</p>
                             <p className="text-xs text-gray-600 truncate">
                               {formatServicios(plan.servicios_asociados)}
                             </p>
@@ -628,7 +628,7 @@ function AdminPlanes() {
                     {plan.descripcion && (
                       <div className="p-3 bg-blue-50 rounded-lg">
                         <p className="text-sm text-gray-700 line-clamp-2">
-                          <span className="font-medium">Descripción:</span> {plan.descripcion}
+                          <span className="font-medium">{t('admin.plans.description')}:</span> {plan.descripcion}
                         </p>
                       </div>
                     )}
@@ -641,12 +641,12 @@ function AdminPlanes() {
           <div className="text-center py-8 sm:py-12">
             <Package className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-              {(busqueda || filtroEstado !== 'todos') ? 'No se encontraron planes' : 'No hay planes'}
+              {(busqueda || filtroEstado !== 'todos') ? t('admin.plans.noPlansFound') : t('admin.plans.noPlans')}
             </h3>
             <p className="text-sm sm:text-base text-gray-600">
               {(busqueda || filtroEstado !== 'todos') 
-                ? 'Intenta cambiar los filtros de búsqueda'
-                : 'Aún no se han creado planes en el sistema'
+                ? t('admin.plans.tryDifferentFilters')
+                : t('admin.plans.noPlansYet')
               }
             </p>
             {!(busqueda || filtroEstado !== 'todos') && (
@@ -655,7 +655,7 @@ function AdminPlanes() {
                 className="mt-4 bg-[#195083] text-white px-6 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium flex items-center gap-2 mx-auto"
               >
                 <Plus size={16} />
-                Crear Primer Plan
+                {t('admin.plans.createFirstPlan')}
               </button>
             )}
           </div>
@@ -680,7 +680,7 @@ function AdminPlanes() {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{selectedPlan.nombre}</h2>
-                    <p className="text-gray-600">Detalles completos del plan</p>
+                    <p className="text-gray-600">{t('admin.plans.modal.fullDetails')}</p>
                   </div>
                 </div>
                 <button
@@ -696,7 +696,7 @@ function AdminPlanes() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <Tag className="h-4 w-4" />
-                    Estado y Precio
+                    {t('admin.plans.modal.statusAndPrice')}
                   </h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -710,7 +710,7 @@ function AdminPlanes() {
                         ) : (
                           <XCircle className="h-4 w-4" />
                         )}
-                        {selectedPlan.estado ? 'Activo' : 'Inactivo'}
+                        {selectedPlan.estado ? t('common.active') : t('common.inactive')}
                       </span>
                     </div>
                     {selectedPlan.precio && (
@@ -722,11 +722,11 @@ function AdminPlanes() {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Registro del Sistema</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">{t('admin.plans.modal.systemRecord')}</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Creado: {formatDateForModal(selectedPlan.created_at)}</p>
+                    <p>{t('admin.plans.modal.created')}: {formatDateForModal(selectedPlan.created_at)}</p>
                     {selectedPlan.updated_at !== selectedPlan.created_at && (
-                      <p>Actualizado: {formatDateForModal(selectedPlan.updated_at)}</p>
+                      <p>{t('admin.plans.modal.updated')}: {formatDateForModal(selectedPlan.updated_at)}</p>
                     )}
                     <p className="text-xs text-gray-500">ID: {selectedPlan.id}</p>
                   </div>
@@ -740,15 +740,15 @@ function AdminPlanes() {
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Vigencia del Plan
+                      {t('admin.plans.modal.planValidity')}
                     </h4>
                     <div className="space-y-2">
                       <div>
-                        <p className="text-sm text-gray-600">Fecha de inicio</p>
+                        <p className="text-sm text-gray-600">{t('admin.plans.modal.startDate')}</p>
                         <p className="font-medium text-gray-900">{formatDate(selectedPlan.fecha_inicio)}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Fecha de finalización</p>
+                        <p className="text-sm text-gray-600">{t('admin.plans.modal.endDate')}</p>
                         <p className="font-medium text-gray-900">{formatDate(selectedPlan.fecha_final)}</p>
                       </div>
                     </div>
@@ -760,15 +760,15 @@ function AdminPlanes() {
                   <div className="bg-orange-50 p-4 rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Horarios de Servicio
+                      {t('admin.plans.modal.serviceHours')}
                     </h4>
                     <div className="space-y-2">
                       <div>
-                        <p className="text-sm text-gray-600">Hora de inicio</p>
+                        <p className="text-sm text-gray-600">{t('admin.plans.modal.startTime')}</p>
                         <p className="font-medium text-gray-900">{formatTime(selectedPlan.hora_inicio)}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Hora de finalización</p>
+                        <p className="text-sm text-gray-600">{t('admin.plans.modal.endTime')}</p>
                         <p className="font-medium text-gray-900">{formatTime(selectedPlan.hora_final)}</p>
                       </div>
                     </div>
@@ -781,7 +781,7 @@ function AdminPlanes() {
                 <div className="bg-green-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <Tag className="h-4 w-4" />
-                    Servicios Asociados
+                    {t('admin.plans.modal.associatedServices')}
                   </h4>
                   <p className="text-gray-700 leading-relaxed">{formatServicios(selectedPlan.servicios_asociados)}</p>
                 </div>
@@ -792,7 +792,7 @@ function AdminPlanes() {
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Descripción del Plan
+                    {t('admin.plans.modal.planDescription')}
                   </h4>
                   <p className="text-gray-700 leading-relaxed">{selectedPlan.descripcion}</p>
                 </div>
@@ -808,7 +808,7 @@ function AdminPlanes() {
                   className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
                   <Edit3 className="h-4 w-4" />
-                  Editar Plan
+                  {t('admin.plans.modal.editPlan')}
                 </button>
                 <button
                   onClick={() => handleToggleEstado(selectedPlan.id, selectedPlan.estado)}
@@ -826,13 +826,13 @@ function AdminPlanes() {
                   ) : (
                     <ToggleRight className="h-4 w-4" />
                   )}
-                  {selectedPlan.estado ? 'Desactivar' : 'Activar'}
+                  {selectedPlan.estado ? t('admin.plans.modal.deactivate') : t('admin.plans.modal.activate')}
                 </button>
                 <button
                   onClick={closeModal}
                   className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
-                  Cerrar
+                  {t('common.close')}
                 </button>
               </div>
             </div>
