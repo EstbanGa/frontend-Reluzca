@@ -47,6 +47,14 @@ interface ActividadPlan {
   duracion_estimada_minutos?: number | null;
 }
 
+interface Actividad {
+  id: string;
+  nombre: string;
+  descripcion?: string | null;
+  precio_unitario?: number | null;
+  activa: boolean;
+}
+
 interface Plan {
   id: string;
   nombre: string;
@@ -125,6 +133,16 @@ interface CalculoPrecio {
   precio_por_dia: number;
 }
 
+// Horarios por defecto cuando no se elige un plan (solo actividades)
+const HORARIOS_DEFAULT: HorarioDisponible[] = [
+  { hora_inicio: '07:00', hora_final: '09:00', horas_duracion: 2, sobrecargo_sabado: 0, descripcion: '2 horas de servicio' },
+  { hora_inicio: '07:00', hora_final: '10:00', horas_duracion: 3, sobrecargo_sabado: 0, descripcion: '3 horas de servicio' },
+  { hora_inicio: '07:00', hora_final: '11:00', horas_duracion: 4, sobrecargo_sabado: 0, descripcion: '4 horas de servicio' },
+  { hora_inicio: '07:00', hora_final: '12:00', horas_duracion: 5, sobrecargo_sabado: 0, descripcion: '5 horas de servicio' },
+  { hora_inicio: '07:00', hora_final: '13:00', horas_duracion: 6, sobrecargo_sabado: 0, descripcion: '6 horas de servicio' },
+  { hora_inicio: '07:00', hora_final: '15:00', horas_duracion: 8, sobrecargo_sabado: 0, descripcion: '8 horas de servicio' },
+];
+
 // Pasos del proceso
 const PASOS_IDS = [1, 2, 3, 4, 5, 6];
 const PASO_KEYS = [
@@ -149,6 +167,7 @@ function CrearReserva() {
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
   const [tareasExtra, setTareasExtra] = useState<TareaExtra[]>([]);
+  const [actividadesDisponibles, setActividadesDisponibles] = useState<Actividad[]>([]);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadDia[]>([]);
   const [horariosDisponibles, setHorariosDisponibles] = useState<HorarioDisponible[]>([]);
 
@@ -174,7 +193,8 @@ function CrearReserva() {
     Promise.all([
       cargarEmpleadas(),
       cargarPlanes(),
-      cargarUbicaciones()
+      cargarUbicaciones(),
+      cargarActividades(),
     ]);
   }, []);
 
@@ -185,10 +205,12 @@ function CrearReserva() {
     }
   }, [planSeleccionado]);
 
-  // Cargar horarios cuando se selecciona un plan
+  // Cargar horarios cuando se selecciona un plan (o usar defaults si no hay plan)
   useEffect(() => {
     if (planSeleccionado) {
       cargarHorariosDisponibles(planSeleccionado.id);
+    } else {
+      setHorariosDisponibles(HORARIOS_DEFAULT);
     }
   }, [planSeleccionado]);
 
@@ -365,6 +387,20 @@ function CrearReserva() {
     }
   };
 
+  const cargarActividades = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/actividades?activa_only=true`, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setActividadesDisponibles(Array.isArray(data) ? data : data.actividades ?? []);
+    } catch {
+      // No bloqueamos la carga si las actividades fallan
+    }
+  };
+
   const calcularPrecio = async () => {
     if (!horarioSeleccionado) return;
     
@@ -519,13 +555,13 @@ function CrearReserva() {
       setPasoActual(1);
     } else if (paso === 2 && empleadaSeleccionada) {
       setPasoActual(2);
-    } else if (paso === 3 && empleadaSeleccionada && planSeleccionado) {
+    } else if (paso === 3 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0)) {
       setPasoActual(3);
-    } else if (paso === 4 && empleadaSeleccionada && planSeleccionado && horarioSeleccionado) {
+    } else if (paso === 4 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0) && horarioSeleccionado) {
       setPasoActual(4);
-    } else if (paso === 5 && empleadaSeleccionada && planSeleccionado && horarioSeleccionado && fechasSeleccionadas.length > 0) {
+    } else if (paso === 5 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0) && horarioSeleccionado && fechasSeleccionadas.length > 0) {
       setPasoActual(5);
-    } else if (paso === 6 && empleadaSeleccionada && planSeleccionado && horarioSeleccionado && fechasSeleccionadas.length > 0 && ubicacionSeleccionada) {
+    } else if (paso === 6 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0) && horarioSeleccionado && fechasSeleccionadas.length > 0 && ubicacionSeleccionada) {
       setPasoActual(6);
     }
   };
@@ -550,15 +586,15 @@ function CrearReserva() {
   };
 
   const seleccionarPlan = (plan: Plan) => {
-    setPlanSeleccionado(plan);
+    // Permite deseleccionar haciendo clic en el plan ya activo
+    if (planSeleccionado?.id === plan.id) {
+      setPlanSeleccionado(null);
+    } else {
+      setPlanSeleccionado(plan);
+    }
     setHorarioSeleccionado(null);
     setFechasSeleccionadas([]);
-    // Si es full, preseleccionar todas las actividades del plan
-    if (plan.tipo_plan !== 'a_la_carte') {
-      setActividadesSeleccionadas((plan.actividades ?? []).map((a) => a.id));
-    } else {
-      setActividadesSeleccionadas([]);
-    }
+    // actividadesSeleccionadas se mantiene para actividades individuales
   };
 
   const toggleActividadPlan = (id: string) => {
@@ -619,7 +655,7 @@ function CrearReserva() {
 
   // Validaciones
   const puedeAvanzarPaso1 = empleadaSeleccionada !== null;
-  const puedeAvanzarPaso2 = planSeleccionado !== null;
+  const puedeAvanzarPaso2 = planSeleccionado !== null || actividadesSeleccionadas.length > 0;
   const puedeAvanzarPaso3 = horarioSeleccionado !== null;
   const puedeAvanzarPaso4 = fechasSeleccionadas.length > 0;
   const puedeAvanzarPaso5 = ubicacionSeleccionada !== null;
@@ -738,122 +774,169 @@ function CrearReserva() {
           </div>
         )}
 
-        {/* Paso 2: Seleccionar Plan */}
+        {/* Paso 2: Seleccionar Plan y Actividades */}
         {pasoActual === 2 && (
-          <div className="p-4 sm:p-6">
-            <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                {t('cliente.createReservation.selectPlan.title')}
+          <div className="p-4 sm:p-6 space-y-8">
+            {/* Header */}
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                Elige tu servicio
               </h2>
-              <p className="text-gray-600">
-                {t('cliente.createReservation.selectPlan.employee')} <span className="font-semibold text-gray-900">{empleadaSeleccionada?.nombre_completo}</span>
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {t('cliente.createReservation.selectPlan.planDefines')}
+              <p className="text-gray-600 text-sm">
+                Empleada: <span className="font-semibold text-gray-900">{empleadaSeleccionada?.nombre_completo}</span>.
+                {" "}Puedes elegir un plan, actividades individuales, o ambos.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* ─── SECCIÓN PLANES ─── */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Package className="h-5 w-5 text-[#195083]" />
+                <h3 className="text-lg font-semibold text-gray-800">Planes</h3>
+                {planSeleccionado && (
+                  <span className="text-xs bg-[#195083]/10 text-[#195083] px-2 py-0.5 rounded-full font-semibold">
+                    Seleccionado
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Un plan incluye tiempo y actividades de limpieza en un precio cerrado. Haz clic de nuevo para deseleccionar.
+              </p>
+
               {planes.length === 0 ? (
-                <div className="lg:col-span-2 text-center py-12">
-                  <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {t('cliente.createReservation.selectPlan.noPlans')}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {t('cliente.createReservation.selectPlan.noPlansDesc')}
-                  </p>
+                <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
+                  <Package className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No hay planes disponibles</p>
                 </div>
               ) : (
-              planes.map((plan) => (
-                <div
-                  key={plan.id}
-                  onClick={() => seleccionarPlan(plan)}
-                  className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                    planSeleccionado?.id === plan.id
-                      ? 'border-[#195083] bg-[#195083]/5'
-                      : 'border-gray-200 hover:border-[#195083]/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="bg-[#195083]/10 p-2 rounded-lg">
-                      <Package className="h-5 w-5 text-[#195083]" />
-                    </div>
-                    {planSeleccionado?.id === plan.id && (
-                      <CheckCircle className="h-5 w-5 text-[#195083]" />
-                    )}
-                  </div>
-                  
-                  <h4 className="font-semibold text-gray-900 mb-1">{plan.nombre}</h4>
-                  <p className="text-sm text-gray-600 mb-2">{plan.descripcion}</p>
-                  
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-bold text-[#195083]">
-                      {formatCurrency(plan.precio)} {t('cliente.createReservation.selectPlan.perDay')}
-                    </span>
-                    <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                      {t('cliente.createReservation.selectPlan.workHours', { n: plan.horas_servicio })}
-                    </span>
-                  </div>
-
-                  <div className="text-sm text-gray-600 mb-3">
-                    {t('cliente.createReservation.selectPlan.available', { start: plan.hora_inicio, end: plan.hora_final })}
-                  </div>
-
-                  {/* Actividades à la carte */}
-                  {plan.tipo_plan === 'a_la_carte' && plan.actividades && plan.actividades.length > 0 && planSeleccionado?.id === plan.id && (
-                    <div className="mt-3 border-t border-gray-100 pt-3">
-                      <p className="text-xs font-medium text-gray-600 mb-2">
-                        {t('admin.createPlan.activities')}
-                      </p>
-                      <div className="space-y-1">
-                        {plan.actividades.map((act) => {
-                          const sel = actividadesSeleccionadas.includes(act.id);
-                          return (
-                            <label key={act.id} className="flex items-center gap-2 cursor-pointer text-sm">
-                              <input
-                                type="checkbox"
-                                checked={sel}
-                                onChange={() => toggleActividadPlan(act.id)}
-                                className="w-4 h-4 text-[#195083]"
-                              />
-                              <span className="flex-1 text-gray-700">{act.nombre}</span>
-                              {act.precio_unitario != null && (
-                                <span className="text-gray-500 text-xs">
-                                  ${Number(act.precio_unitario).toLocaleString('es-CO')}
-                                </span>
-                              )}
-                            </label>
-                          );
-                        })}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {planes.map((plan) => (
+                    <div
+                      key={plan.id}
+                      onClick={() => seleccionarPlan(plan)}
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                        planSeleccionado?.id === plan.id
+                          ? 'border-[#195083] bg-[#195083]/5 shadow-sm'
+                          : 'border-gray-200 hover:border-[#195083]/50 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="bg-[#195083]/10 p-2 rounded-lg">
+                          <Package className="h-5 w-5 text-[#195083]" />
+                        </div>
+                        {planSeleccionado?.id === plan.id
+                          ? <CheckCircle className="h-5 w-5 text-[#195083]" />
+                          : <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                        }
                       </div>
-                      {actividadesSeleccionadas.length > 0 && (
-                        <p className="text-xs text-[#195083] mt-2 font-medium">
-                          Total: ${(
-                            plan.actividades
-                              .filter((a) => actividadesSeleccionadas.includes(a.id))
-                              .reduce((s, a) => s + (a.precio_unitario ?? 0), 0)
-                          ).toLocaleString('es-CO')}
-                        </p>
+
+                      <h4 className="font-semibold text-gray-900 mb-1">{plan.nombre}</h4>
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{plan.descripcion}</p>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-[#195083]">
+                          {formatCurrency(plan.precio)}<span className="text-xs text-gray-500 font-normal ml-1">/ día</span>
+                        </span>
+                        <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                          {plan.horas_servicio}h de trabajo
+                        </span>
+                      </div>
+
+                      {/* Actividades incluidas */}
+                      {plan.actividades && plan.actividades.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <p className="text-xs text-gray-500 mb-1.5 font-medium">Actividades incluidas</p>
+                          <div className="flex flex-wrap gap-1">
+                            {plan.actividades.map((a) => (
+                              <span key={a.id} className="text-xs bg-[#195083]/8 text-[#195083] px-1.5 py-0.5 rounded">
+                                {a.nombre}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
-                  )}
-
-                  {/* Servicios incluidos (planes full) */}
-                  {plan.tipo_plan !== 'a_la_carte' && plan.servicios_asociados.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs text-gray-500 mb-1">{t('cliente.createReservation.selectPlan.servicesIncluded')}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {plan.servicios_asociados.slice(0, 20).map((servicio, index) => (
-                          <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                            {servicio}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              ))
+              )}
+            </div>
+
+            {/* ─── DIVIDER ─── */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white px-4 text-sm text-gray-500">o elige actividades individuales</span>
+              </div>
+            </div>
+
+            {/* ─── SECCIÓN ACTIVIDADES ─── */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <CheckSquare className="h-5 w-5 text-[#195083]" />
+                <h3 className="text-lg font-semibold text-gray-800">Actividades individuales</h3>
+                {actividadesSeleccionadas.length > 0 && (
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                    {actividadesSeleccionadas.length} seleccionada{actividadesSeleccionadas.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Selecciona servicios específicos que necesites. Cada uno tiene un precio fijo por sesión.
+              </p>
+
+              {actividadesDisponibles.length === 0 ? (
+                <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
+                  <CheckSquare className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No hay actividades disponibles</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {actividadesDisponibles.map((act) => {
+                    const sel = actividadesSeleccionadas.includes(act.id);
+                    return (
+                      <label
+                        key={act.id}
+                        className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all ${
+                          sel ? 'border-[#195083] bg-[#195083]/5' : 'border-gray-200 hover:border-[#195083]/40 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={sel}
+                          onChange={() => toggleActividadPlan(act.id)}
+                          className="w-4 h-4 text-[#195083] shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-800 text-sm">{act.nombre}</p>
+                          {act.descripcion && (
+                            <p className="text-xs text-gray-500 line-clamp-1">{act.descripcion}</p>
+                          )}
+                        </div>
+                        {act.precio_unitario != null && (
+                          <span className="text-sm font-bold text-[#195083] shrink-0">
+                            {formatCurrency(Number(act.precio_unitario))}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Subtotal actividades */}
+              {actividadesSeleccionadas.length > 0 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-sm font-semibold text-green-800">
+                    Subtotal actividades individuales:{' '}
+                    {formatCurrency(
+                      actividadesDisponibles
+                        .filter((a) => actividadesSeleccionadas.includes(a.id))
+                        .reduce((s, a) => s + (a.precio_unitario ? Number(a.precio_unitario) : 0), 0)
+                    )}
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -866,10 +949,17 @@ function CrearReserva() {
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                 {t('cliente.createReservation.selectSchedule.title')}
               </h2>
-              <p className="text-gray-600">
-                {t('cliente.createReservation.selectSchedule.plan')} <span className="font-semibold text-gray-900">{planSeleccionado?.nombre}</span> 
-                ({t('cliente.createReservation.selectPlan.workHours', { n: planSeleccionado?.horas_servicio })})
-              </p>
+              {planSeleccionado ? (
+                <p className="text-gray-600">
+                  {t('cliente.createReservation.selectSchedule.plan')}{" "}
+                  <span className="font-semibold text-gray-900">{planSeleccionado.nombre}</span>
+                  {" "}({planSeleccionado.horas_servicio}h de trabajo)
+                </p>
+              ) : (
+                <p className="text-gray-600">
+                  Solo actividades individuales — elige cuántas horas necesitas
+                </p>
+              )}
               <p className="text-sm text-gray-500 mt-1">
                 {t('cliente.createReservation.selectSchedule.subtitle')}
               </p>

@@ -13,10 +13,7 @@ import AdminEditarUsuario from '@/features/admin/components/AdminEditarUsuario';
 import AdminCrearUsuario from '@/features/admin/components/AdminCrearUsuario';
 import AdminReservas from '@/features/admin/components/AdminReservas';
 import AdminEditarReserva from '@/features/admin/components/AdminEditarReserva';
-import AdminPlanes from '@/features/admin/components/AdminPlanes';
-import AdminCrearPlan from '@/features/admin/components/AdminCrearPlan';
-import AdminEditarPlan from '@/features/admin/components/AdminEditarPlan';
-import AdminActividades from '@/features/admin/components/AdminActividades';
+import AdminPlanesActividades from '@/features/admin/components/AdminPlanesActividades';
 import AdminPQRS from '@/features/admin/components/AdminPQRS';
 import AdminNotificaciones from '@/features/admin/components/AdminNotificaciones';
 import AdminConfiguracion from '@/features/admin/components/AdminConfiguracion';
@@ -59,10 +56,7 @@ export default function App() {
           <Route path="usuarios/editar" element={<AdminEditarUsuario />} />
           <Route path="reservas/index" element={<AdminReservas />} />
           <Route path="reservas/editar" element={<AdminEditarReserva />} />
-          <Route path="planes/index" element={<AdminPlanes />} />
-          <Route path="planes/crear" element={<AdminCrearPlan />} />
-          <Route path="planes/editar" element={<AdminEditarPlan />} />
-          <Route path="actividades/index" element={<AdminActividades />} />
+          <Route path="planes/index" element={<AdminPlanesActividades />} />
           <Route path="pqrs/index" element={<AdminPQRS />} />
           <Route path="notificaciones/index" element={<AdminNotificaciones />} />
           <Route path="configuracion/index" element={<AdminConfiguracion />} />
