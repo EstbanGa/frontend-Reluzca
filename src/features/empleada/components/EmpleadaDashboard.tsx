@@ -3,22 +3,24 @@ import { useState, useEffect } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
+import { formatDate } from "@/utils/dateUtils";
+import { API_BASE_URL } from "@/config/env";
 import { 
   Calendar, 
   Star, 
-  MapPin, 
   Clock,
   CheckCircle,
   AlertCircle,
   UserCheck,
-  Home,
   ArrowRight,
   Award,
   TrendingUp,
   Users,
   RefreshCw,
-  Bell
+  Bell,
+  Play,
+  Zap,
+  MapPin
 } from "lucide-react";
 
 interface EmpleadaData {
@@ -30,16 +32,49 @@ interface EmpleadaData {
   };
 }
 
+interface ReservaActivaBanner {
+  id: string;
+  fecha: string | null;
+  hora_inicio: string | null;
+  hora_final: string | null;
+  estado: string;
+  cliente: { nombre: string } | null;
+  lugar: { nombre: string; nombre_lugar: string | null } | null;
+  actividades: { ejecutada: boolean }[];
+}
+
 function EmpleadaIndex() {
   const { t } = useTranslation();
   const [data, setData] = useState<EmpleadaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reservaActiva, setReservaActiva] = useState<ReservaActivaBanner | null>(null);
+  const [empleadaId, setEmpleadaId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const authHeader = () => ({
+    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    "Content-Type": "application/json",
+  });
 
   useEffect(() => {
     fetchData();
+    // Obtener empleada_id del token
+    fetch(`${API_BASE_URL}/api/auth/me`, { headers: authHeader() })
+      .then((r) => r.json())
+      .then((u) => setEmpleadaId(u.id ?? u.supabase_uid ?? null))
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!empleadaId) return;
+    fetch(`${API_BASE_URL}/api/reservas/empleada/${empleadaId}/activa`, { headers: authHeader() })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d?.activa && d.reserva) setReservaActiva(d.reserva);
+      })
+      .catch(() => {});
+  }, [empleadaId]);
 
   const fetchData = async () => {
     try {
@@ -115,6 +150,57 @@ function EmpleadaIndex() {
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+
+      {/* —— BANNER: SERVICIO EN PROGRESO —— */}
+      {reservaActiva && (
+        <div
+          className="bg-gradient-to-r from-[#D95B26] to-[#e87f50] rounded-2xl p-4 sm:p-5 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => navigate("/empleada/reserva-activa")}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-white/70 uppercase tracking-wide">
+                  {reservaActiva.estado === "en_proceso" ? "▶️ En Progreso" : "📅 Servicio de hoy"}
+                </p>
+                <p className="font-extrabold text-base sm:text-lg truncate">
+                  {reservaActiva.cliente?.nombre ?? "Cliente"}
+                </p>
+                <div className="flex items-center gap-2 text-white/80 text-xs mt-0.5">
+                  <Clock className="h-3 w-3" />
+                  <span>{reservaActiva.hora_inicio} – {reservaActiva.hora_final}</span>
+                  {reservaActiva.lugar && (
+                    <>
+                      <span>·</span>
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate max-w-32">{reservaActiva.lugar.nombre}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              {reservaActiva.actividades.length > 0 && (
+                <span className="text-xs font-bold bg-white/20 rounded-full px-2 py-0.5">
+                  {reservaActiva.actividades.filter((a) => a.ejecutada).length}/
+                  {reservaActiva.actividades.length} act.
+                </span>
+              )}
+              <div className="flex items-center gap-1.5 bg-white text-[#D95B26] rounded-xl px-3 py-1.5 font-bold text-xs">
+                <Play className="h-3 w-3" />
+                Ver servicio
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header de Bienvenida */}
       <div className="bg-gradient-to-r from-[#195083] to-[#4894AD] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">

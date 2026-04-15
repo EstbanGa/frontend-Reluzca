@@ -33,6 +33,7 @@ import ClientePerfil from '@/features/cliente/components/ClientePerfil';
 import EmpleadaLayout from '@/features/empleada/components/EmpleadaLayout';
 import EmpleadaDashboard from '@/features/empleada/components/EmpleadaDashboard';
 import EmpleadaReservas from '@/features/empleada/components/EmpleadaReservas';
+import EmpleadaReservaActiva from '@/features/empleada/components/EmpleadaReservaActiva';
 import EmpleadaCalificaciones from '@/features/empleada/components/EmpleadaCalificaciones';
 import EmpleadaNotificaciones from '@/features/empleada/components/EmpleadaNotificaciones';
 import EmpleadaGanancias from '@/features/empleada/components/EmpleadaGanancias';
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="/empleada" element={<EmpleadaLayout />}>
           <Route path="index" element={<EmpleadaDashboard />} />
           <Route path="reservas/index" element={<EmpleadaReservas />} />
+          <Route path="reserva-activa" element={<EmpleadaReservaActiva />} />
           <Route path="calificaciones/index" element={<EmpleadaCalificaciones />} />
           <Route path="notificaciones/index" element={<EmpleadaNotificaciones />} />
           <Route path="ganancias/index" element={<EmpleadaGanancias />} />

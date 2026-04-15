@@ -393,7 +393,7 @@ function AdminUsuarios() {
                           {u.ranking != null && (
                             <div className="flex items-center gap-0.5 mt-0.5">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span className="text-xs text-gray-500">{u.ranking.toFixed(1)}</span>
+                              <span className="text-xs text-gray-500">{Number(u.ranking).toFixed(1)}</span>
                             </div>
                           )}
                         </div>
