@@ -1,13 +1,13 @@
 ﻿
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
-  Users, Search, Crown, UserCheck, Briefcase, Edit3, Eye, EyeOff,
-  X, RefreshCw, AlertCircle, Trash2, Download, KeyRound, Mail, Phone,
-  Calendar, MapPin, Star, ChevronLeft, ChevronRight, CheckCircle,
-  XCircle, Save
+  Users, Search, Crown, UserCheck, Briefcase, Eye,
+  RefreshCw, AlertCircle, Download, Star,
+  ChevronLeft, ChevronRight, CheckCircle, XCircle,
 } from "lucide-react";
 
 // â”€â”€â”€ Interfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -97,36 +97,44 @@ const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string }> 
 
 // â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AdminUsuarios() {
+  const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [rolFilter, setRolFilter] = useState<"todos" | "admin" | "cliente" | "empleada">("todos");
   const [page, setPage] = useState(1);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Detail panel
-  const [detailUser, setDetailUser] = useState<Usuario | null>(null);
+  // Compatibility stubs – panels permanently disabled (conditions always false)
+  const [detailUser] = useState<Usuario | null>(null);
   const [detailTab, setDetailTab] = useState<"reservas" | "ubicaciones" | "editar">("reservas");
-  const [detailReservas, setDetailReservas] = useState<Reserva[]>([]);
-  const [detailUbicaciones, setDetailUbicaciones] = useState<Ubicacion[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailReservas] = useState<Reserva[]>([]);
+  const [detailUbicaciones] = useState<Ubicacion[]>([]);
+  const [detailLoading] = useState(false);
   const [detailPage, setDetailPage] = useState(1);
-
-  // Edit form
   const [editForm, setEditForm] = useState({ nombre: "", apellido: "", telefono: "", direccion: "", estado: "" });
-  const [editLoading, setEditLoading] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  // Password modal
-  const [pwdModal, setPwdModal] = useState(false);
-  const [pwdTarget, setPwdTarget] = useState<Usuario | null>(null);
+  const [editLoading] = useState(false);
+  const [editError] = useState<string | null>(null);
+  const [pwdModal] = useState(false);
+  const [pwdTarget] = useState<Usuario | null>(null);
   const [newPwd, setNewPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [pwdLoading, setPwdLoading] = useState(false);
-  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdLoading] = useState(false);
+  const [pwdError] = useState<string | null>(null);
+  const [deleteLoading] = useState(false);
+  const openDetail = (u: Usuario) => navigate(`/admin/usuarios/detalle/${u.id}`);
+  const closeDetail = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSaveEdit = async () => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleDelete = async (_id: string) => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const openPwd = (_u: Usuario) => {};
+  const closePwd = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleChangePwd = async () => {};
 
-  useEffect(() => { loadAllUsuarios(); }, []);
+  useEffect(() => { loadAllUsuarios(); }, []);;
 
   const loadAllUsuarios = async () => {
     setLoading(true);
@@ -147,102 +155,15 @@ function AdminUsuarios() {
     }
   };
 
-  const openDetail = async (u: Usuario) => {
-    setDetailUser(u);
-    setDetailTab("reservas");
-    setDetailPage(1);
-    setEditForm({ nombre: u.nombre, apellido: u.apellido, telefono: u.telefono ?? "", direccion: u.direccion ?? "", estado: u.estado });
-    setEditError(null);
-    setDetailLoading(true);
-    try {
-      const [rRes, uRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/reservas/cliente/${u.id}`, { headers: authHeaders() }),
-        fetch(`${API_BASE_URL}/api/ubicaciones/cliente/${u.id}`, { headers: authHeaders() }),
-      ]);
-      setDetailReservas(rRes.ok ? await rRes.json() : []);
-      setDetailUbicaciones(uRes.ok ? await uRes.json() : []);
-    } catch {
-      setDetailReservas([]);
-      setDetailUbicaciones([]);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  const closeDetail = () => setDetailUser(null);
-
-  const handleSaveEdit = async () => {
-    if (!detailUser) return;
-    setEditLoading(true);
-    setEditError(null);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/usuarios/${detailUser.id}`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          nombre: editForm.nombre.trim(),
-          apellido: editForm.apellido.trim(),
-          telefono: editForm.telefono.trim() || null,
-          direccion: editForm.direccion.trim() || null,
-          estado: editForm.estado,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      await loadAllUsuarios();
-      closeDetail();
-    } catch (e: any) {
-      setEditError(`Error al guardar: ${e.message}`);
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Â¿Eliminar este usuario permanentemente?")) return;
-    setDeleteLoading(true);
-    try {
-      await fetch(`${API_BASE_URL}/api/usuarios/${id}`, { method: "DELETE", headers: authHeaders() });
-      await loadAllUsuarios();
-      if (detailUser?.id === id) closeDetail();
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const openPwd = (u: Usuario) => { setPwdTarget(u); setNewPwd(""); setPwdError(null); setPwdModal(true); };
-  const closePwd = () => { setPwdModal(false); setPwdTarget(null); setNewPwd(""); setPwdError(null); };
-
-  const handleChangePwd = async () => {
-    if (!pwdTarget || newPwd.length < 6) { setPwdError("MÃ­nimo 6 caracteres"); return; }
-    setPwdLoading(true);
-    setPwdError(null);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/usuarios/${pwdTarget.id}/password`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({ nueva_contrasena: newPwd }),
-      });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.detail || `HTTP ${res.status}`); }
-      closePwd();
-    } catch (e: any) {
-      setPwdError(e.message);
-    } finally {
-      setPwdLoading(false);
-    }
-  };
-
   const exportToExcel = () => {
     const rows = usuarios.map(u => ({
       "Nombre": u.nombre,
       "Apellido": u.apellido,
       "Correo": u.correo,
-      "TelÃ©fono": u.telefono ?? "",
+      "Teléfono": u.telefono ?? "",
       "Rol": u.rol,
       "Estado": u.estado,
       "Fecha registro": fmtDate(u.fecha_registro),
-      "Fecha nacimiento": fmtDate(u.fecha_nacimiento),
-      "GÃ©nero": u.genero ?? "",
-      "DirecciÃ³n": u.direccion ?? "",
       "Ranking": u.ranking ?? "",
       "Total reservas": u.estadisticas?.total_reservas ?? "",
       "Gasto total": u.estadisticas?.gasto_total ?? "",
@@ -269,8 +190,6 @@ function AdminUsuarios() {
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const pagedReservas = detailReservas.slice((detailPage - 1) * PAGE_SIZE, detailPage * PAGE_SIZE);
-  const reservaPages = Math.max(1, Math.ceil(detailReservas.length / PAGE_SIZE));
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-64">
@@ -363,7 +282,7 @@ function AdminUsuarios() {
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Estado</th>
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Registro</th>
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Reservas</th>
-                <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Acciones</th>
+                <th className="w-36" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -379,7 +298,11 @@ function AdminUsuarios() {
                 const RolIcon = rolCfg.icon;
                 const isActivo = u.estado === "activo";
                 return (
-                  <tr key={u.id} className="hover:bg-gray-50/70 transition-colors group">
+                    <tr
+                      key={u.id}
+                      className="hover:bg-[#195083]/5 transition-colors group cursor-pointer"
+                      onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
+                    >
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div
@@ -425,31 +348,14 @@ function AdminUsuarios() {
                         {u.estadisticas?.total_reservas ?? "â€”"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => openDetail(u)}
-                          title="Ver detalles"
-                          className="p-1.5 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => openPwd(u)}
-                          title="Cambiar contraseÃ±a"
-                          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                        >
-                          <KeyRound className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(u.id)}
-                          disabled={deleteLoading}
-                          title="Eliminar"
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                    <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#195083] text-white text-xs font-semibold rounded-lg opacity-0 translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out hover:bg-[#0f3a5f] whitespace-nowrap"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Ver detalles
+                      </button>
                     </td>
                   </tr>
                 );

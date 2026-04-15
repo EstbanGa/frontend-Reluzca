@@ -9,6 +9,7 @@ import UnauthorizedPage from '@/features/auth/components/UnauthorizedPage';
 import AdminLayout from '@/features/admin/components/AdminLayout';
 import AdminDashboard from '@/features/admin/components/AdminDashboard';
 import AdminUsuarios from '@/features/admin/components/AdminUsuarios';
+import AdminUsuarioDetalle from '@/features/admin/components/AdminUsuarioDetalle';
 import AdminEditarUsuario from '@/features/admin/components/AdminEditarUsuario';
 import AdminCrearUsuario from '@/features/admin/components/AdminCrearUsuario';
 import AdminReservas from '@/features/admin/components/AdminReservas';
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="usuarios/index" element={<AdminUsuarios />} />
           <Route path="usuarios/crear" element={<AdminCrearUsuario />} />
           <Route path="usuarios/editar" element={<AdminEditarUsuario />} />
+          <Route path="usuarios/detalle/:id" element={<AdminUsuarioDetalle />} />
           <Route path="reservas/index" element={<AdminReservas />} />
           <Route path="reservas/editar" element={<AdminEditarReserva />} />
           <Route path="planes/index" element={<AdminPlanesActividades />} />

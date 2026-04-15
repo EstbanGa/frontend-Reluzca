@@ -10,6 +10,9 @@ import {
   Calendar,
   RefreshCw,
   AlertCircle,
+  Clock,
+  FileText,
+  CreditCard,
 } from "lucide-react";
 
 interface DetalleReserva {
@@ -69,6 +72,7 @@ function EmpleadaGanancias() {
   const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
 
   const [mes, setMes] = useState(mesActual);
+  const [periodoDisplay, setPeriodoDisplay] = useState<'mensual' | 'quincenal'>('mensual');
   const [empleadaId, setEmpleadaId] = useState<string | null>(null);
   const [data, setData] = useState<GananciasData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -300,56 +304,102 @@ function EmpleadaGanancias() {
             </div>
           )}
 
-          {/* Histórico */}
-          {data.historico && data.historico.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-                <h2 className="font-semibold text-gray-900 dark:text-white text-sm">
-                  {t("empleada.earnings.history")}
-                </h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                        {t("empleada.earnings.period")}
-                      </th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                        {t("empleada.earnings.completedServices")}
-                      </th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                        {t("empleada.earnings.totalEarned")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {data.historico.map((h) => (
-                      <tr
-                        key={h.mes}
-                        className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${
-                          h.mes === mes ? "bg-green-50 dark:bg-green-900/20" : ""
+          {/* CXP — Cuentas por Pagar */}
+          {data.historico && data.historico.length > 0 && (() => {
+            const today = new Date();
+            const currentMesStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+            const cxpRows = data.historico.flatMap(h => {
+              const isPast = h.mes < currentMesStr;
+              const mesLabel = new Date(h.mes + '-01').toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+              if (periodoDisplay === 'mensual') {
+                return [{ key: h.mes, label: mesLabel, servicios: h.total_servicios, monto: h.total_neto, pagado: isPast, isCurrent: h.mes === mes }];
+              }
+              return [
+                { key: `${h.mes}-Q1`, label: `${mesLabel} · 1ª quincena`, servicios: Math.ceil(h.total_servicios / 2), monto: Math.round(h.total_neto / 2), pagado: isPast, isCurrent: h.mes === mes },
+                { key: `${h.mes}-Q2`, label: `${mesLabel} · 2ª quincena`, servicios: Math.floor(h.total_servicios / 2), monto: Math.round(h.total_neto / 2), pagado: isPast, isCurrent: h.mes === mes },
+              ];
+            });
+
+            return (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-purple-600" />
+                      CXP — Cuentas por Pagar
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Historial de pagos por período</p>
+                  </div>
+                  <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    {(['mensual', 'quincenal'] as const).map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setPeriodoDisplay(p)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all capitalize ${
+                          periodoDisplay === p
+                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                         }`}
                       >
-                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">
-                          {new Date(h.mes + "-01").toLocaleDateString("es-CO", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
-                          {h.total_servicios}
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold text-green-600">
-                          {formatCOP(h.total_neto)}
-                        </td>
-                      </tr>
+                        {p}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Período</th>
+                        <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300 hidden sm:table-cell">Servicios</th>
+                        <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Monto</th>
+                        <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Estado</th>
+                        <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300 hidden sm:table-cell">Comprobante</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {cxpRows.map((row) => (
+                        <tr
+                          key={row.key}
+                          className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${
+                            row.isCurrent ? 'bg-green-50 dark:bg-green-900/20' : ''
+                          }`}
+                        >
+                          <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{row.label}</td>
+                          <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400 hidden sm:table-cell">{row.servicios}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-green-600">{formatCOP(row.monto)}</td>
+                          <td className="px-4 py-3 text-center">
+                            {row.pagado ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-medium rounded-full">
+                                <CheckCircle className="w-3 h-3" />
+                                Pagado
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-medium rounded-full">
+                                <Clock className="w-3 h-3" />
+                                Pendiente
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center hidden sm:table-cell">
+                            {row.pagado ? (
+                              <button className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
+                                <FileText className="w-3.5 h-3.5" />
+                                Ver
+                              </button>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </>
       ) : null}
     </div>

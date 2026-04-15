@@ -32,9 +32,38 @@ const TIPOS_LUGAR_VALUES = [
 ];
 
 const defaultCenter = {
-  lat: 6.2442, // Medellín
-  lng: -75.5812
+  lat: 40.7128, // New York City (cambia según ciudad elegida)
+  lng: -74.0060
 };
+
+const US_STATES = [
+  { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" }, { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" }, { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" }, { value: "DE", label: "Delaware" },
+  { value: "FL", label: "Florida" }, { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" }, { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" }, { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" }, { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" }, { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" }, { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" }, { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" }, { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" }, { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" }, { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" }, { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" }, { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" }, { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" }, { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" }, { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" }, { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" }, { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" }, { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" }, { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" }, { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" }, { value: "WY", label: "Wyoming" },
+  { value: "DC", label: "Washington D.C." },
+];
 
 interface FormData {
   nombre: string;
@@ -49,6 +78,8 @@ interface FormData {
   numero_apartamento: string;
   bloque: string;
   referencias: string;
+  state: string;
+  city: string;
 }
 
 interface MapPosition {
@@ -126,6 +157,7 @@ function CrearUbicacion() {
   const [isGeocodingFromAddress, setIsGeocodingFromAddress] = useState(false);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
+  const [areaUnit, setAreaUnit] = useState<'ft2' | 'm2'>('ft2');
   
   // Estados del formulario
   const [formData, setFormData] = useState<FormData>({
@@ -140,7 +172,9 @@ function CrearUbicacion() {
     direccion: '',
     numero_apartamento: '',
     bloque: '',
-    referencias: ''
+    referencias: '',
+    state: '',
+    city: '',
   });
 
   const [markerPosition, setMarkerPosition] = useState<MapPosition>(defaultCenter);
@@ -188,7 +222,6 @@ function CrearUbicacion() {
       // Crear el autocomplete
       if (addressInputRef.current) {
         const autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
-          componentRestrictions: { country: 'co' },
           fields: ['formatted_address', 'geometry', 'name', 'address_components'],
           types: ['address']
         });
@@ -283,12 +316,10 @@ function CrearUbicacion() {
       const results = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new Error('Timeout'));
-        }, 500000);
+        }, 8000);
 
         geocoderRef.current!.geocode({
           address: address.trim(),
-          region: 'CO',
-          componentRestrictions: { country: 'CO' }
         }, (results, status) => {
           clearTimeout(timeoutId);
           
@@ -344,7 +375,7 @@ function CrearUbicacion() {
       const results = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new Error('Timeout'));
-        }, 300000);
+        }, 6000);
 
         geocoderRef.current!.geocode({ location: position }, (results, status) => {
           clearTimeout(timeoutId);
@@ -402,7 +433,7 @@ function CrearUbicacion() {
     if (formData.direccion && formData.direccion.length >= 10 && mapInitialized) {
       debounceTimeoutRef.current = setTimeout(() => {
         geocodeAddress(formData.direccion);
-      }, 300000);
+      }, 1500);
     }
 
     return () => {
@@ -411,6 +442,25 @@ function CrearUbicacion() {
       }
     };
   }, [formData.direccion, geocodeAddress, mapInitialized]);
+
+  // Centrar mapa cuando cambia estado/ciudad
+  useEffect(() => {
+    if (!mapsLoaded || !mapInitialized || !geocoderRef.current) return;
+    if (!formData.city && !formData.state) return;
+    const parts = [formData.city, formData.state, 'USA'].filter(Boolean);
+    const query = parts.join(', ');
+    geocoderRef.current.geocode({ address: query }, (results, status) => {
+      if (status === 'OK' && results?.[0]?.geometry?.location) {
+        const loc = results[0].geometry.location;
+        const pos = { lat: loc.lat(), lng: loc.lng() };
+        mapRef.current?.panTo(pos);
+        mapRef.current?.setZoom(12);
+        markerRef.current?.setPosition(pos);
+        setMarkerPosition(pos);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.city, formData.state, mapsLoaded, mapInitialized]);
 
   // Detectar ubicación actual
   const detectCurrentLocation = () => {
@@ -510,7 +560,8 @@ function CrearUbicacion() {
     }
 
     // Validar campos numéricos si están presentes
-    if (formData.tamaño && (isNaN(Number(formData.tamaño)) || Number(formData.tamaño) <= 0 || Number(formData.tamaño) > 500)) {
+    const maxSize = areaUnit === 'ft2' ? 10000 : 929;
+    if (formData.tamaño && (isNaN(Number(formData.tamaño)) || Number(formData.tamaño) <= 0 || Number(formData.tamaño) > maxSize)) {
       setError(t('cliente.createLocation.validation.sizeRange'));
       return;
     }
@@ -550,19 +601,24 @@ function CrearUbicacion() {
     let areaM2: number | null = null;
     let areaFt2: number | null = null;
     if (formData.tamaño) {
-      const metros = Number(formData.tamaño);
-      areaM2 = metros;
-      areaFt2 = Math.round(metros * 10.7639 * 100) / 100;
+      const sizeVal = Number(formData.tamaño);
+      if (areaUnit === 'ft2') {
+        areaFt2 = sizeVal;
+        areaM2 = Math.round(sizeVal / 10.7639 * 100) / 100;
+      } else {
+        areaM2 = sizeVal;
+        areaFt2 = Math.round(sizeVal * 10.7639 * 100) / 100;
+      }
       let categoria = 'pequeño';
-      if (metros > 150) categoria = 'grande';
-      else if (metros > 80) categoria = 'mediano';
+      if (areaM2 > 150) categoria = 'grande';
+      else if (areaM2 > 80) categoria = 'mediano';
 
       tamañoData = {
-        metros: metros,
+        metros: areaM2,
         pies: areaFt2,
-        unidad: 'm²',
+        unidad: areaUnit === 'ft2' ? 'ft²' : 'm²',
         categoria: categoria,
-        display: `${metros} m² / ${areaFt2} ft²`
+        display: `${areaM2} m² / ${areaFt2} ft²`
       };
     }
 
@@ -751,17 +807,38 @@ function CrearUbicacion() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Ruler className="h-4 w-4" />
-                  {t('cliente.createLocation.sizeLabel')}
+                  Área
                 </label>
+                {/* Toggle ft² / m² */}
+                <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-2 w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setAreaUnit('ft2')}
+                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${areaUnit === 'ft2' ? 'bg-[#4894AD] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >ft²</button>
+                  <button
+                    type="button"
+                    onClick={() => setAreaUnit('m2')}
+                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${areaUnit === 'm2' ? 'bg-[#4894AD] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  >m²</button>
+                </div>
                 <input
                   type="number"
                   value={formData.tamaño}
                   onChange={(e) => handleInputChange('tamaño', e.target.value)}
-                  placeholder={t('cliente.createLocation.sizePlaceholder')}
+                  placeholder={areaUnit === 'ft2' ? 'Ej: 1200 ft²' : 'Ej: 112 m²'}
                   min="1"
-                  max="500"
+                  max={areaUnit === 'ft2' ? '10000' : '929'}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
                 />
+                {formData.tamaño && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {areaUnit === 'ft2'
+                      ? `≈ ${(Number(formData.tamaño) / 10.7639).toFixed(0)} m²`
+                      : `≈ ${(Number(formData.tamaño) * 10.7639).toFixed(0)} ft²`
+                    }
+                  </p>
+                )}
               </div>
 
               <div>
@@ -824,6 +901,33 @@ function CrearUbicacion() {
                   onChange={(e) => handleAddressChange(e.target.value)}
                   placeholder={t('cliente.createLocation.addressPlaceholder')}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
+                />
+              </div>
+            </div>
+
+            {/* Selector estado / ciudad (centra el mapa) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <select
+                  value={formData.state}
+                  onChange={(e) => handleInputChange('state', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 bg-white"
+                >
+                  <option value="">Seleccionar estado...</option>
+                  {US_STATES.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  placeholder="Ej: Miami, Houston..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
                 />
               </div>
             </div>

@@ -1,10 +1,7 @@
 
 import {
-  Home,
   Calendar,
   MapPin,
-  Star,
-  FileText,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -14,11 +11,8 @@ export default function ClienteLayout() {
   const { t } = useTranslation();
 
   const menuItems: MenuItem[] = [
-    { href: "/cliente/index", icon: Home, label: t('cliente.menu.home') },
     { href: "/cliente/reservas/index", icon: Calendar, label: t('cliente.menu.reservations') },
     { href: "/cliente/ubicaciones/index", icon: MapPin, label: t('cliente.menu.locations') },
-    { href: "/cliente/calificaciones/index", icon: Star, label: t('cliente.menu.ratings') },
-    { href: "/cliente/pqrs/index", icon: FileText, label: t('cliente.menu.support') },
   ];
 
   const theme: ThemeConfig = {

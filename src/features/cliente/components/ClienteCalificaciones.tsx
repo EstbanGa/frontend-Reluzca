@@ -4,7 +4,7 @@ import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useTranslation } from "react-i18next";
 import { 
   Star, Plus, Trash2, RefreshCw, AlertCircle,
-  Calendar, User, MessageSquare, X, Check
+  Calendar, User, MessageSquare, X, Check, Image, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { API_BASE_URL } from "@/config/env";
 
@@ -56,6 +56,17 @@ function CalificacionesPage() {
   const [calificacionEmpleada, setCalificacionEmpleada] = useState(0);
   const [comentario, setComentario] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Fotos del servicio
+  const [showFotosModal, setShowFotosModal] = useState(false);
+  const [fotosLoading, setFotosLoading] = useState(false);
+  const [fotosActual, setFotosActual] = useState<{id: string; url_foto: string; tipo: string}[]>([]);
+  const [fotosViewIdx, setFotosViewIdx] = useState(0);
+
+  // Rating por actividades
+  const [byActividad, setByActividad] = useState(false);
+  const [actividades, setActividades] = useState<{id: string; nombre: string; estrellas: number}[]>([]);
+  const [loadingActividades, setLoadingActividades] = useState(false);
 
   useEffect(() => {
     fetchCalificaciones();
@@ -115,10 +126,16 @@ function CalificacionesPage() {
     setCalificacionServicio(0);
     setCalificacionEmpleada(0);
     setComentario("");
+    setByActividad(false);
+    setActividades([]);
   };
 
   const handleSubmitCalificacion = async () => {
-    if (!selectedReserva || calificacionServicio === 0) {
+    const ratedActividades = actividades.filter(a => a.estrellas > 0);
+    const finalCalificacion = byActividad && ratedActividades.length > 0
+      ? Math.round(ratedActividades.reduce((s, a) => s + a.estrellas, 0) / ratedActividades.length)
+      : calificacionServicio;
+    if (!selectedReserva || finalCalificacion === 0) {
       alert(t('cliente.ratings.alerts.selectRequired'));
       return;
     }
@@ -131,7 +148,7 @@ function CalificacionesPage() {
         id_reserva: selectedReserva.id,
         id_usuario: userData.id,
         id_empleada: selectedReserva.empleada?.id || null,
-        calificacion_servicio: calificacionServicio,
+        calificacion_servicio: finalCalificacion,
         calificacion_empleada: calificacionEmpleada > 0 ? calificacionEmpleada : null,
         comentario: comentario.trim() || null
       };
@@ -166,6 +183,47 @@ function CalificacionesPage() {
       fetchCalificaciones();
     } catch (err) {
       alert(t('cliente.pqrs.errors.deleteError'));
+    }
+  };
+
+  const fetchFotos = async (reservaId: string) => {
+    setFotosLoading(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Error al cargar fotos');
+      const d = await res.json();
+      setFotosActual(d.fotos ?? []);
+    } catch {
+      setFotosActual([]);
+    } finally {
+      setFotosLoading(false);
+    }
+  };
+
+  const openFotos = (reservaId: string) => {
+    setFotosViewIdx(0);
+    setShowFotosModal(true);
+    fetchFotos(reservaId);
+  };
+
+  const fetchActividades = async (reservaId: string) => {
+    setLoadingActividades(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/actividades`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Error al cargar actividades');
+      const d = await res.json();
+      const list = (d.actividades ?? []) as {id: string; nombre: string}[];
+      setActividades(list.map(a => ({ ...a, estrellas: 0 })));
+    } catch {
+      setActividades([]);
+    } finally {
+      setLoadingActividades(false);
     }
   };
 
@@ -376,6 +434,19 @@ function CalificacionesPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Ver fotos del servicio */}
+                {cal.reserva?.id && (
+                  <div className="flex justify-end pt-1">
+                    <button
+                      onClick={() => cal.reserva?.id && openFotos(cal.reserva.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4894AD] border border-[#4894AD]/30 rounded-lg hover:bg-[#4894AD]/5 transition-colors"
+                    >
+                      <Image className="h-3.5 w-3.5" />
+                      Ver fotos del servicio
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -459,16 +530,65 @@ function CalificacionesPage() {
                   )}
                 </div>
 
-                {/* Calificación del Servicio */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('cliente.ratings.modal.rateService')}</label>
-                  <div className="flex items-center gap-2">
-                    {renderStars(calificacionServicio, setCalificacionServicio)}
-                    {calificacionServicio > 0 && (
-                      <span className="text-sm text-gray-600 ml-2">{t('cliente.ratings.modal.starsOf5', { n: calificacionServicio })}</span>
+                {/* Calificación del Servicio / por actividades */}
+                {!byActividad ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('cliente.ratings.modal.rateService')}</label>
+                    <div className="flex items-center gap-2">
+                      {renderStars(calificacionServicio, setCalificacionServicio)}
+                      {calificacionServicio > 0 && (
+                        <span className="text-sm text-gray-600 ml-2">{t('cliente.ratings.modal.starsOf5', { n: calificacionServicio })}</span>
+                      )}
+                    </div>
+                    {selectedReserva && (
+                      <button
+                        type="button"
+                        onClick={() => { setByActividad(true); fetchActividades(selectedReserva.id); }}
+                        className="mt-2 text-xs text-[#4894AD] hover:underline"
+                      >
+                        ¿Prefiere calificar por actividades? →
+                      </button>
                     )}
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-sm font-medium text-gray-700">Calificación por actividades</label>
+                      <button
+                        type="button"
+                        onClick={() => { setByActividad(false); setActividades([]); }}
+                        className="text-xs text-gray-500 hover:text-gray-700 underline"
+                      >
+                        ← Calificar servicio completo
+                      </button>
+                    </div>
+                    {loadingActividades ? (
+                      <div className="text-center py-4">
+                        <RefreshCw className="h-5 w-5 text-[#4894AD] mx-auto animate-spin" />
+                      </div>
+                    ) : actividades.length > 0 ? (
+                      <div className="space-y-3">
+                        {actividades.map((act) => (
+                          <div key={act.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
+                            <span className="text-sm text-gray-700 font-medium min-w-0 flex-1 truncate">{act.nombre}</span>
+                            {renderStars(act.estrellas, (n) =>
+                              setActividades(prev => prev.map(a => a.id === act.id ? { ...a, estrellas: n } : a))
+                            )}
+                          </div>
+                        ))}
+                        {actividades.some(a => a.estrellas > 0) && (
+                          <p className="text-xs text-gray-500 text-right">
+                            Promedio: {(actividades.filter(a => a.estrellas > 0).reduce((s, a) => s + a.estrellas, 0) / actividades.filter(a => a.estrellas > 0).length).toFixed(1)} ★
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-3">
+                        No se encontraron actividades para esta reserva.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Calificación de la Empleada */}
                 {selectedReserva?.empleada && (
@@ -508,7 +628,7 @@ function CalificacionesPage() {
                   </button>
                   <button
                     onClick={handleSubmitCalificacion}
-                    disabled={!selectedReserva || calificacionServicio === 0 || submitting}
+                    disabled={!selectedReserva || (byActividad ? !actividades.some(a => a.estrellas > 0) : calificacionServicio === 0) || submitting}
                     className="flex-1 px-4 py-2 bg-[#4894AD] text-white rounded-lg hover:bg-[#195083] transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {submitting ? (
@@ -524,6 +644,84 @@ function CalificacionesPage() {
                     )}
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Modal de Fotos del Servicio */}
+      {showFotosModal && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
+          onClick={() => setShowFotosModal(false)}
+        >
+          <div className="relative w-full max-w-3xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold text-lg">Fotos del servicio</h3>
+              <button
+                onClick={() => setShowFotosModal(false)}
+                className="text-white/80 hover:text-white p-1 rounded-lg transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {fotosLoading ? (
+              <div className="text-center py-16">
+                <RefreshCw className="h-8 w-8 text-white mx-auto animate-spin mb-4" />
+                <p className="text-white/70">Cargando fotos...</p>
+              </div>
+            ) : fotosActual.length > 0 ? (
+              <>
+                <div
+                  className="relative bg-black rounded-xl overflow-hidden flex items-center justify-center"
+                  style={{ minHeight: 300 }}
+                >
+                  <img
+                    src={fotosActual[fotosViewIdx]?.url_foto}
+                    alt={`Foto ${fotosViewIdx + 1}`}
+                    className="max-h-[60vh] max-w-full object-contain"
+                  />
+                  {fotosActual.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setFotosViewIdx(i => (i - 1 + fotosActual.length) % fotosActual.length)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button
+                        onClick={() => setFotosViewIdx(i => (i + 1) % fotosActual.length)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-center text-white/60 text-sm mt-2">
+                  {fotosViewIdx + 1} / {fotosActual.length}
+                </p>
+                {fotosActual.length > 1 && (
+                  <div className="flex gap-2 mt-3 overflow-x-auto pb-1 justify-center">
+                    {fotosActual.map((f, i) => (
+                      <button key={f.id} onClick={() => setFotosViewIdx(i)}>
+                        <img
+                          src={f.url_foto}
+                          alt={`thumb ${i + 1}`}
+                          className={`h-14 w-14 object-cover rounded-lg border-2 transition-all ${
+                            i === fotosViewIdx ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-75'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 bg-white/5 rounded-xl">
+                <Image className="h-16 w-16 text-white/30 mx-auto mb-3" />
+                <p className="text-white/60">Esta reserva no tiene fotos del servicio.</p>
               </div>
             )}
           </div>
