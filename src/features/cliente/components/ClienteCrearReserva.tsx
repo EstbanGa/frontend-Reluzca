@@ -27,7 +27,8 @@ import {
   Users,
   RefreshCw,
   CheckSquare,
-  Square
+  Square,
+  Search
 } from "lucide-react";
 
 // Interfaces
@@ -188,6 +189,10 @@ function CrearReserva() {
   const [mesActual, setMesActual] = useState(new Date());
   const [cargandoHorarios, setCargandoHorarios] = useState(false);
 
+  // Estados de búsqueda de empleadas y recientes
+  const [busquedaEmpleada, setBusquedaEmpleada] = useState('');
+  const [empleadasRecientesIds, setEmpleadasRecientesIds] = useState<string[]>([]);
+
   // Cargar datos iniciales
   useEffect(() => {
     Promise.all([
@@ -195,6 +200,7 @@ function CrearReserva() {
       cargarPlanes(),
       cargarUbicaciones(),
       cargarActividades(),
+      cargarEmpleadasRecientes(),
     ]);
   }, []);
 
@@ -240,6 +246,30 @@ function CrearReserva() {
       setEmpleadas(empleadas);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadEmployees'));
+    }
+  };
+
+  const cargarEmpleadasRecientes = async () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+      const user = JSON.parse(userStr);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/reservas/cliente/${user.id}`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      if (!response.ok) return;
+      const result = await response.json();
+      // Extraer IDs únicos de empleadas de reservas previas (más recientes primero)
+      const ids: string[] = [];
+      for (const r of result.reservas ?? []) {
+        if (r.empleada?.id && !ids.includes(r.empleada.id)) {
+          ids.push(r.empleada.id);
+        }
+      }
+      setEmpleadasRecientesIds(ids);
+    } catch {
+      // No bloquear si falla
     }
   };
 
@@ -724,60 +754,104 @@ function CrearReserva() {
       {/* Contenido del paso actual */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         {/* Paso 1: Seleccionar Empleada */}
-        {pasoActual === 1 && (
-          <div className="p-4 sm:p-6">
-            <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                {t('cliente.createReservation.selectEmployee.title')}
-              </h2>
-              <p className="text-gray-600">
-                {t('cliente.createReservation.selectEmployee.subtitle')}
-              </p>
-            </div>
+        {pasoActual === 1 && (() => {
+          const term = busquedaEmpleada.toLowerCase().trim();
+          const empleadasFiltradas = term
+            ? empleadas.filter(e => e.nombre_completo.toLowerCase().includes(term))
+            : empleadas;
+          const recientes = empleadasFiltradas.filter(e => empleadasRecientesIds.includes(e.id));
+          const otras = empleadasFiltradas.filter(e => !empleadasRecientesIds.includes(e.id));
 
-            {empleadas.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {empleadas.map((empleada) => (
-                  <div 
-                    key={empleada.id}
-                    onClick={() => seleccionarEmpleada(empleada)}
-                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all hover:shadow-md ${
-                      empleadaSeleccionada?.id === empleada.id
-                        ? 'border-[#195083] bg-[#195083]/5'
-                        : 'border-gray-200 hover:border-[#195083]/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="bg-[#195083]/10 p-2 rounded-lg">
-                        <User className="h-5 w-5 text-[#195083]" />
+          const renderCard = (empleada: Empleada) => (
+            <div
+              key={empleada.id}
+              onClick={() => seleccionarEmpleada(empleada)}
+              className={`p-4 border-2 rounded-xl cursor-pointer transition-all hover:shadow-md ${
+                empleadaSeleccionada?.id === empleada.id
+                  ? 'border-[#195083] bg-[#195083]/5'
+                  : 'border-gray-200 hover:border-[#195083]/50'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="bg-[#195083]/10 p-2 rounded-lg">
+                  <User className="h-5 w-5 text-[#195083]" />
+                </div>
+                {empleadaSeleccionada?.id === empleada.id && (
+                  <CheckCircle className="h-5 w-5 text-[#195083]" />
+                )}
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">{empleada.nombre_completo}</h3>
+              <div className="flex items-center gap-1 mb-2">
+                <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                <span className="text-sm font-medium text-gray-700">{empleada.ranking.toFixed(1)}</span>
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="p-4 sm:p-6">
+              <div className="mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                  {t('cliente.createReservation.selectEmployee.title')}
+                </h2>
+                <p className="text-gray-600">
+                  {t('cliente.createReservation.selectEmployee.subtitle')}
+                </p>
+              </div>
+
+              {/* Barra de búsqueda */}
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar empleada por nombre..."
+                  value={busquedaEmpleada}
+                  onChange={(e) => setBusquedaEmpleada(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30 focus:border-[#195083] transition-colors"
+                />
+              </div>
+
+              {empleadasFiltradas.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Recientes */}
+                  {recientes.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Clock className="h-4 w-4 text-[#195083]" />
+                        <h3 className="text-sm font-semibold text-[#195083] uppercase tracking-wide">Recientes</h3>
                       </div>
-                      {empleadaSeleccionada?.id === empleada.id && (
-                        <CheckCircle className="h-5 w-5 text-[#195083]" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {recientes.map(renderCard)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Todas / Otras */}
+                  {otras.length > 0 && (
+                    <div>
+                      {recientes.length > 0 && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Otras empleadas</h3>
+                        </div>
                       )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {otras.map(renderCard)}
+                      </div>
                     </div>
-                    
-                    <h3 className="font-semibold text-gray-900 mb-1">
-                      {empleada.nombre_completo}
-                    </h3>
-                    
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-medium text-gray-700">
-                        {empleada.ranking.toFixed(1)}
-                      </span>
-                    </div>
-                    
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">{t('cliente.createReservation.selectEmployee.noEmployees')}</p>
-              </div>
-            )}
-          </div>
-        )}
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    {busquedaEmpleada ? 'No se encontraron empleadas con ese nombre' : t('cliente.createReservation.selectEmployee.noEmployees')}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Paso 2: Seleccionar Plan y Actividades */}
         {pasoActual === 2 && (
@@ -1016,9 +1090,6 @@ function CrearReserva() {
                         >
                           <p className={`text-2xl font-bold ${sel ? 'text-[#195083]' : 'text-gray-800'}`}>
                             {horario.horas_duracion}h
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {horario.hora_inicio} - {horario.hora_final}
                           </p>
                         </div>
                       );
