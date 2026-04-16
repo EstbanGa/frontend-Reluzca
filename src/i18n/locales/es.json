@@ -1577,6 +1577,7 @@
       },
       "search": "Buscar por cliente, ubicación, plan...",
       "noName": "Ubicación sin nombre",
+      "viewDetails": "Ver detalles",
       "clientLabel": "Cliente:",
       "noResults": "No se encontraron servicios",
       "empty": "No tienes servicios asignados",

@@ -1577,6 +1577,7 @@
       },
       "search": "Search by client, location, plan...",
       "noName": "Unnamed location",
+      "viewDetails": "View details",
       "clientLabel": "Client:",
       "noResults": "No services found",
       "empty": "You have no assigned services",
