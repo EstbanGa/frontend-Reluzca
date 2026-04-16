@@ -312,9 +312,11 @@ function EmpleadaServicios() {
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [busqueda, setBusqueda] = useState('');
   const [serviciosFiltrados, setServiciosFiltrados] = useState<Servicio[]>([]);
-  const [showModal, setShowModal] = useState(false);
+
+  // Vista: 'list' | 'detail'
+  const [viewState, setViewState] = useState<'list' | 'detail'>('list');
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null);
-  const [modalTab, setModalTab] = useState<'details' | 'checklist' | 'photos'>('details');
+  const [detailTab, setDetailTab] = useState<'details' | 'checklist' | 'photos'>('details');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [checklistLoading, setChecklistLoading] = useState(false);
   const [fotos, setFotos] = useState<FotoItem[]>([]);
@@ -328,6 +330,20 @@ function EmpleadaServicios() {
   const formatTamano = (tamano: UbicacionInfo['tamaño']) => {
     if (!tamano) return t('empleada.services.notSpecified');
     return tamano.display || t('empleada.services.notSpecified');
+  };
+
+  // Detecta si hay una reserva en curso ahora mismo
+  const getReservaEnCurso = (servicios: Servicio[]): Servicio | null => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    return servicios.find(s => {
+      if (s.fecha !== todayStr) return false;
+      if (!s.hora_inicio || !s.hora_final) return false;
+      const activos = ['en_proceso', 'confirmada', 'programada', 'pendiente'];
+      if (!activos.includes((s.estado || '').toLowerCase())) return false;
+      return s.hora_inicio <= currentTime && currentTime <= s.hora_final;
+    }) ?? null;
   };
 
   useEffect(() => {
@@ -369,17 +385,19 @@ function EmpleadaServicios() {
   const filtrarServicios = () => {
     if (!data) return;
 
-    let servicios = [...(data.servicios || [])];
+    // Excluir la reserva en curso de la lista general
+    const enCursoId = getReservaEnCurso(data.servicios)?.id;
+    let servicios = data.servicios.filter(s => s.id !== enCursoId);
 
     // Filtro por estado
     if (filtroEstado !== 'todos') {
-      servicios = servicios.filter(servicio => servicio.estado === filtroEstado.toUpperCase());
+      servicios = servicios.filter(servicio => (servicio.estado || '').toLowerCase() === filtroEstado.toLowerCase());
     }
 
     // Filtro por búsqueda
     if (busqueda) {
       const searchTerm = busqueda.toLowerCase();
-      servicios = servicios.filter(servicio => 
+      servicios = servicios.filter(servicio =>
         servicio.cliente.nombre.toLowerCase().includes(searchTerm) ||
         servicio.ubicacion?.nombre.toLowerCase().includes(searchTerm) ||
         servicio.ubicacion?.nombre_lugar?.toLowerCase().includes(searchTerm) ||
@@ -398,7 +416,9 @@ function EmpleadaServicios() {
   };
 
   const getEstadoInfo = (estado: string) => {
-    const info = ESTADOS_SERVICIO_VALUES[estado as keyof typeof ESTADOS_SERVICIO_VALUES];
+    const normalized = (estado || '').toUpperCase();
+    const estadoKey = normalized === 'EN_PROCESO' ? 'EN_PROGRESO' : normalized;
+    const info = ESTADOS_SERVICIO_VALUES[estadoKey as keyof typeof ESTADOS_SERVICIO_VALUES];
     if (!info) return { label: estado, color: 'bg-gray-100 text-gray-800', icon: AlertCircle };
     return { ...info, label: t('empleada.services.status.' + info.key) };
   };
@@ -412,7 +432,15 @@ function EmpleadaServicios() {
     setChecklistLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/actividades`, { headers: authHeader() });
-      if (res.ok) setChecklist(await res.json());
+      if (res.ok) {
+        const json = await res.json();
+        // El backend devuelve { actividades: [...] }
+        const items = Array.isArray(json) ? json : (json.actividades ?? []);
+        setChecklist(items.map((item: { id: string; id_actividad: string; nombre?: string; nombre_actividad?: string; programada: boolean; ejecutada: boolean; notas?: string | null }) => ({
+          ...item,
+          nombre_actividad: item.nombre || item.nombre_actividad || item.id_actividad,
+        })));
+      }
     } catch { /* ignore */ } finally {
       setChecklistLoading(false);
     }
@@ -422,20 +450,27 @@ function EmpleadaServicios() {
     setFotosLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos`, { headers: authHeader() });
-      if (res.ok) setFotos(await res.json());
+      if (res.ok) {
+        const json = await res.json();
+        setFotos(Array.isArray(json) ? json : (json.fotos ?? []));
+      }
     } catch { /* ignore */ } finally {
       setFotosLoading(false);
     }
   };
 
-  const toggleActividad = async (reservaId: string, itemId: string) => {
+  const toggleActividad = async (reservaId: string, item: ChecklistItem) => {
+    const nuevoEstado = !item.ejecutada;
     const res = await fetch(
-      `${API_BASE_URL}/api/reservas/${reservaId}/actividades/${itemId}/toggle`,
-      { method: 'PATCH', headers: authHeader() }
+      `${API_BASE_URL}/api/reservas/${reservaId}/actividades/${item.id}/toggle`,
+      {
+        method: 'PATCH',
+        headers: authHeader(),
+        body: JSON.stringify({ ejecutada: nuevoEstado }),
+      }
     );
     if (res.ok) {
-      const updated: ChecklistItem = await res.json();
-      setChecklist(prev => prev.map(c => c.id === itemId ? { ...c, ejecutada: updated.ejecutada } : c));
+      setChecklist(prev => prev.map(c => c.id === item.id ? { ...c, ejecutada: nuevoEstado } : c));
     }
   };
 
@@ -469,20 +504,19 @@ function EmpleadaServicios() {
     }
   };
 
-  const openModal = (servicio: Servicio) => {
+  const openDetail = (servicio: Servicio, tab: 'details' | 'checklist' | 'photos' = 'details') => {
     setSelectedServicio(servicio);
-    setModalTab('details');
+    setDetailTab(tab);
     setChecklist([]);
     setFotos([]);
-    setShowModal(true);
+    setViewState('detail');
     fetchChecklist(servicio.id);
     fetchFotos(servicio.id);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
+  const closeDetail = () => {
+    setViewState('list');
     setSelectedServicio(null);
-    setModalTab('details');
     setChecklist([]);
     setFotos([]);
   };
@@ -501,7 +535,7 @@ function EmpleadaServicios() {
         <AlertCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-red-500 mb-4" />
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('empleada.services.errorLoading')}</h3>
         <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
-        <button 
+        <button
           onClick={fetchServicios}
           className="bg-[#D95B26] text-white px-4 py-2 rounded-lg hover:bg-[#B8491F] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"
         >
@@ -512,6 +546,324 @@ function EmpleadaServicios() {
     );
   }
 
+  const reservaEnCurso = getReservaEnCurso(data.servicios);
+
+  // ─── VISTA DETALLE ─────────────────────────────────────────────────────────
+  if (viewState === 'detail' && selectedServicio) {
+    const esEnCurso = reservaEnCurso?.id === selectedServicio.id;
+    const tipoInfo = getTipoInfo(selectedServicio.ubicacion?.tipo_lugar || 'otro');
+    const TipoIcon = tipoInfo.icon;
+    const estadoInfo = getEstadoInfo(selectedServicio.estado || 'pendiente');
+    const EstadoIcon = estadoInfo.icon;
+
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        {/* Header de la página de detalle */}
+        <div className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white ${esEnCurso ? 'bg-gradient-to-r from-[#195083] to-[#4894AD]' : 'bg-gradient-to-r from-[#D95B26] to-[#4894AD]'}`}>
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={closeDetail}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl font-extrabold text-[#FCF7F0] truncate">
+                {selectedServicio.ubicacion?.nombre || 'Servicio de limpieza'}
+              </h1>
+              <p className="text-[#FCF7F0]/80 text-sm">
+                {tipoInfo.label}
+                {esEnCurso && <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs font-medium">● En curso</span>}
+              </p>
+            </div>
+          </div>
+
+          {/* Info rápida en el header */}
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="bg-white/15 rounded-lg p-2 text-center">
+              <Calendar className="h-4 w-4 mx-auto mb-1 text-[#FCF7F0]/80" />
+              <p className="text-[#FCF7F0] font-medium text-xs">{formatDate(selectedServicio.fecha)}</p>
+            </div>
+            <div className="bg-white/15 rounded-lg p-2 text-center">
+              <Clock className="h-4 w-4 mx-auto mb-1 text-[#FCF7F0]/80" />
+              <p className="text-[#FCF7F0] font-medium text-xs">{formatTime(selectedServicio.hora_inicio)} — {formatTime(selectedServicio.hora_final)}</p>
+            </div>
+            <div className={`rounded-lg p-2 text-center ${estadoInfo.color} bg-opacity-90`}>
+              <EstadoIcon className="h-4 w-4 mx-auto mb-1" />
+              <p className="font-medium text-xs">{estadoInfo.label}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex border-b border-gray-100">
+            {[
+              { key: 'details' as const, label: 'Detalles', icon: <FileText className="h-4 w-4" /> },
+              { key: 'checklist' as const, label: t('empleada.checklist.title'), icon: <ListChecks className="h-4 w-4" /> },
+              ...(esEnCurso ? [{ key: 'photos' as const, label: t('empleada.photos.title'), icon: <Image className="h-4 w-4" /> }] : []),
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setDetailTab(tab.key)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex-1 justify-center ${
+                  detailTab === tab.key
+                    ? 'border-[#D95B26] text-[#D95B26]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="p-4 sm:p-6">
+            {/* Detalles */}
+            {detailTab === 'details' && (
+              <div className="space-y-5">
+                {/* Cliente */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-blue-600" />
+                    {t('empleada.services.modal.clientInfo')}
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-gray-400" />
+                      <span className="text-sm font-medium text-gray-900">{selectedServicio.cliente.nombre}</span>
+                    </div>
+                    {selectedServicio.cliente.telefono && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-gray-400" />
+                        <a href={`tel:${selectedServicio.cliente.telefono}`} className="text-sm text-blue-600 hover:underline">
+                          {selectedServicio.cliente.telefono}
+                        </a>
+                      </div>
+                    )}
+                    {selectedServicio.cliente.correo && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-gray-400" />
+                        <a href={`mailto:${selectedServicio.cliente.correo}`} className="text-sm text-blue-600 hover:underline truncate">
+                          {selectedServicio.cliente.correo}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Plan */}
+                {selectedServicio.plan && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                      <Package className="h-4 w-4 text-[#D95B26]" />
+                      {t('empleada.services.modal.cleaningPlan')}
+                    </h4>
+                    <p className="font-medium text-gray-900 text-sm">{selectedServicio.plan.nombre}</p>
+                    {selectedServicio.plan.descripcion && (
+                      <p className="text-sm text-gray-600 mt-1">{selectedServicio.plan.descripcion}</p>
+                    )}
+                    {selectedServicio.plan.servicios_asociados?.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {selectedServicio.plan.servicios_asociados.map((srv, idx) => (
+                          <span key={idx} className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-xs text-gray-700">
+                            {srv}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Ubicación */}
+                {selectedServicio.ubicacion && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-[#D95B26]" />
+                      {t('empleada.services.modal.locationDetails')}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {selectedServicio.ubicacion.nombre_lugar && (
+                        <div>
+                          <p className="text-xs text-gray-500">{t('empleada.services.modal.place')}</p>
+                          <p className="font-medium text-gray-900">{selectedServicio.ubicacion.nombre_lugar}</p>
+                        </div>
+                      )}
+                      {selectedServicio.ubicacion.tamaño && formatTamano(selectedServicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
+                        <div>
+                          <p className="text-xs text-gray-500">{t('empleada.services.size')}</p>
+                          <p className="font-medium text-gray-900">{formatTamano(selectedServicio.ubicacion.tamaño)}</p>
+                        </div>
+                      )}
+                      {selectedServicio.ubicacion.baños != null && (
+                        <div>
+                          <p className="text-xs text-gray-500">{t('empleada.services.bathrooms')}</p>
+                          <p className="font-medium text-gray-900">{selectedServicio.ubicacion.baños}</p>
+                        </div>
+                      )}
+                      {selectedServicio.ubicacion.pisos != null && (
+                        <div>
+                          <p className="text-xs text-gray-500">{t('empleada.services.floors')}</p>
+                          <p className="font-medium text-gray-900">{selectedServicio.ubicacion.pisos}</p>
+                        </div>
+                      )}
+                    </div>
+                    {selectedServicio.ubicacion.descripcion && (
+                      <p className="text-sm text-gray-600 mt-3">{selectedServicio.ubicacion.descripcion}</p>
+                    )}
+                    {selectedServicio.ubicacion.ubicacion && (
+                      <div className="mt-3">
+                        {(selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion) && (
+                          <p className="text-sm text-gray-700 mb-3">
+                            📍 {selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion}
+                          </p>
+                        )}
+                        <InteractiveMap ubicacion={selectedServicio.ubicacion.ubicacion} />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedServicio.descripcion && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4" />
+                      {t('empleada.services.modal.additionalNotes')}
+                    </h4>
+                    <p className="text-sm text-gray-700">{selectedServicio.descripcion}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Checklist */}
+            {detailTab === 'checklist' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                    <ListChecks className="h-5 w-5 text-[#D95B26]" />
+                    {t('empleada.checklist.title')}
+                  </h3>
+                  {checklist.length > 0 && (
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      {checklist.filter(c => c.ejecutada).length}/{checklist.length}
+                    </span>
+                  )}
+                </div>
+                {checklistLoading ? (
+                  <div className="text-center py-10"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
+                ) : checklist.length === 0 ? (
+                  <div className="text-center py-10">
+                    <ListChecks className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">{t('empleada.checklist.empty')}</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {checklist.map(item => (
+                      <li key={item.id} className="flex items-center gap-3 py-3">
+                        <input
+                          type="checkbox"
+                          checked={item.ejecutada}
+                          onChange={() => toggleActividad(selectedServicio.id, item)}
+                          className="h-4 w-4 rounded border-gray-300 text-[#D95B26] focus:ring-[#D95B26] cursor-pointer flex-shrink-0"
+                        />
+                        <span className={`flex-1 text-sm ${item.ejecutada ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                          {item.nombre_actividad}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs flex-shrink-0 ${
+                          item.ejecutada ? 'bg-green-100 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                        }`}>
+                          {item.ejecutada ? t('empleada.checklist.ejecutada') : t('empleada.checklist.programada')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Fotos — solo si está en curso */}
+            {detailTab === 'photos' && esEnCurso && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                  <Image className="h-5 w-5 text-[#D95B26]" />
+                  {t('empleada.photos.title')}
+                </h3>
+
+                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                  <p className="text-sm font-medium text-gray-700">{t('empleada.photos.upload')}</p>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newFotoUrl}
+                    onChange={e => setNewFotoUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    <select
+                      value={newFotoTipo}
+                      onChange={e => setNewFotoTipo(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
+                    >
+                      <option value="antes">{t('empleada.photos.types.before')}</option>
+                      <option value="durante">{t('empleada.photos.types.during')}</option>
+                      <option value="despues">{t('empleada.photos.types.after')}</option>
+                    </select>
+                    <input
+                      type="text"
+                      placeholder={t('empleada.photos.descriptionLabel')}
+                      value={newFotoDesc}
+                      onChange={e => setNewFotoDesc(e.target.value)}
+                      className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
+                    />
+                    <button
+                      onClick={() => saveFoto(selectedServicio.id)}
+                      disabled={savingFoto || !newFotoUrl.trim()}
+                      className="px-4 py-2 bg-[#D95B26] text-white rounded-lg text-sm font-medium hover:bg-[#b84c1e] disabled:opacity-50 transition-colors"
+                    >
+                      {savingFoto ? <Loader2 className="h-4 w-4 animate-spin" /> : t('empleada.photos.upload')}
+                    </button>
+                  </div>
+                </div>
+
+                {fotosLoading ? (
+                  <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
+                ) : fotos.length === 0 ? (
+                  <p className="text-gray-500 text-sm py-4 text-center">{t('empleada.photos.empty')}</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {fotos.map(foto => (
+                      <div key={foto.id} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                        <img src={foto.url_foto} alt={foto.descripcion || ''} className="w-full h-28 object-cover" />
+                        {foto.tipo && (
+                          <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">
+                            {t(`empleada.photos.types.${foto.tipo === 'antes' ? 'before' : foto.tipo === 'durante' ? 'during' : 'after'}`)}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => deleteFoto(selectedServicio.id, foto.id)}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                        {foto.descripcion && (
+                          <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate">
+                            {foto.descripcion}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── VISTA LISTA ───────────────────────────────────────────────────────────
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
@@ -525,41 +877,84 @@ function EmpleadaServicios() {
               {t('empleada.services.subtitle')}
             </p>
           </div>
+          <button
+            onClick={fetchServicios}
+            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
+            title="Recargar"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
         </div>
       </div>
+
+      {/* ── BANNER EN CURSO (Rappi style) ── */}
+      {reservaEnCurso && (
+        <div className="bg-gradient-to-r from-[#195083] to-[#4894AD] rounded-xl p-4 sm:p-5 text-white shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+            </span>
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/80">Servicio en curso ahora</p>
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base sm:text-lg font-bold text-[#FCF7F0] truncate">
+                {reservaEnCurso.ubicacion?.nombre || 'Servicio de limpieza'}
+              </h2>
+              <p className="text-[#FCF7F0]/80 text-sm mt-0.5">
+                <User className="h-3.5 w-3.5 inline mr-1" />
+                {reservaEnCurso.cliente.nombre}
+              </p>
+              <p className="text-[#FCF7F0]/70 text-sm mt-0.5">
+                <Clock className="h-3.5 w-3.5 inline mr-1" />
+                {formatTime(reservaEnCurso.hora_inicio)} — {formatTime(reservaEnCurso.hora_final)}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 flex-shrink-0">
+              <button
+                onClick={() => openDetail(reservaEnCurso, 'checklist')}
+                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+              >
+                <ListChecks className="h-3.5 w-3.5" />
+                Checklist
+              </button>
+              <button
+                onClick={() => openDetail(reservaEnCurso, 'photos')}
+                className="px-3 py-1.5 bg-white text-[#195083] hover:bg-white/90 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+              >
+                <Image className="h-3.5 w-3.5" />
+                Fotos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
             <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.total')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#D95B26]">
-              {data.estadisticas.total}
-            </p>
+            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#D95B26]">{data.estadisticas.total}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
             <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.pending')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">
-              {data.estadisticas.por_estado.pendientes}
-            </p>
+            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">{data.estadisticas.por_estado.pendientes}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
             <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.inProgress')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">
-              {data.estadisticas.por_estado.en_progreso}
-            </p>
+            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">{data.estadisticas.por_estado.en_progreso}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
             <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.completed')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
-              {data.estadisticas.por_estado.completados}
-            </p>
+            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">{data.estadisticas.por_estado.completados}</p>
           </div>
         </div>
       </div>
@@ -577,7 +972,6 @@ function EmpleadaServicios() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-
           <div className="flex flex-col sm:flex-row gap-4">
             <select
               value={filtroEstado}
@@ -586,9 +980,10 @@ function EmpleadaServicios() {
             >
               <option value="todos">{t('empleada.services.filters.all')}</option>
               <option value="pendiente">{t('empleada.services.filters.pending')}</option>
-              <option value="en_progreso">{t('empleada.services.filters.inProgress')}</option>
-              <option value="completado">{t('empleada.services.filters.completed')}</option>
-              <option value="cancelado">{t('empleada.services.filters.cancelled')}</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="en_proceso">En proceso</option>
+              <option value="completada">{t('empleada.services.filters.completed')}</option>
+              <option value="cancelada">{t('empleada.services.filters.cancelled')}</option>
             </select>
           </div>
         </div>
@@ -600,114 +995,55 @@ function EmpleadaServicios() {
           serviciosFiltrados.map((servicio) => {
             const tipoInfo = getTipoInfo(servicio.ubicacion?.tipo_lugar || 'otro');
             const TipoIcon = tipoInfo.icon;
-            const estadoInfo = getEstadoInfo(servicio.estado || 'PENDIENTE');
+            const estadoInfo = getEstadoInfo(servicio.estado || 'pendiente');
             const EstadoIcon = estadoInfo.icon;
-            
+
             return (
-              <div key={servicio.id} className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div className="space-y-4">
-                  {/* Header del servicio */}
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div
+                key={servicio.id}
+                className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => openDetail(servicio)}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className="bg-[#D95B26]/10 p-2 rounded-lg flex-shrink-0">
                         <TipoIcon className="h-5 w-5 text-[#D95B26]" />
                       </div>
-                      
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-gray-900 text-base sm:text-lg break-words">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {servicio.ubicacion?.nombre || t('empleada.services.noName')}
                         </h3>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1 flex-wrap">
-                          <span className="capitalize">{tipoInfo.label}</span>
-                          {servicio.ubicacion?.nombre_lugar && (
-                            <>
-                              <span className="hidden sm:inline">•</span>
-                              <span className="break-words">{servicio.ubicacion.nombre_lugar}</span>
-                            </>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-700 mt-1">
-                          {t('empleada.services.clientLabel')} <span className="font-medium">{servicio.cliente.nombre}</span>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {t('empleada.services.clientLabel')} <span className="font-medium text-gray-700">{servicio.cliente.nombre}</span>
                         </p>
                       </div>
                     </div>
-                    
-                    {/* Estado y botón */}
-                    <div className="flex items-center gap-2 flex-shrink-0 sm:mt-0 mt-2 justify-start sm:justify-end">
-                      <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 ${estadoInfo.color}`}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${estadoInfo.color}`}>
                         <EstadoIcon className="h-3 w-3" />
                         {estadoInfo.label}
                       </span>
-                      
-                      <button
-                        onClick={() => openModal(servicio)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
+                      <Eye className="h-4 w-4 text-gray-400" />
                     </div>
                   </div>
 
-                  {/* Información del servicio */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span>{formatDate(servicio.fecha)}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock className="h-4 w-4" />
-                      <span>{formatTime(servicio.hora_inicio)} - {formatTime(servicio.hora_final)}</span>
-                    </div>
-                    
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {formatDate(servicio.fecha)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {formatTime(servicio.hora_inicio)} — {formatTime(servicio.hora_final)}
+                    </span>
                     {servicio.plan && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Package className="h-4 w-4" />
-                        <span>{servicio.plan.nombre}</span>
-                      </div>
-                    )}
-                    
-                    {servicio.ubicacion?.tamaño && formatTamano(servicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Ruler className="h-4 w-4" />
-                        <span>{formatTamano(servicio.ubicacion.tamaño)}</span>
-                      </div>
+                      <span className="flex items-center gap-1">
+                        <Package className="h-3.5 w-3.5" />
+                        {servicio.plan.nombre}
+                      </span>
                     )}
                   </div>
-
-                  {/* Información adicional de ubicación */}
-                  {servicio.ubicacion && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                      {servicio.ubicacion.baños && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Bath className="h-4 w-4" />
-                          <span>{servicio.ubicacion.baños} {t('empleada.services.bathrooms').toLowerCase()}</span>
-                        </div>
-                      )}
-                      
-                      {servicio.ubicacion.pisos && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Layers className="h-4 w-4" />
-                          <span>{servicio.ubicacion.pisos} {t('empleada.services.floors').toLowerCase()}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <User className="h-4 w-4" />
-                        <span>{servicio.cliente.nombre}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Descripción si existe */}
-                  {servicio.descripcion && (
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-700 line-clamp-2">
-                        {servicio.descripcion}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             );
@@ -716,8 +1052,8 @@ function EmpleadaServicios() {
           <div className="text-center py-8 sm:py-12">
             <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-              {busqueda || filtroEstado !== 'todos' 
-                ? t('empleada.services.noResults') 
+              {busqueda || filtroEstado !== 'todos'
+                ? t('empleada.services.noResults')
                 : t('empleada.services.empty')
               }
             </h3>
@@ -730,360 +1066,6 @@ function EmpleadaServicios() {
           </div>
         )}
       </div>
-
-      {/* Modal de detalles */}
-      {showModal && selectedServicio && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div 
-            className="absolute inset-0 bg-opacity-50" 
-            onClick={closeModal}
-          ></div>
-          
-          <div className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
-            <div className="p-6">
-              {/* Header del modal */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-[#D95B26]/10 p-3 rounded-lg">
-                    {(() => {
-                      const TipoIcon = getTipoInfo(selectedServicio.ubicacion?.tipo_lugar || 'otro').icon;
-                      return <TipoIcon className="h-6 w-6 text-[#D95B26]" />;
-                    })()}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      {selectedServicio.ubicacion?.nombre || 'Servicio de limpieza'}
-                    </h2>
-                    <p className="text-gray-600">
-                      {getTipoInfo(selectedServicio.ubicacion?.tipo_lugar || 'otro').label}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={closeModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex gap-1 border-b border-gray-200 mb-5">
-                {[
-                  { key: 'details' as const, label: t('empleada.services.modal.scheduledDate').split(' ')[0] !== '' ? t('empleada.services.modal.clientInfo').replace(/\s.*/,'') : 'Detalles', icon: <FileText className="h-4 w-4" /> },
-                  { key: 'checklist' as const, label: t('empleada.checklist.title'), icon: <ListChecks className="h-4 w-4" /> },
-                  { key: 'photos' as const, label: t('empleada.photos.title'), icon: <Image className="h-4 w-4" /> },
-                ].map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setModalTab(tab.key)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                      modalTab === tab.key
-                        ? 'border-[#D95B26] text-[#D95B26]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {tab.icon}
-                    {tab.key === 'details' ? 'Detalles' : tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab: Details */}
-              {modalTab === 'details' && <div className="space-y-6">
-                {/* Estado del servicio */}
-                <div className="flex items-center gap-3">
-                  {(() => {
-                    const estadoInfo = getEstadoInfo(selectedServicio.estado || 'PENDIENTE');
-                    const EstadoIcon = estadoInfo.icon;
-                    return (
-                      <span className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${estadoInfo.color}`}>
-                        <EstadoIcon className="h-4 w-4" />
-                        {estadoInfo.label}
-                      </span>
-                    );
-                  })()}
-                </div>
-
-                {/* Información del servicio */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {t('empleada.services.modal.scheduledDate')}
-                    </h4>
-                    <p className="text-gray-700">{formatDate(selectedServicio.fecha)}</p>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {t('empleada.services.modal.schedule')}
-                    </h4>
-                    <p className="text-gray-700">
-                      {formatTime(selectedServicio.hora_inicio)} - {formatTime(selectedServicio.hora_final)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Información del cliente */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {t('empleada.services.modal.clientInfo')}
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">{t('empleada.services.modal.clientName')}</p>
-                      <p className="font-medium text-gray-900">{selectedServicio.cliente.nombre}</p>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Información del plan */}
-                {selectedServicio.plan && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      {t('empleada.services.modal.cleaningPlan')}
-                    </h4>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="font-medium text-gray-900">{selectedServicio.plan.nombre}</p>
-                        {selectedServicio.plan.descripcion && (
-                          <p className="text-sm text-gray-600 mt-1">{selectedServicio.plan.descripcion}</p>
-                        )}
-                      </div>
-                      
-                      {selectedServicio.plan.servicios_asociados && selectedServicio.plan.servicios_asociados.length > 0 && (
-                        <div>
-                          <p className="text-sm text-gray-600 mb-2">{t('empleada.services.modal.servicesIncluded')}</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedServicio.plan.servicios_asociados.map((servicio, index) => (
-                              <span key={index} className="px-2 py-1 bg-white rounded-md text-xs text-gray-700 border border-gray-200">
-                                {servicio}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Información de la ubicación */}
-                {selectedServicio.ubicacion && (
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {t('empleada.services.modal.locationDetails')}
-                      </h4>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {selectedServicio.ubicacion.nombre_lugar && (
-                          <div>
-                            <p className="text-sm text-gray-600">{t('empleada.services.modal.place')}</p>
-                            <p className="font-medium text-gray-900">{selectedServicio.ubicacion.nombre_lugar}</p>
-                          </div>
-                        )}
-
-                        {selectedServicio.ubicacion.tamaño && formatTamano(selectedServicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
-                          <div>
-                            <p className="text-sm text-gray-600">{t('empleada.services.size')}</p>
-                            <p className="font-medium text-gray-900">{formatTamano(selectedServicio.ubicacion.tamaño)}</p>
-                          </div>
-                        )}
-
-                        {selectedServicio.ubicacion.baños && (
-                          <div>
-                            <p className="text-sm text-gray-600">{t('empleada.services.bathrooms')}</p>
-                            <p className="font-medium text-gray-900">{selectedServicio.ubicacion.baños}</p>
-                          </div>
-                        )}
-
-                        {selectedServicio.ubicacion.pisos && (
-                          <div>
-                            <p className="text-sm text-gray-600">{t('empleada.services.floors')}</p>
-                            <p className="font-medium text-gray-900">{selectedServicio.ubicacion.pisos}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {selectedServicio.ubicacion.descripcion && (
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-600">{t('empleada.services.modal.additionalDescription')}</p>
-                          <p className="text-gray-700 mt-1">{selectedServicio.ubicacion.descripcion}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Mapa de ubicación */}
-                    {selectedServicio.ubicacion.ubicacion && (
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                          <Map className="h-4 w-4" />
-                          {t('empleada.services.modal.mapLocation')}
-                        </h4>
-                        
-                        {(selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion) && (
-                          <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
-                            <p className="text-gray-700 font-medium">
-                              📍 {selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion}
-                            </p>
-                          </div>
-                        )}
-                        
-                        <div className="mb-4">
-                          <InteractiveMap ubicacion={selectedServicio.ubicacion.ubicacion} />
-                        </div>
-                        
-
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Descripción del servicio */}
-                {selectedServicio.descripcion && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      {t('empleada.services.modal.additionalNotes')}
-                    </h4>
-                    <p className="text-gray-700 leading-relaxed">{selectedServicio.descripcion}</p>
-                  </div>
-                )}
-              </div>}
-
-              {/* Tab: Checklist */}
-              {modalTab === 'checklist' && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <ListChecks className="h-5 w-5 text-[#D95B26]" />
-                    {t('empleada.checklist.title')}
-                  </h3>
-                  {checklistLoading ? (
-                    <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
-                  ) : checklist.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-6 text-center">{t('empleada.checklist.empty')}</p>
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-500">
-                        {t('empleada.checklist.progress')}: {checklist.filter(c => c.ejecutada).length}/{checklist.length}
-                      </p>
-                      <ul className="divide-y divide-gray-100">
-                        {checklist.map(item => (
-                          <li key={item.id} className="flex items-center justify-between py-3 gap-3">
-                            <div className="flex items-center gap-3 flex-1">
-                              <input
-                                type="checkbox"
-                                checked={item.ejecutada}
-                                onChange={() => toggleActividad(selectedServicio.id, item.id)}
-                                className="h-4 w-4 rounded border-gray-300 text-[#D95B26] focus:ring-[#D95B26] cursor-pointer"
-                              />
-                              <span className={`text-sm ${item.ejecutada ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                                {item.nombre_actividad || item.id_actividad}
-                              </span>
-                            </div>
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              item.ejecutada ? 'bg-green-100 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                            }`}>
-                              {item.ejecutada ? t('empleada.checklist.ejecutada') : t('empleada.checklist.programada')}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Tab: Fotos */}
-              {modalTab === 'photos' && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <Image className="h-5 w-5 text-[#D95B26]" />
-                    {t('empleada.photos.title')}
-                  </h3>
-
-                  {/* Agregar URL de foto */}
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                    <p className="text-sm font-medium text-gray-700">{t('empleada.photos.upload')}</p>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={newFotoUrl}
-                      onChange={e => setNewFotoUrl(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
-                    />
-                    <div className="flex gap-2 flex-wrap">
-                      <select
-                        value={newFotoTipo}
-                        onChange={e => setNewFotoTipo(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
-                      >
-                        <option value="antes">{t('empleada.photos.types.before')}</option>
-                        <option value="durante">{t('empleada.photos.types.during')}</option>
-                        <option value="despues">{t('empleada.photos.types.after')}</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder={t('empleada.photos.descriptionLabel')}
-                        value={newFotoDesc}
-                        onChange={e => setNewFotoDesc(e.target.value)}
-                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
-                      />
-                      <button
-                        onClick={() => saveFoto(selectedServicio.id)}
-                        disabled={savingFoto || !newFotoUrl.trim()}
-                        className="px-4 py-2 bg-[#D95B26] text-white rounded-lg text-sm font-medium hover:bg-[#b84c1e] disabled:opacity-50 transition-colors"
-                      >
-                        {savingFoto ? <Loader2 className="h-4 w-4 animate-spin" /> : t('empleada.photos.upload')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {fotosLoading ? (
-                    <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
-                  ) : fotos.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4 text-center">{t('empleada.photos.empty')}</p>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {fotos.map(foto => (
-                        <div key={foto.id} className="relative group rounded-lg overflow-hidden border border-gray-200">
-                          <img
-                            src={foto.url_foto}
-                            alt={foto.descripcion || ''}
-                            className="w-full h-28 object-cover"
-                          />
-                          {foto.tipo && (
-                            <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">
-                              {t(`empleada.photos.types.${foto.tipo === 'antes' ? 'before' : foto.tipo === 'durante' ? 'during' : 'after'}`)}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => deleteFoto(selectedServicio.id, foto.id)}
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                          {foto.descripcion && (
-                            <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate">
-                              {foto.descripcion}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
