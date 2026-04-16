@@ -36,7 +36,6 @@ interface FormData {
 const ROLES = [
   { value: "cliente", label: "Cliente" },
   { value: "empleada", label: "Empleada" },
-  { value: "admin", label: "Administrador" },
 ];
 
 const ESTADOS = [
@@ -366,68 +365,38 @@ function AdminCrearUsuario() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Rol */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('admin.createUser.roleLabel')} <span className="text-red-500">*</span>
               </label>
-              <div className="space-y-2">
-                {ROLES.map((rol) => (
-                  <label
-                    key={rol.value}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                      formData.rol === rol.value
-                        ? "border-[#195083] bg-[#195083]/5"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="rol"
-                      value={rol.value}
-                      checked={formData.rol === rol.value}
-                      onChange={(e) =>
-                        handleInputChange("rol", e.target.value)
-                      }
-                      className="accent-[#195083]"
-                    />
-                    <span className="text-sm font-medium text-gray-900">
-                      {t(`common.roles.${rol.value}`)}
-                    </span>
-                  </label>
+              <select
+                value={formData.rol}
+                onChange={(e) => handleInputChange("rol", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm bg-white"
+              >
+                {ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {t(`common.roles.${r.value}`)}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
 
             {/* Estado */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('common.status')}
               </label>
-              <div className="space-y-2">
-                {ESTADOS.map((estado) => (
-                  <label
-                    key={estado.value}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                      formData.estado === estado.value
-                        ? "border-[#195083] bg-[#195083]/5"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="estado"
-                      value={estado.value}
-                      checked={formData.estado === estado.value}
-                      onChange={(e) =>
-                        handleInputChange("estado", e.target.value)
-                      }
-                      className="accent-[#195083]"
-                    />
-                    <span className="text-sm font-medium text-gray-900">
-                      {t(`common.statuses.${estado.value}`)}
-                    </span>
-                  </label>
+              <select
+                value={formData.estado}
+                onChange={(e) => handleInputChange("estado", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm bg-white"
+              >
+                {ESTADOS.map((e) => (
+                  <option key={e.value} value={e.value}>
+                    {t(`common.statuses.${e.value}`)}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
         </div>

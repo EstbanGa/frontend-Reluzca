@@ -282,7 +282,6 @@ function AdminUsuarios() {
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Estado</th>
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Registro</th>
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Reservas</th>
-                <th className="w-36" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -348,14 +347,16 @@ function AdminUsuarios() {
                         {u.estadisticas?.total_reservas ?? "â€”"}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#195083] text-white text-xs font-semibold rounded-lg opacity-0 translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out hover:bg-[#0f3a5f] whitespace-nowrap"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        Ver detalles
-                      </button>
+                    <td className="relative w-0 p-0" onClick={e => e.stopPropagation()}>
+                      <div className="absolute right-3 top-0 bottom-0 flex items-center gap-1.5 opacity-0 translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-10">
+                        <button
+                          onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#195083] text-white text-xs font-semibold rounded-lg hover:bg-[#0f3a5f] whitespace-nowrap shadow-sm"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Ver detalles
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

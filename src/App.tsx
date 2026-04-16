@@ -38,6 +38,7 @@ import EmpleadaReservaActiva from '@/features/empleada/components/EmpleadaReserv
 import EmpleadaCalificaciones from '@/features/empleada/components/EmpleadaCalificaciones';
 import EmpleadaNotificaciones from '@/features/empleada/components/EmpleadaNotificaciones';
 import EmpleadaGanancias from '@/features/empleada/components/EmpleadaGanancias';
+import EmpleadaPerfil from '@/features/empleada/components/EmpleadaPerfil';
 
 export default function App() {
   return (
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="calificaciones/index" element={<EmpleadaCalificaciones />} />
           <Route path="notificaciones/index" element={<EmpleadaNotificaciones />} />
           <Route path="ganancias/index" element={<EmpleadaGanancias />} />
+          <Route path="perfil" element={<EmpleadaPerfil />} />
           <Route index element={<Navigate to="index" replace />} />
         </Route>
 

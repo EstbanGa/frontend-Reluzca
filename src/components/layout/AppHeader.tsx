@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Bell, Menu, User, LogOut, Settings } from "lucide-react";
+import { Bell, Menu, User, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { ThemeConfig } from "./AppSidebar";
 
@@ -62,16 +62,6 @@ export default function AppHeader({
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <LanguageSwitcher />
-
-          {theme.settingsRoute && (
-            <button
-              onClick={() => navigate(theme.settingsRoute!)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              title={t("common.settings")}
-            >
-              <Settings size={18} className="sm:w-5 sm:h-5 text-gray-600" />
-            </button>
-          )}
 
           {theme.notificationsRoute && (
             <button

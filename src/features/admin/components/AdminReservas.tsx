@@ -304,7 +304,6 @@ function AdminReservas() {
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Estado</th>
                 <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Pago</th>
                 <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Total</th>
-                <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -369,14 +368,17 @@ function AdminReservas() {
                     <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-gray-800 text-xs">
                       {fmtCOP(r.precio_total)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => setDetailReserva(r)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-all"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
+                    <td className="relative w-0 p-0">
+                      <div className="absolute right-3 top-0 bottom-0 flex items-center gap-1.5 opacity-0 translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-10">
+                        <button
+                          onClick={() => setDetailReserva(r)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#195083] text-white text-xs font-semibold rounded-lg hover:bg-[#0f3a5f] whitespace-nowrap shadow-sm"
+                          title="Ver detalles"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Ver
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

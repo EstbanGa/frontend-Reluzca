@@ -217,37 +217,10 @@ function ClientePerfilPage() {
       {/* Profile Card */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Card Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
             {t("cliente.profile.personalInfo")}
           </h2>
-          {!editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#4894AD] bg-[#4894AD]/10 rounded-lg hover:bg-[#4894AD]/20 transition-colors"
-            >
-              <Pencil className="h-4 w-4" />
-              {t("cliente.profile.edit")}
-            </button>
-          ) : (
-            <div className="flex gap-2">
-              <button
-                onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <X className="h-4 w-4" />
-                {t("cliente.profile.cancel")}
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#4894AD] rounded-lg hover:bg-[#4894AD]/90 transition-colors disabled:opacity-50"
-              >
-                <Save className="h-4 w-4" />
-                {saving ? t("cliente.profile.saving") : t("cliente.profile.save")}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Save Error */}
@@ -417,9 +390,21 @@ function ClientePerfilPage() {
               {t("cliente.profile.registrationDate")}
             </label>
             <p className="text-base text-gray-900">
-              {formatDate(profile.fecha_registro)}
-            </p>
+                {formatDate(profile.fecha_registro)}
+              </p>
           </div>
+        </div>
+      </div>
+
+      {/* Nota contraseña */}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-amber-800">¿Deseas cambiar tu contraseña?</p>
+          <p className="text-sm text-amber-700 mt-0.5">
+            Los cambios de contraseña se realizan desde la página de inicio de sesión usando la opción
+            <strong> "¿Olvidaste tu contraseña?"</strong>.
+          </p>
         </div>
       </div>
     </div>
