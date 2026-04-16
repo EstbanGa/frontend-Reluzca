@@ -86,11 +86,6 @@ interface Ubicacion {
   descripcion: string;
 }
 
-interface TareaExtra {
-  nombre: string;
-  precio: number;
-}
-
 interface DisponibilidadDia {
   fecha: string;
   disponible: boolean;
@@ -125,8 +120,6 @@ interface CalculoPrecio {
   precio_actividades: number;
   cantidad_dias: number;
   precio_base: number;
-  precio_tareas_extra: number;
-  cantidad_tareas_extra: number;
   precio_pisos_extra: number;
   pisos_extra: number;
   sobrecargo_sabados: number;
@@ -181,7 +174,6 @@ function CrearReserva() {
   const [empleadas, setEmpleadas] = useState<Empleada[]>([]);
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
-  const [tareasExtra, setTareasExtra] = useState<TareaExtra[]>([]);
   const [actividadesDisponibles, setActividadesDisponibles] = useState<Actividad[]>([]);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadDia[]>([]);
   const [horariosDisponibles, setHorariosDisponibles] = useState<HorarioDisponible[]>([]);
@@ -192,7 +184,6 @@ function CrearReserva() {
   const [horarioSeleccionado, setHorarioSeleccionado] = useState<HorarioDisponible | null>(null);
   const [fechasSeleccionadas, setFechasSeleccionadas] = useState<string[]>([]);
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<Ubicacion | null>(null);
-  const [tareasSeleccionadas, setTareasSeleccionadas] = useState<string[]>([]);
   const [actividadesSeleccionadas, setActividadesSeleccionadas] = useState<string[]>([]);
   const [horasTrabajoSeleccionadas, setHorasTrabajoSeleccionadas] = useState<number | null>(null);
 
@@ -219,13 +210,6 @@ function CrearReserva() {
     ]);
   }, []);
 
-  // Cargar tareas extra cuando se selecciona un plan
-  useEffect(() => {
-    if (planSeleccionado) {
-      cargarTareasExtra(planSeleccionado.id);
-    }
-  }, [planSeleccionado]);
-
   // Cargar horarios cuando se selecciona un plan (o usar defaults si no hay plan)
   useEffect(() => {
     if (planSeleccionado) {
@@ -244,7 +228,7 @@ function CrearReserva() {
     } else {
       setCalculoPrecio(null);
     }
-  }, [planSeleccionado, ubicacionSeleccionada, fechasSeleccionadas, horarioSeleccionado, tareasSeleccionadas, actividadesSeleccionadas]);
+  }, [planSeleccionado, ubicacionSeleccionada, fechasSeleccionadas, horarioSeleccionado, actividadesSeleccionadas]);
 
   const cargarEmpleadas = async () => {
     try {
@@ -407,35 +391,6 @@ function CrearReserva() {
     }
   };
 
-  // CORRECTED: URL corregida para tareas extra
-  const cargarTareasExtra = async (planId: string) => {
-    try {
-      const token = localStorage.getItem("access_token");
-      
-      // URL CORREGIDA: Coincide con el patrón de Django
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reservas/planes/${planId}/tareas-extra`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setTareasExtra(result.tareas_extra);
-        setTareasSeleccionadas([]); // Resetear selección
-      } else {
-        throw new Error(result.error || t('cliente.createReservation.errors.loadExtraTasks'));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadExtraTasks'));
-    }
-  };
-
   const cargarActividades = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -486,7 +441,7 @@ function CrearReserva() {
           plan_id: planSeleccionado?.id || null,
           ubicacion_id: ubicacionSeleccionada?.id,
           fechas_horarios: fechasHorarios,
-          tareas_extra: tareasSeleccionadas,
+          tareas_extra: [],
           actividades_seleccionadas: actividadesSeleccionadas
         })
       });
@@ -548,7 +503,7 @@ function CrearReserva() {
           plan_id: planSeleccionado?.id,
           ubicacion_id: ubicacionSeleccionada?.id,
           fechas_horarios: fechasHorarios,
-          tareas_extra: tareasSeleccionadas,
+          tareas_extra: [],
           actividades_seleccionadas: actividadesSeleccionadas,
         })
       });
@@ -666,14 +621,6 @@ function CrearReserva() {
       if (fechasSeleccionadas.length < 30) {
         setFechasSeleccionadas([...fechasSeleccionadas, fecha].sort());
       }
-    }
-  };
-
-  const toggleTareaExtra = (tarea: string) => {
-    if (tareasSeleccionadas.includes(tarea)) {
-      setTareasSeleccionadas(tareasSeleccionadas.filter(t => t !== tarea));
-    } else {
-      setTareasSeleccionadas([...tareasSeleccionadas, tarea]);
     }
   };
 
@@ -1361,7 +1308,7 @@ function CrearReserva() {
           </div>
         )}
 
-        {/* Paso 5: Detalles (Ubicación y Tareas Extra) */}
+        {/* Paso 5: Detalles (Ubicación) */}
         {pasoActual === 5 && (
           <div className="p-4 sm:p-6 space-y-6">
             <div>
@@ -1419,45 +1366,6 @@ function CrearReserva() {
               </div>
             </div>
 
-            {/* Tareas Extra */}
-            {planSeleccionado && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  {t('cliente.createReservation.details.extraTasks')}
-                  <span className="text-sm font-normal text-gray-600 ml-2">
-                    {t('cliente.createReservation.details.extraTasksPrice')}
-                  </span>
-                </h3>
-                
-                {tareasExtra.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {tareasExtra.map((tarea) => (
-                      <div
-                        key={tarea.nombre}
-                        onClick={() => toggleTareaExtra(tarea.nombre)}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center gap-3 ${
-                          tareasSeleccionadas.includes(tarea.nombre)
-                            ? 'border-[#195083] bg-[#195083]/5'
-                            : 'border-gray-200 hover:border-[#195083]/50'
-                        }`}
-                      >
-                        {tareasSeleccionadas.includes(tarea.nombre) ? (
-                          <CheckSquare className="h-5 w-5 text-[#195083] flex-shrink-0" />
-                        ) : (
-                          <Square className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                        )}
-                        <span className="text-sm text-gray-900">{tarea.nombre}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">{t('cliente.createReservation.details.allTasksIncluded')}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Resumen de precio en tiempo real */}
             {calculoPrecio && (
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -1478,15 +1386,6 @@ function CrearReserva() {
                         Actividades ({formatCurrency(calculoPrecio.precio_actividades_unitario)}/día × {calculoPrecio.cantidad_dias} días)
                       </span>
                       <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_actividades)}</span>
-                    </div>
-                  )}
-                  
-                  {calculoPrecio.cantidad_tareas_extra > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-700">
-                        {t('cliente.createReservation.pricing.extraTasks', { n: calculoPrecio.cantidad_tareas_extra })}
-                      </span>
-                      <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_tareas_extra)}</span>
                     </div>
                   )}
                   
@@ -1641,21 +1540,6 @@ function CrearReserva() {
                   </div>
                 </div>
 
-                {/* Tareas extra */}
-                {tareasSeleccionadas.length > 0 && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      {t('cliente.createReservation.confirm.extraTasks', { n: tareasSeleccionadas.length })}
-                    </h4>
-                    <div className="space-y-1">
-                      {tareasSeleccionadas.map(tarea => (
-                        <div key={tarea} className="text-sm text-gray-700">
-                          • {tarea}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Resumen de pago */}
@@ -1683,15 +1567,6 @@ function CrearReserva() {
                             Actividades ({formatCurrency(calculoPrecio.precio_actividades_unitario)}/día × {calculoPrecio.cantidad_dias} días)
                           </span>
                           <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_actividades)}</span>
-                        </div>
-                      )}
-                      
-                      {calculoPrecio.cantidad_tareas_extra > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-700">
-                            {t('cliente.createReservation.pricing.extraTasks', { n: calculoPrecio.cantidad_tareas_extra })}
-                          </span>
-                          <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_tareas_extra)}</span>
                         </div>
                       )}
                       
