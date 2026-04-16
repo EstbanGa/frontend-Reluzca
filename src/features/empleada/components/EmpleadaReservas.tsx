@@ -33,7 +33,8 @@ import {
   X,
   ListChecks,
   Image,
-  Trash2
+  Trash2,
+  Play,
 } from "lucide-react";
 
 // Tipos predefinidos de ubicaciones (values only, labels translated at render)
@@ -47,10 +48,14 @@ const TIPOS_LUGAR_VALUES = [
 
 // Estados de servicio con colores (labels translated at render)
 const ESTADOS_SERVICIO_VALUES = {
-  'PENDIENTE': { key: 'pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  'EN_PROGRESO': { key: 'inProgress', color: 'bg-blue-100 text-blue-800', icon: RefreshCw },
-  'COMPLETADO': { key: 'completed', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  'CANCELADO': { key: 'cancelled', color: 'bg-red-100 text-red-800', icon: XCircle }
+  'PENDIENTE':   { key: 'pending',    color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  'CONFIRMADA':  { key: 'confirmed',  color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle },
+  'PROGRAMADA':  { key: 'scheduled',  color: 'bg-blue-100 text-blue-800',    icon: Calendar },
+  'EN_PROGRESO': { key: 'inProgress', color: 'bg-orange-100 text-orange-800', icon: Play },
+  'COMPLETADO':  { key: 'completed',  color: 'bg-green-100 text-green-800',   icon: CheckCircle },
+  'COMPLETADA':  { key: 'completed',  color: 'bg-green-100 text-green-800',   icon: CheckCircle },
+  'CANCELADO':   { key: 'cancelled',  color: 'bg-red-100 text-red-800',       icon: XCircle },
+  'CANCELADA':   { key: 'cancelled',  color: 'bg-red-100 text-red-800',       icon: XCircle },
 };
 
 interface ClienteInfo {
@@ -126,6 +131,7 @@ interface ServiciosData {
     total: number;
     por_estado: {
       pendientes: number;
+      confirmadas: number;
       en_progreso: number;
       completados: number;
       cancelados: number;
@@ -327,6 +333,7 @@ function EmpleadaServicios() {
   const [newFotoTipo, setNewFotoTipo] = useState('durante');
   const [newFotoDesc, setNewFotoDesc] = useState('');
   const [savingFoto, setSavingFoto] = useState(false);
+  const [iniciandoServicio, setIniciandoServicio] = useState(false);
 
   // Función auxiliar para mostrar el tamaño
   const formatTamano = (tamano: UbicacionInfo['tamaño']) => {
@@ -419,10 +426,20 @@ function EmpleadaServicios() {
 
   const getEstadoInfo = (estado: string) => {
     const normalized = (estado || '').toUpperCase();
+    // Normalizar alias del backend al key del mapa
     const estadoKey = normalized === 'EN_PROCESO' ? 'EN_PROGRESO' : normalized;
     const info = ESTADOS_SERVICIO_VALUES[estadoKey as keyof typeof ESTADOS_SERVICIO_VALUES];
     if (!info) return { label: estado, color: 'bg-gray-100 text-gray-800', icon: AlertCircle };
-    return { ...info, label: t('empleada.services.status.' + info.key) };
+    // Buscar la clave de traducción; si no existe caer a labels directos
+    const labelMap: Record<string, string> = {
+      pending: 'Pendiente',
+      confirmed: 'Confirmada',
+      scheduled: 'Programada',
+      inProgress: 'En progreso',
+      completed: 'Completada',
+      cancelled: 'Cancelada',
+    };
+    return { ...info, label: t(`empleada.services.status.${info.key}`, { defaultValue: labelMap[info.key] }) };
   };
 
   const authHeader = () => ({
@@ -521,6 +538,25 @@ function EmpleadaServicios() {
     setSelectedServicio(null);
     setChecklist([]);
     setFotos([]);
+  };
+
+  const iniciarServicio = async (reservaId: string) => {
+    setIniciandoServicio(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/estado`, {
+        method: 'PATCH',
+        headers: authHeader(),
+        body: JSON.stringify({ estado: 'en_proceso' }),
+      });
+      if (res.ok) {
+        // Recargar datos y navegar a la página de reserva activa
+        await fetchServicios();
+        closeDetail();
+        navigate('/empleada/reserva-activa');
+      }
+    } catch { /* ignore */ } finally {
+      setIniciandoServicio(false);
+    }
   };
 
   if (loading) {
@@ -712,6 +748,22 @@ function EmpleadaServicios() {
                     <p className="text-sm text-gray-700">{selectedServicio.descripcion}</p>
                   </div>
                 )}
+
+                {/* Botón iniciar servicio — solo para confirmada/programada */}
+                {['confirmada', 'programada'].includes((selectedServicio.estado || '').toLowerCase()) && (
+                  <button
+                    onClick={() => iniciarServicio(selectedServicio.id)}
+                    disabled={iniciandoServicio}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#195083] hover:bg-[#143f69] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors shadow-sm"
+                  >
+                    {iniciandoServicio ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Play className="h-5 w-5" />
+                    )}
+                    Iniciar servicio
+                  </button>
+                )}
             </div>
 
 
@@ -798,8 +850,8 @@ function EmpleadaServicios() {
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.inProgress')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">{data.estadisticas.por_estado.en_progreso}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Confirmadas</p>
+            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-indigo-600">{data.estadisticas.por_estado.confirmadas ?? 0}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
@@ -832,7 +884,8 @@ function EmpleadaServicios() {
               <option value="todos">{t('empleada.services.filters.all')}</option>
               <option value="pendiente">{t('empleada.services.filters.pending')}</option>
               <option value="confirmada">Confirmada</option>
-              <option value="en_proceso">En proceso</option>
+              <option value="programada">Programada</option>
+              <option value="en_proceso">En progreso</option>
               <option value="completada">{t('empleada.services.filters.completed')}</option>
               <option value="cancelada">{t('empleada.services.filters.cancelled')}</option>
             </select>
