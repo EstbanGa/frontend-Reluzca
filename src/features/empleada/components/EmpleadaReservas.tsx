@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
@@ -306,6 +307,7 @@ const InteractiveMap = ({ ubicacion }: { ubicacion: UbicacionInfo['ubicacion'] }
 
 function EmpleadaServicios() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [data, setData] = useState<ServiciosData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -595,33 +597,10 @@ function EmpleadaServicios() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex border-b border-gray-100">
-            {[
-              { key: 'details' as const, label: 'Detalles', icon: <FileText className="h-4 w-4" /> },
-              { key: 'checklist' as const, label: t('empleada.checklist.title'), icon: <ListChecks className="h-4 w-4" /> },
-              ...(esEnCurso ? [{ key: 'photos' as const, label: t('empleada.photos.title'), icon: <Image className="h-4 w-4" /> }] : []),
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setDetailTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex-1 justify-center ${
-                  detailTab === tab.key
-                    ? 'border-[#D95B26] text-[#D95B26]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
+        {/* Información del servicio */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-4 sm:p-6">
-            {/* Detalles */}
-            {detailTab === 'details' && (
-              <div className="space-y-5">
+            <div className="space-y-5">
                 {/* Cliente */}
                 <div className="bg-blue-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
@@ -733,130 +712,9 @@ function EmpleadaServicios() {
                     <p className="text-sm text-gray-700">{selectedServicio.descripcion}</p>
                   </div>
                 )}
-              </div>
-            )}
+            </div>
 
-            {/* Checklist */}
-            {detailTab === 'checklist' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                    <ListChecks className="h-5 w-5 text-[#D95B26]" />
-                    {t('empleada.checklist.title')}
-                  </h3>
-                  {checklist.length > 0 && (
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      {checklist.filter(c => c.ejecutada).length}/{checklist.length}
-                    </span>
-                  )}
-                </div>
-                {checklistLoading ? (
-                  <div className="text-center py-10"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
-                ) : checklist.length === 0 ? (
-                  <div className="text-center py-10">
-                    <ListChecks className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">{t('empleada.checklist.empty')}</p>
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {checklist.map(item => (
-                      <li key={item.id} className="flex items-center gap-3 py-3">
-                        <input
-                          type="checkbox"
-                          checked={item.ejecutada}
-                          onChange={() => toggleActividad(selectedServicio.id, item)}
-                          className="h-4 w-4 rounded border-gray-300 text-[#D95B26] focus:ring-[#D95B26] cursor-pointer flex-shrink-0"
-                        />
-                        <span className={`flex-1 text-sm ${item.ejecutada ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                          {item.nombre_actividad}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs flex-shrink-0 ${
-                          item.ejecutada ? 'bg-green-100 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                        }`}>
-                          {item.ejecutada ? t('empleada.checklist.ejecutada') : t('empleada.checklist.programada')}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
 
-            {/* Fotos — solo si está en curso */}
-            {detailTab === 'photos' && esEnCurso && (
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                  <Image className="h-5 w-5 text-[#D95B26]" />
-                  {t('empleada.photos.title')}
-                </h3>
-
-                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                  <p className="text-sm font-medium text-gray-700">{t('empleada.photos.upload')}</p>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newFotoUrl}
-                    onChange={e => setNewFotoUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
-                  />
-                  <div className="flex gap-2 flex-wrap">
-                    <select
-                      value={newFotoTipo}
-                      onChange={e => setNewFotoTipo(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
-                    >
-                      <option value="antes">{t('empleada.photos.types.before')}</option>
-                      <option value="durante">{t('empleada.photos.types.during')}</option>
-                      <option value="despues">{t('empleada.photos.types.after')}</option>
-                    </select>
-                    <input
-                      type="text"
-                      placeholder={t('empleada.photos.descriptionLabel')}
-                      value={newFotoDesc}
-                      onChange={e => setNewFotoDesc(e.target.value)}
-                      className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D95B26]"
-                    />
-                    <button
-                      onClick={() => saveFoto(selectedServicio.id)}
-                      disabled={savingFoto || !newFotoUrl.trim()}
-                      className="px-4 py-2 bg-[#D95B26] text-white rounded-lg text-sm font-medium hover:bg-[#b84c1e] disabled:opacity-50 transition-colors"
-                    >
-                      {savingFoto ? <Loader2 className="h-4 w-4 animate-spin" /> : t('empleada.photos.upload')}
-                    </button>
-                  </div>
-                </div>
-
-                {fotosLoading ? (
-                  <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-400" /></div>
-                ) : fotos.length === 0 ? (
-                  <p className="text-gray-500 text-sm py-4 text-center">{t('empleada.photos.empty')}</p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {fotos.map(foto => (
-                      <div key={foto.id} className="relative group rounded-lg overflow-hidden border border-gray-200">
-                        <img src={foto.url_foto} alt={foto.descripcion || ''} className="w-full h-28 object-cover" />
-                        {foto.tipo && (
-                          <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">
-                            {t(`empleada.photos.types.${foto.tipo === 'antes' ? 'before' : foto.tipo === 'durante' ? 'during' : 'after'}`)}
-                          </span>
-                        )}
-                        <button
-                          onClick={() => deleteFoto(selectedServicio.id, foto.id)}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                        {foto.descripcion && (
-                          <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate">
-                            {foto.descripcion}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -913,18 +771,11 @@ function EmpleadaServicios() {
             </div>
             <div className="flex flex-col gap-2 flex-shrink-0">
               <button
-                onClick={() => openDetail(reservaEnCurso, 'checklist')}
-                className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-              >
-                <ListChecks className="h-3.5 w-3.5" />
-                Checklist
-              </button>
-              <button
-                onClick={() => openDetail(reservaEnCurso, 'photos')}
+                onClick={() => navigate('/empleada/reserva-activa')}
                 className="px-3 py-1.5 bg-white text-[#195083] hover:bg-white/90 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
-                <Image className="h-3.5 w-3.5" />
-                Fotos
+                <ListChecks className="h-3.5 w-3.5" />
+                Ver actividad
               </button>
             </div>
           </div>
