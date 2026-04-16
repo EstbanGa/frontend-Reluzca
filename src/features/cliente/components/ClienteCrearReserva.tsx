@@ -120,6 +120,9 @@ interface FechaHorario {
 
 interface CalculoPrecio {
   precio_plan_unitario: number;
+  precio_base_plan: number;
+  precio_actividades_unitario: number;
+  precio_actividades: number;
   cantidad_dias: number;
   precio_base: number;
   precio_tareas_extra: number;
@@ -236,10 +239,12 @@ function CrearReserva() {
 
   // Calcular precio cuando cambian los datos relevantes
   useEffect(() => {
-    if (planSeleccionado && ubicacionSeleccionada && fechasSeleccionadas.length > 0 && horarioSeleccionado) {
+    if ((planSeleccionado || actividadesSeleccionadas.length > 0) && ubicacionSeleccionada && fechasSeleccionadas.length > 0 && horarioSeleccionado) {
       calcularPrecio();
+    } else {
+      setCalculoPrecio(null);
     }
-  }, [planSeleccionado, ubicacionSeleccionada, fechasSeleccionadas, horarioSeleccionado, tareasSeleccionadas]);
+  }, [planSeleccionado, ubicacionSeleccionada, fechasSeleccionadas, horarioSeleccionado, tareasSeleccionadas, actividadesSeleccionadas]);
 
   const cargarEmpleadas = async () => {
     try {
@@ -458,7 +463,6 @@ function CrearReserva() {
         const esSabado = fechaObj.getDay() === 6;
         const horaFinal = horarioSeleccionado.hora_final;
         
-        // Calcular sobrecargo si es sábado después del mediodía
         let sobrecargo = 0;
         if (esSabado && horaFinal > '12:00') {
           sobrecargo = horarioSeleccionado.sobrecargo_sabado || 10000;
@@ -479,10 +483,11 @@ function CrearReserva() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          plan_id: planSeleccionado?.id,
+          plan_id: planSeleccionado?.id || null,
           ubicacion_id: ubicacionSeleccionada?.id,
           fechas_horarios: fechasHorarios,
-          tareas_extra: tareasSeleccionadas
+          tareas_extra: tareasSeleccionadas,
+          actividades_seleccionadas: actividadesSeleccionadas
         })
       });
 
@@ -1458,10 +1463,23 @@ function CrearReserva() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <h3 className="text-lg font-semibold text-blue-900 mb-3">{t('cliente.createReservation.pricing.title')}</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-700">{t('cliente.createReservation.pricing.planBase', { n: calculoPrecio.cantidad_dias })}</span>
-                    <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_base)}</span>
-                  </div>
+                  {calculoPrecio.precio_base_plan > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">
+                        Plan ({formatCurrency(calculoPrecio.precio_plan_unitario)}/día × {calculoPrecio.cantidad_dias} días)
+                      </span>
+                      <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_base_plan)}</span>
+                    </div>
+                  )}
+
+                  {calculoPrecio.precio_actividades > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">
+                        Actividades ({formatCurrency(calculoPrecio.precio_actividades_unitario)}/día × {calculoPrecio.cantidad_dias} días)
+                      </span>
+                      <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_actividades)}</span>
+                    </div>
+                  )}
                   
                   {calculoPrecio.cantidad_tareas_extra > 0 && (
                     <div className="flex justify-between">
@@ -1650,12 +1668,23 @@ function CrearReserva() {
                   
                   {calculoPrecio && (
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-700">
-                          {t('cliente.createReservation.pricing.planBase', { n: calculoPrecio.cantidad_dias })}
-                        </span>
-                        <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_base)}</span>
-                      </div>
+                      {calculoPrecio.precio_base_plan > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-700">
+                            Plan ({formatCurrency(calculoPrecio.precio_plan_unitario)}/día × {calculoPrecio.cantidad_dias} días)
+                          </span>
+                          <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_base_plan)}</span>
+                        </div>
+                      )}
+
+                      {calculoPrecio.precio_actividades > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-700">
+                            Actividades ({formatCurrency(calculoPrecio.precio_actividades_unitario)}/día × {calculoPrecio.cantidad_dias} días)
+                          </span>
+                          <span className="font-medium text-gray-900">{formatCurrency(calculoPrecio.precio_actividades)}</span>
+                        </div>
+                      )}
                       
                       {calculoPrecio.cantidad_tareas_extra > 0 && (
                         <div className="flex justify-between text-sm">
