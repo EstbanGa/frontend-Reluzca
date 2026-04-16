@@ -319,8 +319,8 @@ function ClienteNotificaciones() {
               return (
                 <div
                   key={notificacion.id}
-                  className={`group bg-white rounded-lg shadow-sm p-4 transition-all hover:shadow-md ${
-                    !notificacion.leida ? "border-l-4 border-blue-500" : ""
+                  className={`bg-white rounded-xl shadow-sm p-4 border border-gray-100 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] ${
+                    !notificacion.leida ? "border-l-4 border-l-blue-500" : ""
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -338,7 +338,7 @@ function ClienteNotificaciones() {
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">{notificacion.mensaje}</p>
                         </div>
-                        <div className="flex items-center gap-2 ml-4 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                        <div className="flex items-center gap-2 ml-4">
                           {!notificacion.leida && (
                             <button
                               onClick={() => marcarComoLeida(notificacion.id)}

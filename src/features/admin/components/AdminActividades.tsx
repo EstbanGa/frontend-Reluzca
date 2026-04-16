@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
-import { TableRowActions } from "@/components/common/HoverActions";
+
 import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import {
@@ -278,66 +278,75 @@ function AdminActividades() {
           </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                  {t("admin.activities.fields.name")}
-                </th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300 hidden sm:table-cell">
-                  {t("admin.activities.fields.price")}
-                </th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300 hidden md:table-cell">
-                  {t("admin.activities.fields.duration")}
-                </th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                  {t("admin.activities.fields.active")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {filtradas.map((a) => (
-                <tr
-                  key={a.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group"
+        <div className="flex flex-col gap-2">
+          {filtradas.map((a) => (
+            <div
+              key={a.id}
+              className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200"
+            >
+              {/* Indicador activa/inactiva */}
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                a.activa ? "bg-green-100" : "bg-gray-100"
+              }`}>
+                <Activity className={`h-5 w-5 ${a.activa ? "text-green-600" : "text-gray-400"}`} />
+              </div>
+
+              {/* Contenido */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-sm text-gray-900 truncate">{a.nombre}</h4>
+                {a.descripcion && (
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5">{a.descripcion}</p>
+                )}
+                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                  {a.precio_unitario != null && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">
+                      ${Number(a.precio_unitario).toLocaleString("es-CO")}
+                    </span>
+                  )}
+                  {a.duracion_estimada_minutos != null && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">
+                      {a.duracion_estimada_minutos} min
+                    </span>
+                  )}
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                    a.activa ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${a.activa ? "bg-green-500" : "bg-gray-400"}`} />
+                    {a.activa ? "Activa" : "Inactiva"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Acciones */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={() => handleToggle(a)}
+                  title={t("admin.activities.fields.active")}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900 dark:text-white">{a.nombre}</p>
-                    {a.descripcion && (
-                      <p className="text-xs text-gray-400 truncate max-w-xs mt-0.5">
-                        {a.descripcion}
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right hidden sm:table-cell text-gray-700 dark:text-gray-300">
-                    {a.precio_unitario != null
-                      ? `$${Number(a.precio_unitario).toLocaleString("es-CO")}`
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right hidden md:table-cell text-gray-700 dark:text-gray-300">
-                    {a.duracion_estimada_minutos != null ? `${a.duracion_estimada_minutos} min` : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => handleToggle(a)}
-                      title={t("admin.activities.fields.active")}
-                    >
-                      {a.activa ? (
-                        <ToggleRight className="w-6 h-6 text-green-500 mx-auto" />
-                      ) : (
-                        <ToggleLeft className="w-6 h-6 text-gray-400 mx-auto" />
-                      )}
-                    </button>
-                  </td>
-                  <TableRowActions actions={[
-                    { icon: Edit3, label: t("admin.activities.editActivity"), onClick: () => openEdit(a), variant: "primary" },
-                    { icon: Trash2, label: t("common.delete"), onClick: () => setDeleteConfirm(a), variant: "danger" },
-                  ]} />
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {a.activa ? (
+                    <ToggleRight className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <ToggleLeft className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
+                <button
+                  onClick={() => openEdit(a)}
+                  className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors"
+                  title={t("admin.activities.editActivity")}
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(a)}
+                  className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+                  title={t("common.delete")}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

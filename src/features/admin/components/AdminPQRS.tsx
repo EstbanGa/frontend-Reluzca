@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
-import { CardHoverActions } from "@/components/common/HoverActions";
+
 import { API_BASE_URL } from "@/config/env";
 import { formatDate } from "@/utils/dateUtils";
 import {
@@ -356,33 +356,43 @@ function AdminPQRS() {
             </div>
           ) : (
             <>
-              {/* Header row */}
-              <div className="hidden lg:grid grid-cols-[1fr_1.4fr_2fr_0.8fr_1fr_0.9fr_auto] gap-3 px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                <span>Tipo</span><span>Cliente</span><span>Descripción</span>
-                <span>Prioridad</span><span>Estado</span><span>Fecha</span><span>Acción</span>
-              </div>
+              <div className="flex flex-col gap-2 p-3">
+                {pagedList.map((pqrs) => (
+                  <div
+                    key={pqrs.id}
+                    className="flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+                    onClick={() => openRespondModal(pqrs)}
+                  >
+                    {/* Avatar tipo */}
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
+                      <FileText className="h-5 w-5 text-gray-500" />
+                    </div>
 
-              {pagedList.map((pqrs) => (
-                <div key={pqrs.id} className="group grid grid-cols-1 lg:grid-cols-[1fr_1.4fr_2fr_0.8fr_1fr_0.9fr_auto] gap-2 lg:gap-3 px-4 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 items-start lg:items-center">
-                  <TipoBadge tipo={pqrs.tipo} />
-                  <div className="text-sm text-gray-900 font-medium">
-                    {pqrs.usuario ? `${pqrs.usuario.nombre} ${pqrs.usuario.apellido}` : "Desconocido"}
-                    {pqrs.usuario?.email && <p className="text-xs text-gray-400 font-normal">{pqrs.usuario.email}</p>}
+                    {/* Contenido principal */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm text-gray-900 truncate">
+                        {pqrs.usuario ? `${pqrs.usuario.nombre} ${pqrs.usuario.apellido}` : "Desconocido"}
+                      </h4>
+                      <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{pqrs.descripcion}</p>
+
+                      {/* Tags */}
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                        <TipoBadge tipo={pqrs.tipo} />
+                        <PrioridadBadge prioridad={pqrs.prioridad} />
+                        <EstadoBadge estado={pqrs.estado} />
+                        {pqrs.respuesta && <span className="text-[10px] text-green-600 font-semibold">✓ Respondida</span>}
+                      </div>
+                    </div>
+
+                    {/* Fecha */}
+                    <div className="flex-shrink-0 text-right">
+                      <span className="text-[10px] text-gray-400">
+                        {pqrs.fecha_creacion ? formatDate(pqrs.fecha_creacion) : pqrs.created_at ? formatDate(pqrs.created_at) : "—"}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">{pqrs.descripcion}</p>
-                  <PrioridadBadge prioridad={pqrs.prioridad} />
-                  <div className="flex flex-col gap-1">
-                    <EstadoBadge estado={pqrs.estado} />
-                    {pqrs.respuesta && <span className="text-xs text-green-600">✓ Respondida</span>}
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {pqrs.fecha_creacion ? formatDate(pqrs.fecha_creacion) : pqrs.created_at ? formatDate(pqrs.created_at) : "—"}
-                  </span>
-                  <CardHoverActions actions={[
-                    { icon: MessageSquare, label: pqrs.respuesta ? "Ver / editar" : "Responder", onClick: () => openRespondModal(pqrs), variant: "primary" },
-                  ]} />
-                </div>
-              ))}
+                ))}
+              </div>
 
               {totalPages > 1 && (
                 <div className="p-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
@@ -454,7 +464,7 @@ function AdminPQRS() {
                   {isExpanded && (
                     <div className="border-t border-gray-100 divide-y divide-gray-50">
                       {pqrs.map((p) => (
-                        <div key={p.id} className="group px-4 py-3 flex flex-col sm:flex-row gap-3 sm:items-center hover:bg-gray-50/60">
+                        <div key={p.id} className="px-4 py-3 flex flex-col sm:flex-row gap-3 sm:items-center hover:bg-gray-50/60">
                           <div className="flex-1 min-w-0 space-y-1.5">
                             <div className="flex flex-wrap items-center gap-1.5">
                               <TipoBadge tipo={p.tipo} />
@@ -471,7 +481,7 @@ function AdminPQRS() {
                               {p.fecha_creacion ? formatDate(p.fecha_creacion) : p.created_at ? formatDate(p.created_at) : ""}
                             </p>
                           </div>
-                          <div className="flex gap-2 shrink-0 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                          <div className="flex gap-2 shrink-0">
                             {p.estado !== "cerrado" && (
                               <select
                                 value={p.estado}

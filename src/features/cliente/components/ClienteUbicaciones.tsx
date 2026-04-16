@@ -702,7 +702,7 @@ function ClienteUbicaciones() {
               const isSelected = selectedUbicaciones.includes(ubicacion.id);
               
               return (
-                <div key={ubicacion.id} className={`group bg-white rounded-xl p-4 sm:p-6 shadow-sm border transition-all ${isSelected ? 'border-[#4894AD] bg-blue-50' : 'border-gray-100 hover:shadow-md'}`}>
+                <div key={ubicacion.id} className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border transition-all duration-200 ${isSelected ? 'border-[#4894AD] bg-blue-50' : 'border-gray-100 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01]'}`}>
                   <div className="space-y-4">
                     {/* Header de la ubicación - Responsive mejorado */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -744,7 +744,7 @@ function ClienteUbicaciones() {
                           {ubicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                         </span>
                         
-                        <div className="flex items-center gap-1 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                        <div className="flex items-center gap-1">
                           <button
                             onClick={() => openModal(ubicacion)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

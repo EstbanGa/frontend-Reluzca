@@ -349,7 +349,7 @@ function ClienteReservas() {
             const StatusIcon = estadoConfig.icon;
             
             return (
-              <div key={reserva.id} className="group bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div key={reserva.id} className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200">
                 <div className="space-y-4">
                   {/* Header de la reserva */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -375,7 +375,7 @@ function ClienteReservas() {
                       </span>
                       
                       {puedeEditarse(reserva) && (
-                        <div className="lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                        <div>
                           <button
                             onClick={() => handleEditarReserva(reserva.id)}
                             className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"

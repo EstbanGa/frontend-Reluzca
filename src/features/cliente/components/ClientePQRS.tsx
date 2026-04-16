@@ -341,7 +341,7 @@ function PQRSPage() {
             pqrsFiltrados.map((pqrs) => (
               <div
                 key={pqrs.id}
-                className="group bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
@@ -363,7 +363,7 @@ function PQRSPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                  <div>
                     <button
                       onClick={() => handleDelete(pqrs.id)}
                       className="text-red-600 hover:text-red-800 transition-colors"

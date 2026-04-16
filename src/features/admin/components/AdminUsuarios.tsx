@@ -1,13 +1,13 @@
-﻿
+
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
-  Users, Search, Crown, UserCheck, Briefcase, Eye,
-  RefreshCw, AlertCircle, Download, Star,
-  ChevronLeft, ChevronRight, CheckCircle, XCircle,
+  Users, Search, Crown, UserCheck, Briefcase, Eye, EyeOff,
+  RefreshCw, AlertCircle, Download, Star, X, KeyRound, Save,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 
 // â”€â”€â”€ Interfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -269,105 +269,76 @@ function AdminUsuarios() {
         </div>
       </div>
 
-      {/* Excel-like table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Usuario</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Correo</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">TelÃ©fono</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Rol</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Estado</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Registro</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Reservas</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paged.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-400">
-                    <Users className="h-10 w-10 mx-auto mb-2 text-gray-200" />
-                    {search ? "Sin resultados para la bÃºsqueda." : "No hay usuarios."}
-                  </td>
-                </tr>
-              ) : paged.map((u) => {
-                const rolCfg = ROL_CONFIG[u.rol] ?? ROL_CONFIG.cliente;
-                const RolIcon = rolCfg.icon;
-                const isActivo = u.estado === "activo";
-                return (
-                    <tr
-                      key={u.id}
-                      className="hover:bg-[#195083]/5 transition-colors group cursor-pointer"
-                      onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
-                    >
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}
-                        >
-                          {u.nombre[0]}{u.apellido[0]}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{u.nombre} {u.apellido}</p>
-                          {u.ranking != null && (
-                            <div className="flex items-center gap-0.5 mt-0.5">
-                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span className="text-xs text-gray-500">{Number(u.ranking).toFixed(1)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700">{u.correo}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-600">
-                      {u.telefono ?? <span className="text-gray-300">â€”</span>}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${rolCfg.bg} ${rolCfg.color}`}>
-                        <RolIcon className="h-3 w-3" />
-                        {rolCfg.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        isActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                      }`}>
-                        {isActivo ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                        {isActivo ? "Activo" : "Inactivo"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-600 text-xs">
-                      {fmtDate(u.fecha_registro)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-[#195083]">
-                        {u.estadisticas?.total_reservas ?? "â€”"}
-                      </span>
-                    </td>
-                    <td className="relative w-0 p-0" onClick={e => e.stopPropagation()}>
-                      <div className="absolute right-3 top-0 bottom-0 flex items-center gap-1.5 opacity-0 translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-10">
-                        <button
-                          onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#195083] text-white text-xs font-semibold rounded-lg hover:bg-[#0f3a5f] whitespace-nowrap shadow-sm"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          Ver detalles
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      {/* Lista de usuarios */}
+      <div className="flex flex-col gap-2">
+        {paged.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
+            <Users className="h-10 w-10 mx-auto mb-2 text-gray-200" />
+            {search ? "Sin resultados para la búsqueda." : "No hay usuarios."}
+          </div>
+        ) : paged.map((u) => {
+          const rolCfg = ROL_CONFIG[u.rol] ?? ROL_CONFIG.cliente;
+          const RolIcon = rolCfg.icon;
+          const isActivo = u.estado === "activo";
+          return (
+            <div
+              key={u.id}
+              className="flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+              onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
+            >
+              {/* Avatar */}
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}
+              >
+                {u.nombre[0]}{u.apellido[0]}
+              </div>
+
+              {/* Contenido principal */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-sm text-gray-900 truncate">
+                  {u.nombre} {u.apellido}
+                </h4>
+                <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                  {u.correo}{u.telefono ? ` · ${u.telefono}` : ""}
+                </p>
+
+                {/* Tags */}
+                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${rolCfg.bg} ${rolCfg.color}`}>
+                    <RolIcon className="h-3 w-3" />
+                    {rolCfg.label}
+                  </span>
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                    isActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isActivo ? "bg-green-500" : "bg-red-500"}`} />
+                    {isActivo ? "Activo" : "Inactivo"}
+                  </span>
+                  {u.ranking != null && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      {Number(u.ranking).toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Sección derecha */}
+              <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
+                <span className="text-[10px] text-gray-400">{fmtDate(u.fecha_registro)}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-500">Reservas</span>
+                  <span className="text-xs font-bold text-[#195083]">{u.estadisticas?.total_reservas ?? "—"}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
 
         {pages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
-            <span>{(page - 1) * PAGE_SIZE + 1}â€“{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}</span>
+          <div className="px-4 py-3 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-sm text-gray-600">
+            <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}</span>
             <div className="flex gap-1">
               <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
                 <ChevronLeft className="h-4 w-4" />
@@ -379,263 +350,6 @@ function AdminUsuarios() {
           </div>
         )}
       </div>
-
-      {/* â•â•â•â•â•â•â•â•â•â• PANEL DE DETALLE â•â•â•â•â•â•â•â•â•â• */}
-      {detailUser && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/50" onClick={closeDetail} />
-          <div className="panel-slide-in relative ml-auto w-full max-w-3xl bg-white shadow-2xl flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#195083] to-[#0f3a5f] text-white flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">
-                  {detailUser.nombre[0]}{detailUser.apellido[0]}
-                </div>
-                <div>
-                  <h2 className="font-bold text-[#F5F0E7]">{detailUser.nombre} {detailUser.apellido}</h2>
-                  <p className="text-[#F5F0E7]/70 text-xs">{detailUser.correo} &middot; {detailUser.rol}</p>
-                </div>
-              </div>
-              <button onClick={closeDetail} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 bg-white flex-shrink-0">
-              {[
-                { key: "reservas",    label: `Reservas (${detailReservas.length})`,       icon: Calendar },
-                { key: "ubicaciones", label: `Ubicaciones (${detailUbicaciones.length})`, icon: MapPin },
-                { key: "editar",      label: "Editar usuario",                             icon: Edit3 },
-              ].map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setDetailTab(key as typeof detailTab)}
-                  className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
-                    detailTab === key
-                      ? "border-[#195083] text-[#195083]"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab content */}
-            <div className="flex-1 overflow-y-auto">
-              {detailLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <RefreshCw className="h-8 w-8 animate-spin text-[#195083]" />
-                </div>
-              ) : (
-                <>
-                  {/* â”€â”€ Tab: Reservas â”€â”€ */}
-                  {detailTab === "reservas" && (
-                    <div>
-                      {detailReservas.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
-                          <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-200" />
-                          Sin reservas registradas
-                        </div>
-                      ) : (
-                        <>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="bg-gray-50 border-b border-gray-200">
-                                  <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Fecha</th>
-                                  <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Horario</th>
-                                  <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Plan</th>
-                                  <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Empleada</th>
-                                  <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Estado</th>
-                                  <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Pago</th>
-                                  <th className="text-right px-4 py-2.5 font-bold text-gray-500 uppercase whitespace-nowrap">Total</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-50">
-                                {pagedReservas.map((r) => {
-                                  const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
-                                  const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
-                                  return (
-                                    <tr key={r.id} className="hover:bg-gray-50/70">
-                                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-700">{fmtDate(r.fecha)}</td>
-                                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">{r.hora_inicio} â€“ {r.hora_final}</td>
-                                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-700">{r.plan?.nombre ?? "â€”"}</td>
-                                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">
-                                        {r.empleada ? `${r.empleada.nombre} ${r.empleada.apellido}` : "â€”"}
-                                      </td>
-                                      <td className="px-4 py-2.5 whitespace-nowrap">
-                                        <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${estCfg.bg} ${estCfg.color}`}>
-                                          {estCfg.label}
-                                        </span>
-                                      </td>
-                                      <td className="px-4 py-2.5 whitespace-nowrap">
-                                        <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
-                                          {pagoCfg.label}
-                                        </span>
-                                      </td>
-                                      <td className="px-4 py-2.5 whitespace-nowrap text-right font-semibold text-gray-800">
-                                        {fmtCOP(r.precio_total)}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                          {reservaPages > 1 && (
-                            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
-                              <span>{(detailPage - 1) * PAGE_SIZE + 1}â€“{Math.min(detailPage * PAGE_SIZE, detailReservas.length)} de {detailReservas.length}</span>
-                              <div className="flex gap-1">
-                                <button disabled={detailPage === 1} onClick={() => setDetailPage(p => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                                  <ChevronLeft className="h-3.5 w-3.5" />
-                                </button>
-                                <button disabled={detailPage >= reservaPages} onClick={() => setDetailPage(p => p + 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                                  <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* â”€â”€ Tab: Ubicaciones â”€â”€ */}
-                  {detailTab === "ubicaciones" && (
-                    <div>
-                      {detailUbicaciones.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
-                          <MapPin className="h-10 w-10 mx-auto mb-2 text-gray-200" />
-                          Sin ubicaciones registradas
-                        </div>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase">Nombre / DirecciÃ³n</th>
-                                <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase">Tipo</th>
-                                <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase">Ãrea</th>
-                                <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase">Hab.</th>
-                                <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase">BaÃ±os</th>
-                                <th className="text-left px-4 py-2.5 font-bold text-gray-500 uppercase">Estado</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                              {detailUbicaciones.map((ub) => (
-                                <tr key={ub.id} className="hover:bg-gray-50/70">
-                                  <td className="px-4 py-2.5">
-                                    <p className="font-semibold text-gray-800">{ub.nombre ?? "Sin nombre"}</p>
-                                    <p className="text-gray-500">{ub.direccion}</p>
-                                  </td>
-                                  <td className="px-4 py-2.5 text-gray-600 capitalize">{ub.tipo_inmueble ?? "â€”"}</td>
-                                  <td className="px-4 py-2.5 text-gray-600">{ub.area_m2 != null ? `${ub.area_m2} mÂ²` : "â€”"}</td>
-                                  <td className="px-4 py-2.5 text-gray-600">{ub.num_habitaciones ?? "â€”"}</td>
-                                  <td className="px-4 py-2.5 text-gray-600">{ub.num_banos ?? "â€”"}</td>
-                                  <td className="px-4 py-2.5">
-                                    <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                                      ub.activa !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                                    }`}>
-                                      {ub.activa !== false ? "Activa" : "Inactiva"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* â”€â”€ Tab: Editar â”€â”€ */}
-                  {detailTab === "editar" && (
-                    <div className="p-6 space-y-5 max-w-lg">
-                      {editError && (
-                        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                          <AlertCircle className="h-4 w-4 shrink-0" />
-                          {editError}
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
-                          <input
-                            type="text"
-                            value={editForm.nombre}
-                            onChange={e => setEditForm(f => ({ ...f, nombre: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Apellido</label>
-                          <input
-                            type="text"
-                            value={editForm.apellido}
-                            onChange={e => setEditForm(f => ({ ...f, apellido: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">TelÃ©fono</label>
-                        <input
-                          type="text"
-                          value={editForm.telefono}
-                          onChange={e => setEditForm(f => ({ ...f, telefono: e.target.value }))}
-                          placeholder="Ej: +57 300 123 4567"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Dirección</label>
-                        <input
-                          type="text"
-                          value={editForm.direccion}
-                          onChange={e => setEditForm(f => ({ ...f, direccion: e.target.value }))}
-                          placeholder="Dirección del usuario"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Estado</label>
-                        <select
-                          value={editForm.estado}
-                          onChange={e => setEditForm(f => ({ ...f, estado: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-                        >
-                          <option value="activo">Activo</option>
-                          <option value="inactivo">Inactivo</option>
-                        </select>
-                      </div>
-                      <div className="flex gap-3 pt-2 border-t border-gray-100">
-                        <button
-                          onClick={handleSaveEdit}
-                          disabled={editLoading}
-                          className="flex items-center gap-2 bg-[#195083] text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-[#0f3a5f] disabled:opacity-50 transition-colors"
-                        >
-                          {editLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                          Guardar cambios
-                        </button>
-                        <button
-                          onClick={() => openPwd(detailUser)}
-                          className="flex items-center gap-2 bg-amber-500 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-amber-600 transition-colors"
-                        >
-                          <KeyRound className="h-4 w-4" />
-                          Cambiar contraseÃ±a
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* â•â•â•â•â•â•â•â•â•â• MODAL CONTRASEÃ‘A â•â•â•â•â•â•â•â•â•â• */}
       {pwdModal && pwdTarget && (

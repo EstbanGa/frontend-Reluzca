@@ -1,4 +1,4 @@
-﻿
+
 import { useState, useEffect, useMemo } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { API_BASE_URL } from "@/config/env";
@@ -289,106 +289,75 @@ function AdminReservas() {
         </div>
       </div>
 
-      {/* Excel-like table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">#</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Horario</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Empleada</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Plan</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Estado</th>
-                <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Pago</th>
-                <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paged.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="text-center py-10 text-gray-400">
-                    <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-200" />
-                    {busqueda || filtroEstado !== "todos" || filtroEstadoPago !== "todos"
-                      ? "Sin resultados para los filtros aplicados."
-                      : "No hay reservas registradas."}
-                  </td>
-                </tr>
-              ) : paged.map((r, idx) => {
-                const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
-                const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
-                const rowNum = (page - 1) * PAGE_SIZE + idx + 1;
-                return (
-                  <tr key={r.id} className="hover:bg-gray-50/70 transition-colors group">
-                    <td className="px-4 py-3 text-gray-400 text-xs">{rowNum}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700 font-medium">{fmtDate(r.fecha)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs">
-                      {r.hora_inicio} – {r.hora_final}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {r.cliente ? (
-                        <div>
-                          <p className="font-semibold text-gray-900 text-xs">
-                            {r.cliente.nombre} {r.cliente.apellido}
-                          </p>
-                          <p className="text-gray-400 text-xs">{r.cliente.correo}</p>
-                        </div>
-                      ) : <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {r.empleada ? (
-                        <div>
-                          <p className="text-gray-800 text-xs font-medium">
-                            {r.empleada.nombre} {r.empleada.apellido}
-                          </p>
-                          {r.empleada.ranking != null && (
-                            <div className="flex items-center gap-0.5">
-                              <Star className="h-2.5 w-2.5 text-yellow-400 fill-current" />
-                              <span className="text-xs text-gray-400">{r.empleada.ranking.toFixed(1)}</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700 text-xs">
-                      {r.plan?.nombre ?? <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${estCfg.bg} ${estCfg.color}`}>
-                        {estCfg.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
-                        {pagoCfg.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-gray-800 text-xs">
-                      {fmtCOP(r.precio_total)}
-                    </td>
-                    <td className="relative w-0 p-0">
-                      <div className="absolute right-3 top-0 bottom-0 flex items-center gap-1.5 opacity-0 translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-10">
-                        <button
-                          onClick={() => setDetailReserva(r)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#195083] text-white text-xs font-semibold rounded-lg hover:bg-[#0f3a5f] whitespace-nowrap shadow-sm"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          Ver
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      {/* Lista de reservas */}
+      <div className="flex flex-col gap-2">
+        {paged.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
+            <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-200" />
+            {busqueda || filtroEstado !== "todos" || filtroEstadoPago !== "todos"
+              ? "Sin resultados para los filtros aplicados."
+              : "No hay reservas registradas."}
+          </div>
+        ) : paged.map((r, idx) => {
+          const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
+          const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
+          return (
+            <div
+              key={r.id}
+              className="flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
+              onClick={() => setDetailReserva(r)}
+            >
+              {/* Avatar fecha */}
+              <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}>
+                <span className="text-[10px] font-bold leading-none">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })}</span>
+                <span className="text-[8px] uppercase leading-none mt-0.5">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })}</span>
+              </div>
+
+              {/* Contenido principal */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-sm text-gray-900 truncate">
+                  {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "Sin cliente"}
+                </h4>
+                <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                  {r.hora_inicio} – {r.hora_final}{r.empleada ? ` · ${r.empleada.nombre} ${r.empleada.apellido}` : ""}{r.plan ? ` · ${r.plan.nombre}` : ""}
+                </p>
+
+                {/* Tags */}
+                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${estCfg.bg} ${estCfg.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${estCfg.color.replace("text-", "bg-")}`} />
+                    {estCfg.label}
+                  </span>
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${pagoCfg.color.replace("text-", "bg-")}`} />
+                    {pagoCfg.label}
+                  </span>
+                  {r.lugar && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
+                      <MapPin className="h-3 w-3" />
+                      {r.lugar.nombre ?? r.lugar.direccion ?? ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Sección derecha - precio */}
+              <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
+                <span className="text-xs font-bold text-[#195083]">{fmtCOP(r.precio_total)}</span>
+                {r.empleada?.ranking != null && (
+                  <div className="flex items-center gap-0.5">
+                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                    <span className="text-[10px] text-gray-500">{r.empleada.ranking.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
 
         {pages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
+          <div className="px-4 py-3 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-sm text-gray-600">
             <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}</span>
             <div className="flex gap-1">
               <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
@@ -408,7 +377,6 @@ function AdminReservas() {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDetailReserva(null)} />
           <div className="modal-enter relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            {/* Modal header */}
             <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] px-6 py-4 flex items-center justify-between">
               <div>
                 <h2 className="font-bold text-[#F5F0E7] text-lg">Detalle de Reserva</h2>
@@ -420,7 +388,6 @@ function AdminReservas() {
             </div>
 
             <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* Status badges */}
               <div className="flex items-center gap-3">
                 {(() => {
                   const estCfg = ESTADO_CONFIG[detailReserva.estado] ?? ESTADO_CONFIG.pendiente;
@@ -443,7 +410,6 @@ function AdminReservas() {
                 })()}
               </div>
 
-              {/* Cliente */}
               {detailReserva.cliente && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Cliente</p>
@@ -461,7 +427,6 @@ function AdminReservas() {
                 </div>
               )}
 
-              {/* Empleada */}
               {detailReserva.empleada && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Empleada</p>
@@ -482,7 +447,6 @@ function AdminReservas() {
                 </div>
               )}
 
-              {/* Plan y lugar */}
               <div className="grid grid-cols-2 gap-3">
                 {detailReserva.plan && (
                   <div className="bg-gray-50 rounded-xl p-4">
@@ -504,7 +468,6 @@ function AdminReservas() {
                 )}
               </div>
 
-              {/* Pago info */}
               {detailReserva.metodo_pago && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Método de pago</p>
@@ -512,7 +475,6 @@ function AdminReservas() {
                 </div>
               )}
 
-              {/* Descripción */}
               {detailReserva.descripcion && (
                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Notas</p>

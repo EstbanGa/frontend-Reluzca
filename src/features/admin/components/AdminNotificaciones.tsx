@@ -388,64 +388,69 @@ function AdminNotificaciones() {
       )}
 
       {/* Historial */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="p-4 sm:p-6 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-[#195083]" />
-            {t('admin.notifications.history')}
-            <span className="text-sm font-normal text-gray-500">({notificaciones.length})</span>
-          </h2>
+      <div className="space-y-1">
+        <div className="flex items-center gap-2 mb-3">
+          <MessageSquare className="h-5 w-5 text-[#195083]" />
+          <h2 className="text-lg font-bold text-gray-900">{t('admin.notifications.history')}</h2>
+          <span className="text-sm font-normal text-gray-500">({notificaciones.length})</span>
         </div>
-        <div className="divide-y divide-gray-100">
-          {notificaciones.length === 0 ? (
-            <div className="text-center py-12">
-              <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">{t('admin.notifications.empty')}</p>
-            </div>
-          ) : (
-            notificaciones.map(n => (
-              <div key={n.id} className={`group p-4 sm:p-5 transition-colors ${n.leida ? 'bg-white' : 'bg-blue-50/40'}`}>
-                <div className="flex items-start gap-3">
-                  <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.leida ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTipoColor(n.tipo)}`}>{n.tipo}</span>
-                      <span className="text-xs text-gray-400">{n.canal}</span>
-                      {n.usuario_destino && (
-                        <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                          {getRolIcon(n.usuario_destino.rol)}
-                          {n.usuario_destino.nombre} {n.usuario_destino.apellido}
-                        </span>
-                      )}
+
+        {notificaciones.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 text-center py-12">
+            <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">{t('admin.notifications.empty')}</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {notificaciones.map(n => (
+              <div key={n.id} className={`flex items-start gap-3 p-3 border rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] cursor-pointer ${n.leida ? 'bg-white border-gray-100' : 'bg-blue-50/40 border-blue-200'}`}
+                onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
+              >
+                {/* Indicador leída */}
+                <div className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${n.leida ? 'bg-gray-300' : 'bg-blue-500'}`} />
+
+                {/* Contenido */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${getTipoColor(n.tipo)}`}>{n.tipo}</span>
+                    <span className="text-[10px] text-gray-400">{n.canal}</span>
+                    {n.usuario_destino && (
+                      <span className="flex items-center gap-1 text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                        {getRolIcon(n.usuario_destino.rol)}
+                        {n.usuario_destino.nombre} {n.usuario_destino.apellido}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-800 line-clamp-1">{n.mensaje}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{formatDate(n.created_at)}</p>
+
+                  {expandedId === n.id && n.usuario_destino && (
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100 text-sm text-gray-700">
+                      <p><span className="font-medium">{t('common.email')}:</span> {n.usuario_destino.correo}</p>
+                      <p><span className="font-medium">{t('admin.notifications.userId')}:</span> <span className="font-mono text-xs">{n.usuario_destino.id}</span></p>
                     </div>
-                    <p className="text-sm text-gray-800 mb-1">{n.mensaje}</p>
-                    <p className="text-xs text-gray-400">{formatDate(n.created_at)}</p>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
-                    <button
-                      onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
-                      className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      {expandedId === n.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(n.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                  )}
                 </div>
-                {expandedId === n.id && n.usuario_destino && (
-                  <div className="mt-3 ml-5 p-3 bg-gray-50 rounded-lg border border-gray-100 text-sm text-gray-700">
-                    <p><span className="font-medium">{t('common.email')}:</span> {n.usuario_destino.correo}</p>
-                    <p><span className="font-medium">{t('admin.notifications.userId')}:</span> <span className="font-mono text-xs">{n.usuario_destino.id}</span></p>
-                  </div>
-                )}
+
+                {/* Acciones */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === n.id ? null : n.id); }}
+                    className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    {expandedId === n.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
