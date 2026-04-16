@@ -134,15 +134,26 @@ interface CalculoPrecio {
   precio_por_dia: number;
 }
 
-// Horarios por defecto cuando no se elige un plan (solo actividades)
-const HORARIOS_DEFAULT: HorarioDisponible[] = [
-  { hora_inicio: '07:00', hora_final: '09:00', horas_duracion: 2, sobrecargo_sabado: 0, descripcion: '2 horas de servicio' },
-  { hora_inicio: '07:00', hora_final: '10:00', horas_duracion: 3, sobrecargo_sabado: 0, descripcion: '3 horas de servicio' },
-  { hora_inicio: '07:00', hora_final: '11:00', horas_duracion: 4, sobrecargo_sabado: 0, descripcion: '4 horas de servicio' },
-  { hora_inicio: '07:00', hora_final: '12:00', horas_duracion: 5, sobrecargo_sabado: 0, descripcion: '5 horas de servicio' },
-  { hora_inicio: '07:00', hora_final: '13:00', horas_duracion: 6, sobrecargo_sabado: 0, descripcion: '6 horas de servicio' },
-  { hora_inicio: '07:00', hora_final: '15:00', horas_duracion: 8, sobrecargo_sabado: 0, descripcion: '8 horas de servicio' },
-];
+// Horas de trabajo disponibles cuando no hay plan (solo el número)
+const HORAS_DISPONIBLES = [2, 3, 4, 5, 6, 8];
+
+// Genera franjas horarias posibles para una duración dada
+const generarFranjasHorarias = (horas: number): HorarioDisponible[] => {
+  const franjas: HorarioDisponible[] = [];
+  const horaMinInicio = 6; // 6 AM
+  const horaMaxFin = 20;   // 8 PM
+  for (let inicio = horaMinInicio; inicio + horas <= horaMaxFin; inicio++) {
+    const fin = inicio + horas;
+    franjas.push({
+      hora_inicio: `${String(inicio).padStart(2, '0')}:00`,
+      hora_final: `${String(fin).padStart(2, '0')}:00`,
+      horas_duracion: horas,
+      sobrecargo_sabado: 0,
+      descripcion: `${horas}h de servicio`,
+    });
+  }
+  return franjas;
+};
 
 // Pasos del proceso
 const PASOS_IDS = [1, 2, 3, 4, 5, 6];
@@ -180,6 +191,7 @@ function CrearReserva() {
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<Ubicacion | null>(null);
   const [tareasSeleccionadas, setTareasSeleccionadas] = useState<string[]>([]);
   const [actividadesSeleccionadas, setActividadesSeleccionadas] = useState<string[]>([]);
+  const [horasTrabajoSeleccionadas, setHorasTrabajoSeleccionadas] = useState<number | null>(null);
 
   // Estados de cálculo
   const [calculoPrecio, setCalculoPrecio] = useState<CalculoPrecio | null>(null);
@@ -215,10 +227,12 @@ function CrearReserva() {
   useEffect(() => {
     if (planSeleccionado) {
       cargarHorariosDisponibles(planSeleccionado.id);
+    } else if (horasTrabajoSeleccionadas) {
+      setHorariosDisponibles(generarFranjasHorarias(horasTrabajoSeleccionadas));
     } else {
-      setHorariosDisponibles(HORARIOS_DEFAULT);
+      setHorariosDisponibles([]);
     }
-  }, [planSeleccionado]);
+  }, [planSeleccionado, horasTrabajoSeleccionadas]);
 
   // Calcular precio cuando cambian los datos relevantes
   useEffect(() => {
@@ -621,6 +635,7 @@ function CrearReserva() {
       setPlanSeleccionado(null);
     } else {
       setPlanSeleccionado(plan);
+      setHorasTrabajoSeleccionadas(null); // Limpiar horas manuales al elegir plan
     }
     setHorarioSeleccionado(null);
     setFechasSeleccionadas([]);
@@ -632,8 +647,9 @@ function CrearReserva() {
       ? actividadesSeleccionadas.filter((x) => x !== id)
       : [...actividadesSeleccionadas, id];
     setActividadesSeleccionadas(next);
-    // Si quitan todas las actividades y no hay plan, limpiar horario
+    // Si quitan todas las actividades y no hay plan, limpiar horas y horario
     if (next.length === 0 && !planSeleccionado) {
+      setHorasTrabajoSeleccionadas(null);
       setHorarioSeleccionado(null);
     }
   };
@@ -690,7 +706,7 @@ function CrearReserva() {
 
   // Validaciones
   const puedeAvanzarPaso1 = empleadaSeleccionada !== null;
-  const puedeAvanzarPaso2 = planSeleccionado !== null || (actividadesSeleccionadas.length > 0 && horarioSeleccionado !== null);
+  const puedeAvanzarPaso2 = planSeleccionado !== null || (actividadesSeleccionadas.length > 0 && horasTrabajoSeleccionadas !== null);
   const puedeAvanzarPaso3 = horarioSeleccionado !== null;
   const puedeAvanzarPaso4 = fechasSeleccionadas.length > 0;
   const puedeAvanzarPaso5 = ubicacionSeleccionada !== null;
@@ -1060,28 +1076,31 @@ function CrearReserva() {
                 );
               })()}
 
-              {/* ─── SELECTOR DE HORAS (solo sin plan) ─── */}
+              {/* ─── SELECTOR DE HORAS DE TRABAJO (solo sin plan) ─── */}
               {!planSeleccionado && actividadesSeleccionadas.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Clock className="h-5 w-5 text-[#195083]" />
-                    <h3 className="text-lg font-semibold text-gray-800">Horas de servicio</h3>
-                    {horarioSeleccionado && (
+                    <h3 className="text-lg font-semibold text-gray-800">Horas de trabajo</h3>
+                    {horasTrabajoSeleccionadas && (
                       <span className="text-xs bg-[#195083]/10 text-[#195083] px-2 py-0.5 rounded-full font-semibold">
-                        {horarioSeleccionado.horas_duracion}h seleccionadas
+                        {horasTrabajoSeleccionadas}h seleccionadas
                       </span>
                     )}
                   </div>
                   <p className="text-sm text-gray-500 mb-4">
-                    Elige cuántas horas de servicio necesitas para tus actividades.
+                    ¿Cuántas horas de trabajo necesitas? El horario exacto lo elegirás en el siguiente paso.
                   </p>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                    {HORARIOS_DEFAULT.map((horario, idx) => {
-                      const sel = horarioSeleccionado?.hora_inicio === horario.hora_inicio && horarioSeleccionado?.hora_final === horario.hora_final;
+                    {HORAS_DISPONIBLES.map((h) => {
+                      const sel = horasTrabajoSeleccionadas === h;
                       return (
                         <div
-                          key={idx}
-                          onClick={() => setHorarioSeleccionado(horario)}
+                          key={h}
+                          onClick={() => {
+                            setHorasTrabajoSeleccionadas(h);
+                            setHorarioSeleccionado(null); // Reset horario al cambiar horas
+                          }}
                           className={`p-3 border-2 rounded-xl cursor-pointer transition-all text-center ${
                             sel
                               ? 'border-[#195083] bg-[#195083]/5 shadow-sm'
@@ -1089,7 +1108,7 @@ function CrearReserva() {
                           }`}
                         >
                           <p className={`text-2xl font-bold ${sel ? 'text-[#195083]' : 'text-gray-800'}`}>
-                            {horario.horas_duracion}h
+                            {h}h
                           </p>
                         </div>
                       );
@@ -1113,88 +1132,76 @@ function CrearReserva() {
                   <p className="text-gray-600">
                     {t('cliente.createReservation.selectSchedule.plan')}{" "}
                     <span className="font-semibold text-gray-900">{planSeleccionado.nombre}</span>
+                    {" · "}{planSeleccionado.horas_servicio}h de trabajo
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
                     {t('cliente.createReservation.selectSchedule.subtitle')}
                   </p>
                 </div>
               ) : (
-                <p className="text-gray-600">
-                  Horario basado en las horas que elegiste en el paso anterior.
-                </p>
+                <div>
+                  <p className="text-gray-600">
+                    Elegiste <span className="font-semibold text-gray-900">{horasTrabajoSeleccionadas}h de trabajo</span>.
+                    Ahora selecciona en qué horario prefieres el servicio.
+                  </p>
+                </div>
               )}
             </div>
 
-            {planSeleccionado ? (
-              /* ── Con plan: elegir horario del plan ── */
-              cargandoHorarios ? (
-                <div className="flex items-center justify-center py-12">
-                  <RefreshCw className="h-8 w-8 animate-spin text-[#195083]" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {horariosDisponibles.map((horario, index) => (
-                    <div
-                      key={index}
-                      onClick={() => setHorarioSeleccionado(horario)}
-                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                        horarioSeleccionado?.hora_inicio === horario.hora_inicio && 
-                        horarioSeleccionado?.hora_final === horario.hora_final
-                          ? 'border-[#195083] bg-[#195083]/5'
-                          : 'border-gray-200 hover:border-[#195083]/50'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="bg-[#195083]/10 p-2 rounded-lg">
-                          <Clock className="h-5 w-5 text-[#195083]" />
-                        </div>
-                        {horarioSeleccionado?.hora_inicio === horario.hora_inicio && 
-                         horarioSeleccionado?.hora_final === horario.hora_final && (
-                          <CheckCircle className="h-5 w-5 text-[#195083]" />
-                        )}
+            {cargandoHorarios ? (
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin text-[#195083]" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {horariosDisponibles.map((horario, index) => (
+                  <div
+                    key={index}
+                    onClick={() => setHorarioSeleccionado(horario)}
+                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                      horarioSeleccionado?.hora_inicio === horario.hora_inicio &&
+                      horarioSeleccionado?.hora_final === horario.hora_final
+                        ? 'border-[#195083] bg-[#195083]/5'
+                        : 'border-gray-200 hover:border-[#195083]/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="bg-[#195083]/10 p-2 rounded-lg">
+                        <Clock className="h-5 w-5 text-[#195083]" />
                       </div>
-                      
-                      <h4 className="font-semibold text-gray-900 mb-1">
-                        {horario.hora_inicio} - {horario.hora_final}
-                      </h4>
-                      
-                      <p className="text-sm text-gray-600 mb-2">
-                        {horario.horas_duracion}h de servicio
-                      </p>
-
-                      {horario.sobrecargo_sabado > 0 && (
-                        <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
-                          <p className="text-yellow-800 font-medium">
-                            {t('cliente.createReservation.selectSchedule.saturdaySurcharge')}
-                          </p>
-                          <p className="text-yellow-700">
-                            {t('cliente.createReservation.selectSchedule.surchargeAmount', { amount: formatCurrency(horario.sobrecargo_sabado) })}
-                          </p>
-                        </div>
+                      {horarioSeleccionado?.hora_inicio === horario.hora_inicio &&
+                       horarioSeleccionado?.hora_final === horario.hora_final && (
+                        <CheckCircle className="h-5 w-5 text-[#195083]" />
                       )}
                     </div>
-                  ))}
 
-                  {horariosDisponibles.length === 0 && (
-                    <div className="col-span-full text-center py-8">
-                      <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">{t('cliente.createReservation.selectSchedule.noSchedules')}</p>
-                    </div>
-                  )}
-                </div>
-              )
-            ) : (
-              /* ── Sin plan: mostrar horario ya elegido en Paso 2 ── */
-              <div className="text-center py-8">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-6 max-w-md mx-auto">
-                  <CheckCircle className="h-10 w-10 text-green-600 mx-auto mb-3" />
-                  <h3 className="font-semibold text-gray-900 mb-1">Horario seleccionado</h3>
-                  <p className="text-2xl font-bold text-[#195083] mb-1">
-                    {horarioSeleccionado?.hora_inicio} - {horarioSeleccionado?.hora_final}
-                  </p>
-                  <p className="text-sm text-gray-600">{horarioSeleccionado?.horas_duracion}h de servicio</p>
-                  <p className="text-xs text-gray-500 mt-3">Puedes cambiar las horas volviendo al paso anterior</p>
-                </div>
+                    <h4 className="font-semibold text-gray-900 mb-1">
+                      {horario.hora_inicio} - {horario.hora_final}
+                    </h4>
+
+                    <p className="text-sm text-gray-600 mb-2">
+                      {horario.horas_duracion}h de servicio
+                    </p>
+
+                    {horario.sobrecargo_sabado > 0 && (
+                      <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
+                        <p className="text-yellow-800 font-medium">
+                          {t('cliente.createReservation.selectSchedule.saturdaySurcharge')}
+                        </p>
+                        <p className="text-yellow-700">
+                          {t('cliente.createReservation.selectSchedule.surchargeAmount', { amount: formatCurrency(horario.sobrecargo_sabado) })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {horariosDisponibles.length === 0 && (
+                  <div className="col-span-full text-center py-8">
+                    <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">{t('cliente.createReservation.selectSchedule.noSchedules')}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
