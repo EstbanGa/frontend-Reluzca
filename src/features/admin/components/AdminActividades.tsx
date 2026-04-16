@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
+import { TableRowActions } from "@/components/common/HoverActions";
 import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import {
@@ -293,14 +294,13 @@ function AdminActividades() {
                 <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
                   {t("admin.activities.fields.active")}
                 </th>
-                <th className="w-24 px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filtradas.map((a) => (
                 <tr
                   key={a.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group"
                 >
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900 dark:text-white">{a.nombre}</p>
@@ -330,24 +330,10 @@ function AdminActividades() {
                       )}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 justify-end">
-                      <button
-                        onClick={() => openEdit(a)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                        title={t("admin.activities.editActivity")}
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(a)}
-                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                        title={t("common.delete")}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  <TableRowActions actions={[
+                    { icon: Edit3, label: t("admin.activities.editActivity"), onClick: () => openEdit(a), variant: "primary" },
+                    { icon: Trash2, label: t("common.delete"), onClick: () => setDeleteConfirm(a), variant: "danger" },
+                  ]} />
                 </tr>
               ))}
             </tbody>

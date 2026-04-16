@@ -702,7 +702,7 @@ function ClienteUbicaciones() {
               const isSelected = selectedUbicaciones.includes(ubicacion.id);
               
               return (
-                <div key={ubicacion.id} className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border transition-all ${isSelected ? 'border-[#4894AD] bg-blue-50' : 'border-gray-100 hover:shadow-md'}`}>
+                <div key={ubicacion.id} className={`group bg-white rounded-xl p-4 sm:p-6 shadow-sm border transition-all ${isSelected ? 'border-[#4894AD] bg-blue-50' : 'border-gray-100 hover:shadow-md'}`}>
                   <div className="space-y-4">
                     {/* Header de la ubicación - Responsive mejorado */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -744,30 +744,32 @@ function ClienteUbicaciones() {
                           {ubicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                         </span>
                         
-                        <button
-                          onClick={() => openModal(ubicacion)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title={t('cliente.locations.viewDetails')}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleOpenEditModal(ubicacion)}
-                          className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"
-                          title={t('cliente.locations.editLocation')}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDelete([ubicacion.id])}
-                          disabled={deleteLoading}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title={t('cliente.locations.deleteLocation')}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-1 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                          <button
+                            onClick={() => openModal(ubicacion)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title={t('cliente.locations.viewDetails')}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleOpenEditModal(ubicacion)}
+                            className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"
+                            title={t('cliente.locations.editLocation')}
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDelete([ubicacion.id])}
+                            disabled={deleteLoading}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title={t('cliente.locations.deleteLocation')}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
 

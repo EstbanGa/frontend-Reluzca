@@ -404,7 +404,7 @@ function AdminNotificaciones() {
             </div>
           ) : (
             notificaciones.map(n => (
-              <div key={n.id} className={`p-4 sm:p-5 transition-colors ${n.leida ? 'bg-white' : 'bg-blue-50/40'}`}>
+              <div key={n.id} className={`group p-4 sm:p-5 transition-colors ${n.leida ? 'bg-white' : 'bg-blue-50/40'}`}>
                 <div className="flex items-start gap-3">
                   <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.leida ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
                   <div className="flex-1 min-w-0">
@@ -421,7 +421,7 @@ function AdminNotificaciones() {
                     <p className="text-sm text-gray-800 mb-1">{n.mensaje}</p>
                     <p className="text-xs text-gray-400">{formatDate(n.created_at)}</p>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
                     <button
                       onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
                       className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"

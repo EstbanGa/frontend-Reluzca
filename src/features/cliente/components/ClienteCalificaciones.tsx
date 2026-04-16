@@ -355,7 +355,7 @@ function CalificacionesPage() {
       <div className="space-y-3 sm:space-y-4">
         {data.calificaciones.length > 0 ? (
           data.calificaciones.map((cal) => (
-            <div key={cal.id} className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div key={cal.id} className="group bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="space-y-4">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -372,13 +372,15 @@ function CalificacionesPage() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteCalificacion(cal.id)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                    title="Eliminar calificación"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
+                    <button
+                      onClick={() => handleDeleteCalificacion(cal.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                      title="Eliminar calificación"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Detalles */}

@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
+import { CardHoverActions } from "@/components/common/HoverActions";
 import { API_BASE_URL } from "@/config/env";
 import { formatDate } from "@/utils/dateUtils";
 import {
@@ -362,7 +363,7 @@ function AdminPQRS() {
               </div>
 
               {pagedList.map((pqrs) => (
-                <div key={pqrs.id} className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr_2fr_0.8fr_1fr_0.9fr_auto] gap-2 lg:gap-3 px-4 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 items-start lg:items-center">
+                <div key={pqrs.id} className="group grid grid-cols-1 lg:grid-cols-[1fr_1.4fr_2fr_0.8fr_1fr_0.9fr_auto] gap-2 lg:gap-3 px-4 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 items-start lg:items-center">
                   <TipoBadge tipo={pqrs.tipo} />
                   <div className="text-sm text-gray-900 font-medium">
                     {pqrs.usuario ? `${pqrs.usuario.nombre} ${pqrs.usuario.apellido}` : "Desconocido"}
@@ -377,13 +378,9 @@ function AdminPQRS() {
                   <span className="text-xs text-gray-500">
                     {pqrs.fecha_creacion ? formatDate(pqrs.fecha_creacion) : pqrs.created_at ? formatDate(pqrs.created_at) : "—"}
                   </span>
-                  <button
-                    onClick={() => openRespondModal(pqrs)}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#195083] text-white rounded-lg hover:bg-[#0f3a5f] font-semibold whitespace-nowrap"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    {pqrs.respuesta ? "Ver / editar" : "Responder"}
-                  </button>
+                  <CardHoverActions actions={[
+                    { icon: MessageSquare, label: pqrs.respuesta ? "Ver / editar" : "Responder", onClick: () => openRespondModal(pqrs), variant: "primary" },
+                  ]} />
                 </div>
               ))}
 
@@ -457,7 +454,7 @@ function AdminPQRS() {
                   {isExpanded && (
                     <div className="border-t border-gray-100 divide-y divide-gray-50">
                       {pqrs.map((p) => (
-                        <div key={p.id} className="px-4 py-3 flex flex-col sm:flex-row gap-3 sm:items-center hover:bg-gray-50/60">
+                        <div key={p.id} className="group px-4 py-3 flex flex-col sm:flex-row gap-3 sm:items-center hover:bg-gray-50/60">
                           <div className="flex-1 min-w-0 space-y-1.5">
                             <div className="flex flex-wrap items-center gap-1.5">
                               <TipoBadge tipo={p.tipo} />
@@ -474,7 +471,7 @@ function AdminPQRS() {
                               {p.fecha_creacion ? formatDate(p.fecha_creacion) : p.created_at ? formatDate(p.created_at) : ""}
                             </p>
                           </div>
-                          <div className="flex gap-2 shrink-0">
+                          <div className="flex gap-2 shrink-0 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
                             {p.estado !== "cerrado" && (
                               <select
                                 value={p.estado}

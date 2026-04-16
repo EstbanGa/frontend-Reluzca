@@ -319,7 +319,7 @@ function ClienteNotificaciones() {
               return (
                 <div
                   key={notificacion.id}
-                  className={`bg-white rounded-lg shadow-sm p-4 transition-all hover:shadow-md ${
+                  className={`group bg-white rounded-lg shadow-sm p-4 transition-all hover:shadow-md ${
                     !notificacion.leida ? "border-l-4 border-blue-500" : ""
                   }`}
                 >
@@ -338,7 +338,7 @@ function ClienteNotificaciones() {
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">{notificacion.mensaje}</p>
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-2 ml-4 lg:opacity-0 lg:translate-x-2 lg:group-hover:opacity-100 lg:group-hover:translate-x-0 transition-all duration-200 ease-out">
                           {!notificacion.leida && (
                             <button
                               onClick={() => marcarComoLeida(notificacion.id)}
