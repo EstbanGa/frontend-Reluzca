@@ -302,55 +302,68 @@ function AdminReservas() {
           const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
           const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
           return (
-            <div
-              key={r.id}
-              className="flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
-              onClick={() => setDetailReserva(r)}
-            >
-              {/* Avatar fecha */}
-              <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}>
-                <span className="text-[10px] font-bold leading-none">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })}</span>
-                <span className="text-[8px] uppercase leading-none mt-0.5">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })}</span>
+            <div key={r.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
+              {/* Botón oculto detrás del card */}
+              <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
+                <button
+                  onClick={() => setDetailReserva(r)}
+                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
+                  title="Ver detalle"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
               </div>
 
-              {/* Contenido principal */}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-sm text-gray-900 truncate">
-                  {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "Sin cliente"}
-                </h4>
-                <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                  {r.hora_inicio} – {r.hora_final}{r.empleada ? ` · ${r.empleada.nombre} ${r.empleada.apellido}` : ""}{r.plan ? ` · ${r.plan.nombre}` : ""}
-                </p>
+              {/* Card content - se desliza a la izquierda en hover */}
+              <div
+                className="relative flex items-start gap-3 p-3 bg-white cursor-pointer transition-transform duration-300 ease-out group-hover:-translate-x-11"
+                onClick={() => setDetailReserva(r)}
+              >
+                {/* Avatar fecha */}
+                <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}>
+                  <span className="text-[10px] font-bold leading-none">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })}</span>
+                  <span className="text-[8px] uppercase leading-none mt-0.5">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })}</span>
+                </div>
 
-                {/* Tags */}
-                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${estCfg.bg} ${estCfg.color}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${estCfg.color.replace("text-", "bg-")}`} />
-                    {estCfg.label}
-                  </span>
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${pagoCfg.color.replace("text-", "bg-")}`} />
-                    {pagoCfg.label}
-                  </span>
-                  {r.lugar && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
-                      <MapPin className="h-3 w-3" />
-                      {r.lugar.nombre ?? r.lugar.direccion ?? ""}
+                {/* Contenido principal */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-sm text-gray-900 truncate">
+                    {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "Sin cliente"}
+                  </h4>
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                    {r.hora_inicio} – {r.hora_final}{r.empleada ? ` · ${r.empleada.nombre} ${r.empleada.apellido}` : ""}{r.plan ? ` · ${r.plan.nombre}` : ""}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${estCfg.bg} ${estCfg.color}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${estCfg.color.replace("text-", "bg-")}`} />
+                      {estCfg.label}
                     </span>
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${pagoCfg.color.replace("text-", "bg-")}`} />
+                      {pagoCfg.label}
+                    </span>
+                    {r.lugar && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        {r.lugar.nombre ?? r.lugar.direccion ?? ""}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sección derecha - precio */}
+                <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
+                  <span className="text-xs font-bold text-[#195083]">{fmtCOP(r.precio_total)}</span>
+                  {r.empleada?.ranking != null && (
+                    <div className="flex items-center gap-0.5">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      <span className="text-[10px] text-gray-500">{r.empleada.ranking.toFixed(1)}</span>
+                    </div>
                   )}
                 </div>
-              </div>
-
-              {/* Sección derecha - precio */}
-              <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
-                <span className="text-xs font-bold text-[#195083]">{fmtCOP(r.precio_total)}</span>
-                {r.empleada?.ranking != null && (
-                  <div className="flex items-center gap-0.5">
-                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                    <span className="text-[10px] text-gray-500">{r.empleada.ranking.toFixed(1)}</span>
-                  </div>
-                )}
               </div>
             </div>
           );

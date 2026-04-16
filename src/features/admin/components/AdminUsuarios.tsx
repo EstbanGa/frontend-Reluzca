@@ -281,55 +281,68 @@ function AdminUsuarios() {
           const RolIcon = rolCfg.icon;
           const isActivo = u.estado === "activo";
           return (
-            <div
-              key={u.id}
-              className="flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
-              onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
-            >
-              {/* Avatar */}
+            <div key={u.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
+              {/* Botón oculto detrás del card */}
+              <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
+                <button
+                  onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
+                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
+                  title="Ver detalle"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Card content - se desliza a la izquierda en hover */}
               <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}
+                className="relative flex items-start gap-3 p-3 bg-white cursor-pointer transition-transform duration-300 ease-out group-hover:-translate-x-11"
+                onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
               >
-                {u.nombre[0]}{u.apellido[0]}
-              </div>
-
-              {/* Contenido principal */}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-sm text-gray-900 truncate">
-                  {u.nombre} {u.apellido}
-                </h4>
-                <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                  {u.correo}{u.telefono ? ` · ${u.telefono}` : ""}
-                </p>
-
-                {/* Tags */}
-                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${rolCfg.bg} ${rolCfg.color}`}>
-                    <RolIcon className="h-3 w-3" />
-                    {rolCfg.label}
-                  </span>
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                    isActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${isActivo ? "bg-green-500" : "bg-red-500"}`} />
-                    {isActivo ? "Activo" : "Inactivo"}
-                  </span>
-                  {u.ranking != null && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
-                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      {Number(u.ranking).toFixed(1)}
-                    </span>
-                  )}
+                {/* Avatar */}
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}
+                >
+                  {u.nombre[0]}{u.apellido[0]}
                 </div>
-              </div>
 
-              {/* Sección derecha */}
-              <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
-                <span className="text-[10px] text-gray-400">{fmtDate(u.fecha_registro)}</span>
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-gray-500">Reservas</span>
-                  <span className="text-xs font-bold text-[#195083]">{u.estadisticas?.total_reservas ?? "—"}</span>
+                {/* Contenido principal */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-sm text-gray-900 truncate">
+                    {u.nombre} {u.apellido}
+                  </h4>
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                    {u.correo}{u.telefono ? ` · ${u.telefono}` : ""}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${rolCfg.bg} ${rolCfg.color}`}>
+                      <RolIcon className="h-3 w-3" />
+                      {rolCfg.label}
+                    </span>
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      isActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${isActivo ? "bg-green-500" : "bg-red-500"}`} />
+                      {isActivo ? "Activo" : "Inactivo"}
+                    </span>
+                    {u.ranking != null && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
+                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        {Number(u.ranking).toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sección derecha */}
+                <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
+                  <span className="text-[10px] text-gray-400">{fmtDate(u.fecha_registro)}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-gray-500">Reservas</span>
+                    <span className="text-xs font-bold text-[#195083]">{u.estadisticas?.total_reservas ?? "—"}</span>
+                  </div>
                 </div>
               </div>
             </div>

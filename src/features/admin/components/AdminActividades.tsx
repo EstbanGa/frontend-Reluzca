@@ -280,70 +280,70 @@ function AdminActividades() {
       ) : (
         <div className="flex flex-col gap-2">
           {filtradas.map((a) => (
-            <div
-              key={a.id}
-              className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200"
-            >
-              {/* Indicador activa/inactiva */}
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                a.activa ? "bg-green-100" : "bg-gray-100"
-              }`}>
-                <Activity className={`h-5 w-5 ${a.activa ? "text-green-600" : "text-gray-400"}`} />
-              </div>
-
-              {/* Contenido */}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-sm text-gray-900 truncate">{a.nombre}</h4>
-                {a.descripcion && (
-                  <p className="text-[11px] text-gray-500 truncate mt-0.5">{a.descripcion}</p>
-                )}
-                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                  {a.precio_unitario != null && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">
-                      ${Number(a.precio_unitario).toLocaleString("es-CO")}
-                    </span>
-                  )}
-                  {a.duracion_estimada_minutos != null && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">
-                      {a.duracion_estimada_minutos} min
-                    </span>
-                  )}
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                    a.activa ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${a.activa ? "bg-green-500" : "bg-gray-400"}`} />
-                    {a.activa ? "Activa" : "Inactiva"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Acciones */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div key={a.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
+              {/* Botones ocultos detrás del card */}
+              <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
                 <button
                   onClick={() => handleToggle(a)}
                   title={t("admin.activities.fields.active")}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-gray-100 transition-colors"
                 >
                   {a.activa ? (
-                    <ToggleRight className="w-5 h-5 text-green-500" />
+                    <ToggleRight className="w-4 h-4 text-green-500" />
                   ) : (
-                    <ToggleLeft className="w-5 h-5 text-gray-400" />
+                    <ToggleLeft className="w-4 h-4 text-gray-400" />
                   )}
                 </button>
                 <button
                   onClick={() => openEdit(a)}
-                  className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors"
+                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
                   title={t("admin.activities.editActivity")}
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(a)}
-                  className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
                   title={t("common.delete")}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
+              </div>
+
+              {/* Card content - se desliza a la izquierda en hover */}
+              <div className="relative flex items-center gap-3 p-3 bg-white transition-transform duration-300 ease-out group-hover:-translate-x-28">
+                {/* Indicador activa/inactiva */}
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  a.activa ? "bg-green-100" : "bg-gray-100"
+                }`}>
+                  <Activity className={`h-5 w-5 ${a.activa ? "text-green-600" : "text-gray-400"}`} />
+                </div>
+
+                {/* Contenido */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-sm text-gray-900 truncate">{a.nombre}</h4>
+                  {a.descripcion && (
+                    <p className="text-[11px] text-gray-500 truncate mt-0.5">{a.descripcion}</p>
+                  )}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    {a.precio_unitario != null && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">
+                        ${Number(a.precio_unitario).toLocaleString("es-CO")}
+                      </span>
+                    )}
+                    {a.duracion_estimada_minutos != null && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">
+                        {a.duracion_estimada_minutos} min
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      a.activa ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${a.activa ? "bg-green-500" : "bg-gray-400"}`} />
+                      {a.activa ? "Activa" : "Inactiva"}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

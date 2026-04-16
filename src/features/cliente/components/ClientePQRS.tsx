@@ -339,10 +339,19 @@ function PQRSPage() {
             </div>
           ) : (
             pqrsFiltrados.map((pqrs) => (
-              <div
-                key={pqrs.id}
-                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200"
-              >
+              <div key={pqrs.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                {/* Botón oculto detrás del card */}
+                <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                  <button
+                    onClick={() => handleDelete(pqrs.id)}
+                    className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Card content - se desliza a la izquierda en hover */}
+                <div className="relative bg-white p-6 transition-transform duration-300 ease-out group-hover:-translate-x-11">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
                     {getEstadoIcon(pqrs.estado)}
@@ -362,14 +371,6 @@ function PQRSPage() {
                         {t('cliente.pqrs.createdLabel')} {pqrs.fecha_creacion ? formatFecha(pqrs.fecha_creacion) : 'N/A'}
                       </p>
                     </div>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => handleDelete(pqrs.id)}
-                      className="text-red-600 hover:text-red-800 transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
                   </div>
                 </div>
 
@@ -399,6 +400,7 @@ function PQRSPage() {
                       {t('cliente.pqrs.attendedBy')} {pqrs.empleada.nombre} {pqrs.empleada.apellido}
                     </div>
                   )}
+                </div>
                 </div>
               </div>
             ))

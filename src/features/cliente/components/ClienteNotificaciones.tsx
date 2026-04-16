@@ -317,12 +317,33 @@ function ClienteNotificaciones() {
               const colorClass = TIPO_COLORS[notificacion.tipo_notificacion] || "text-gray-600 bg-gray-50";
 
               return (
-                <div
-                  key={notificacion.id}
-                  className={`bg-white rounded-xl shadow-sm p-4 border border-gray-100 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] ${
-                    !notificacion.leida ? "border-l-4 border-l-blue-500" : ""
-                  }`}
-                >
+                <div key={notificacion.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                  {/* Botones ocultos detrás del card */}
+                  <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                    {!notificacion.leida && (
+                      <button
+                        onClick={() => marcarComoLeida(notificacion.id)}
+                        className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
+                        title="Marcar como leída"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => eliminarNotificacion(notificacion.id)}
+                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Card content - se desliza a la izquierda en hover */}
+                  <div
+                    className={`relative p-4 transition-transform duration-300 ease-out group-hover:-translate-x-20 ${
+                      !notificacion.leida ? "border-l-4 border-l-blue-500 bg-white" : "bg-white"
+                    }`}
+                  >
                   <div className="flex items-start gap-4">
                     {/* Icono */}
                     <div className={`p-3 rounded-full ${colorClass}`}>
@@ -338,24 +359,7 @@ function ClienteNotificaciones() {
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">{notificacion.mensaje}</p>
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
-                          {!notificacion.leida && (
-                            <button
-                              onClick={() => marcarComoLeida(notificacion.id)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Marcar como leída"
-                            >
-                              <Check className="w-5 h-5" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => eliminarNotificacion(notificacion.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
+
                       </div>
 
                       {/* Detalles de la reserva */}
@@ -391,6 +395,7 @@ function ClienteNotificaciones() {
                       </div>
                     </div>
                   </div>
+                </div>
                 </div>
               );
             })

@@ -349,7 +349,22 @@ function ClienteReservas() {
             const StatusIcon = estadoConfig.icon;
             
             return (
-              <div key={reserva.id} className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200">
+              <div key={reserva.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                {/* Botón oculto detrás del card */}
+                {puedeEditarse(reserva) && (
+                  <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                    <button
+                      onClick={() => handleEditarReserva(reserva.id)}
+                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#4894AD] transition-colors"
+                      title={t('cliente.reservations.editReservation')}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Card content - se desliza a la izquierda en hover */}
+                <div className={`relative bg-white p-4 sm:p-6 transition-transform duration-300 ease-out ${puedeEditarse(reserva) ? 'group-hover:-translate-x-11' : ''}`}>
                 <div className="space-y-4">
                   {/* Header de la reserva */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -373,18 +388,6 @@ function ClienteReservas() {
                         <StatusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                         {estadoConfig.label}
                       </span>
-                      
-                      {puedeEditarse(reserva) && (
-                        <div>
-                          <button
-                            onClick={() => handleEditarReserva(reserva.id)}
-                            className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"
-                            title={t('cliente.reservations.editReservation')}
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -463,6 +466,7 @@ function ClienteReservas() {
                       </p>
                     </div>
                   )}
+                </div>
                 </div>
               </div>
             );

@@ -358,37 +358,50 @@ function AdminPQRS() {
             <>
               <div className="flex flex-col gap-2 p-3">
                 {pagedList.map((pqrs) => (
-                  <div
-                    key={pqrs.id}
-                    className="flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:bg-[#195083]/5 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
-                    onClick={() => openRespondModal(pqrs)}
-                  >
-                    {/* Avatar tipo */}
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
-                      <FileText className="h-5 w-5 text-gray-500" />
+                  <div key={pqrs.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
+                    {/* Botón oculto detrás del card */}
+                    <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
+                      <button
+                        onClick={() => openRespondModal(pqrs)}
+                        className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
+                        title={pqrs.respuesta ? "Editar respuesta" : "Responder"}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </button>
                     </div>
 
-                    {/* Contenido principal */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm text-gray-900 truncate">
-                        {pqrs.usuario ? `${pqrs.usuario.nombre} ${pqrs.usuario.apellido}` : "Desconocido"}
-                      </h4>
-                      <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{pqrs.descripcion}</p>
-
-                      {/* Tags */}
-                      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                        <TipoBadge tipo={pqrs.tipo} />
-                        <PrioridadBadge prioridad={pqrs.prioridad} />
-                        <EstadoBadge estado={pqrs.estado} />
-                        {pqrs.respuesta && <span className="text-[10px] text-green-600 font-semibold">✓ Respondida</span>}
+                    {/* Card content - se desliza a la izquierda en hover */}
+                    <div
+                      className="relative flex items-start gap-3 p-3 bg-white cursor-pointer transition-transform duration-300 ease-out group-hover:-translate-x-11"
+                      onClick={() => openRespondModal(pqrs)}
+                    >
+                      {/* Avatar tipo */}
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
+                        <FileText className="h-5 w-5 text-gray-500" />
                       </div>
-                    </div>
 
-                    {/* Fecha */}
-                    <div className="flex-shrink-0 text-right">
-                      <span className="text-[10px] text-gray-400">
-                        {pqrs.fecha_creacion ? formatDate(pqrs.fecha_creacion) : pqrs.created_at ? formatDate(pqrs.created_at) : "—"}
-                      </span>
+                      {/* Contenido principal */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-gray-900 truncate">
+                          {pqrs.usuario ? `${pqrs.usuario.nombre} ${pqrs.usuario.apellido}` : "Desconocido"}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{pqrs.descripcion}</p>
+
+                        {/* Tags */}
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                          <TipoBadge tipo={pqrs.tipo} />
+                          <PrioridadBadge prioridad={pqrs.prioridad} />
+                          <EstadoBadge estado={pqrs.estado} />
+                          {pqrs.respuesta && <span className="text-[10px] text-green-600 font-semibold">✓ Respondida</span>}
+                        </div>
+                      </div>
+
+                      {/* Fecha */}
+                      <div className="flex-shrink-0 text-right">
+                        <span className="text-[10px] text-gray-400">
+                          {pqrs.fecha_creacion ? formatDate(pqrs.fecha_creacion) : pqrs.created_at ? formatDate(pqrs.created_at) : "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}

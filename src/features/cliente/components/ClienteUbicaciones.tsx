@@ -702,7 +702,35 @@ function ClienteUbicaciones() {
               const isSelected = selectedUbicaciones.includes(ubicacion.id);
               
               return (
-                <div key={ubicacion.id} className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border transition-all duration-200 ${isSelected ? 'border-[#4894AD] bg-blue-50' : 'border-gray-100 hover:shadow-lg hover:-translate-y-0.5 hover:scale-[1.01]'}`}>
+                <div key={ubicacion.id} className={`group relative rounded-xl overflow-hidden shadow-sm ${isSelected ? 'border-2 border-[#4894AD]' : 'border border-gray-100'}`}>
+                  {/* Botones ocultos detrás del card */}
+                  <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                    <button
+                      onClick={() => openModal(ubicacion)}
+                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
+                      title={t('cliente.locations.viewDetails')}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleOpenEditModal(ubicacion)}
+                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-[#4894AD]/10 text-gray-500 hover:text-[#4894AD] transition-colors"
+                      title={t('cliente.locations.editLocation')}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete([ubicacion.id])}
+                      disabled={deleteLoading}
+                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                      title={t('cliente.locations.deleteLocation')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Card content - se desliza a la izquierda en hover */}
+                  <div className={`relative p-4 sm:p-6 bg-white transition-transform duration-300 ease-out group-hover:-translate-x-28 ${isSelected ? 'bg-blue-50' : ''}`}>
                   <div className="space-y-4">
                     {/* Header de la ubicación - Responsive mejorado */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -744,32 +772,7 @@ function ClienteUbicaciones() {
                           {ubicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                         </span>
                         
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => openModal(ubicacion)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title={t('cliente.locations.viewDetails')}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleOpenEditModal(ubicacion)}
-                            className="p-2 text-gray-400 hover:text-[#4894AD] hover:bg-[#4894AD]/10 rounded-lg transition-colors"
-                            title={t('cliente.locations.editLocation')}
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDelete([ubicacion.id])}
-                            disabled={deleteLoading}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                            title={t('cliente.locations.deleteLocation')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+
                       </div>
                     </div>
 
@@ -811,6 +814,7 @@ function ClienteUbicaciones() {
                       </div>
                     )}
                   </div>
+                </div>
                 </div>
               );
             })}
