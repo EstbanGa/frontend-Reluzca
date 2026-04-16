@@ -343,21 +343,20 @@ function EmpleadaServicios() {
   const fetchServicios = async () => {
     try {
       setLoading(true);
-      
-      // Por ahora retornamos estructura completa con valores vacíos hasta implementar el endpoint
-      const result: ServiciosData = { 
-        message: "Servicios cargados",
-        servicios: [],
-        estadisticas: {
-          total: 0,
-          por_estado: {
-            pendientes: 0,
-            en_progreso: 0,
-            completados: 0,
-            cancelados: 0
-          }
-        }
-      };
+      const token = localStorage.getItem('access_token');
+      if (!token) throw new Error('No hay sesión activa');
+
+      const meRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!meRes.ok) throw new Error('No se pudo obtener la sesión');
+      const me = await meRes.json();
+
+      const res = await fetch(`${API_BASE_URL}/api/reservas/empleada/${me.id}/detalle`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}: No se pudieron cargar los servicios`);
+      const result: ServiciosData = await res.json();
       setData(result);
     } catch (err) {
       console.error('Error al cargar servicios:', err);
