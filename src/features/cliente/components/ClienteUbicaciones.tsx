@@ -703,8 +703,8 @@ function ClienteUbicaciones() {
               
               return (
                 <div key={ubicacion.id} className={`group relative rounded-xl overflow-hidden shadow-sm ${isSelected ? 'border-2 border-[#4894AD]' : 'border border-gray-100'}`}>
-                  {/* Botones ocultos detrás del card */}
-                  <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                  {/* Botones ocultos a la izquierda del card */}
+                  <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                     <button
                       onClick={() => openModal(ubicacion)}
                       className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
@@ -729,8 +729,8 @@ function ClienteUbicaciones() {
                     </button>
                   </div>
 
-                  {/* Card content - se desliza a la izquierda en hover */}
-                  <div className={`relative p-4 sm:p-6 bg-white transition-transform duration-300 ease-out group-hover:-translate-x-28 ${isSelected ? 'bg-blue-50' : ''}`}>
+                  {/* Card content - se desliza a la derecha en hover */}
+                  <div className={`relative z-10 p-4 sm:p-6 bg-white transition-all duration-200 ease-out group-hover:translate-x-28 group-hover:mr-28 ${isSelected ? 'bg-blue-50' : ''}`}>
                   <div className="space-y-4">
                     {/* Header de la ubicación - Responsive mejorado */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

@@ -281,8 +281,8 @@ function AdminActividades() {
         <div className="flex flex-col gap-2">
           {filtradas.map((a) => (
             <div key={a.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-              {/* Botones ocultos detrás del card */}
-              <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
+              {/* Botones ocultos a la izquierda del card */}
+              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                 <button
                   onClick={() => handleToggle(a)}
                   title={t("admin.activities.fields.active")}
@@ -310,8 +310,8 @@ function AdminActividades() {
                 </button>
               </div>
 
-              {/* Card content - se desliza a la izquierda en hover */}
-              <div className="relative flex items-center gap-3 p-3 bg-white transition-transform duration-300 ease-out group-hover:-translate-x-28">
+              {/* Card content - se desliza a la derecha en hover */}
+              <div className="relative z-10 flex items-center gap-3 p-3 bg-white transition-all duration-200 ease-out group-hover:translate-x-28 group-hover:mr-28">
                 {/* Indicador activa/inactiva */}
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                   a.activa ? "bg-green-100" : "bg-gray-100"

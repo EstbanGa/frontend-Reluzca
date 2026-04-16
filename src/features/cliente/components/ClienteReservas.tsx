@@ -350,9 +350,9 @@ function ClienteReservas() {
             
             return (
               <div key={reserva.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                {/* Botón oculto detrás del card */}
+                {/* Botón oculto a la izquierda del card */}
                 {puedeEditarse(reserva) && (
-                  <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                  <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                     <button
                       onClick={() => handleEditarReserva(reserva.id)}
                       className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#4894AD] transition-colors"
@@ -363,8 +363,8 @@ function ClienteReservas() {
                   </div>
                 )}
 
-                {/* Card content - se desliza a la izquierda en hover */}
-                <div className={`relative bg-white p-4 sm:p-6 transition-transform duration-300 ease-out ${puedeEditarse(reserva) ? 'group-hover:-translate-x-11' : ''}`}>
+                {/* Card content - se desliza a la derecha en hover */}
+                <div className={`relative z-10 bg-white p-4 sm:p-6 transition-all duration-200 ease-out ${puedeEditarse(reserva) ? 'group-hover:translate-x-11 group-hover:mr-11' : ''}`}>
                 <div className="space-y-4">
                   {/* Header de la reserva */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">

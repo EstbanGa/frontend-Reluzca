@@ -303,8 +303,8 @@ function AdminReservas() {
           const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
           return (
             <div key={r.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-              {/* Botón oculto detrás del card */}
-              <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
+              {/* Botón oculto a la izquierda del card */}
+              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                 <button
                   onClick={() => setDetailReserva(r)}
                   className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
@@ -314,9 +314,9 @@ function AdminReservas() {
                 </button>
               </div>
 
-              {/* Card content - se desliza a la izquierda en hover */}
+              {/* Card content - se desliza a la derecha en hover */}
               <div
-                className="relative flex items-start gap-3 p-3 bg-white cursor-pointer transition-transform duration-300 ease-out group-hover:-translate-x-11"
+                className="relative z-10 flex items-start gap-3 p-3 bg-white cursor-pointer transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11"
                 onClick={() => setDetailReserva(r)}
               >
                 {/* Avatar fecha */}

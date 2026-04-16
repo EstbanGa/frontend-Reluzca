@@ -404,8 +404,8 @@ function AdminNotificaciones() {
           <div className="flex flex-col gap-2">
             {notificaciones.map(n => (
               <div key={n.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-                {/* Botones ocultos detrás del card */}
-                <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50">
+                {/* Botones ocultos a la izquierda del card */}
+                <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                   <button
                     onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === n.id ? null : n.id); }}
                     className="p-2 rounded-lg bg-white shadow-sm hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
@@ -420,9 +420,9 @@ function AdminNotificaciones() {
                   </button>
                 </div>
 
-                {/* Card content - se desliza a la izquierda en hover */}
+                {/* Card content - se desliza a la derecha en hover */}
                 <div
-                  className={`relative flex items-start gap-3 p-3 cursor-pointer transition-transform duration-300 ease-out group-hover:-translate-x-20 ${n.leida ? 'bg-white' : 'bg-blue-50/40'}`}
+                  className={`relative z-10 flex items-start gap-3 p-3 cursor-pointer transition-all duration-200 ease-out group-hover:translate-x-20 group-hover:mr-20 ${n.leida ? 'bg-white' : 'bg-blue-50/40'}`}
                   onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
                 >
                   {/* Indicador leída */}

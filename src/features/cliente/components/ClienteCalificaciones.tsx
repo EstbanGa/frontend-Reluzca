@@ -356,8 +356,8 @@ function CalificacionesPage() {
         {data.calificaciones.length > 0 ? (
           data.calificaciones.map((cal) => (
             <div key={cal.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-              {/* Botón oculto detrás del card */}
-              <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+              {/* Botón oculto a la izquierda del card */}
+              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                 <button
                   onClick={() => handleDeleteCalificacion(cal.id)}
                   className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
@@ -367,8 +367,8 @@ function CalificacionesPage() {
                 </button>
               </div>
 
-              {/* Card content - se desliza a la izquierda en hover */}
-              <div className="relative bg-white p-4 sm:p-6 transition-transform duration-300 ease-out group-hover:-translate-x-11">
+              {/* Card content - se desliza a la derecha en hover */}
+              <div className="relative z-10 bg-white p-4 sm:p-6 transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11">
               <div className="space-y-4">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">

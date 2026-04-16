@@ -318,8 +318,8 @@ function ClienteNotificaciones() {
 
               return (
                 <div key={notificacion.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                  {/* Botones ocultos detrás del card */}
-                  <div className="absolute right-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 z-10">
+                  {/* Botones ocultos a la izquierda del card */}
+                  <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
                     {!notificacion.leida && (
                       <button
                         onClick={() => marcarComoLeida(notificacion.id)}
@@ -338,9 +338,9 @@ function ClienteNotificaciones() {
                     </button>
                   </div>
 
-                  {/* Card content - se desliza a la izquierda en hover */}
+                  {/* Card content - se desliza a la derecha en hover */}
                   <div
-                    className={`relative p-4 transition-transform duration-300 ease-out group-hover:-translate-x-20 ${
+                    className={`relative z-10 p-4 transition-all duration-200 ease-out group-hover:translate-x-20 group-hover:mr-20 ${
                       !notificacion.leida ? "border-l-4 border-l-blue-500 bg-white" : "bg-white"
                     }`}
                   >
