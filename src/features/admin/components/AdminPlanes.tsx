@@ -20,8 +20,6 @@ import {
   ArrowRight,
   RefreshCw,
   Eye,
-  ChevronLeft,
-  ChevronRight,
   X,
   Check,
   Square,
@@ -34,6 +32,10 @@ import {
   ToggleLeft,
   ToggleRight
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListDetailModal from "@/components/ui/ListDetailModal";
 
 interface Plan {
   id: string;
@@ -347,61 +349,32 @@ function AdminPlanes() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              {t('admin.plans.title')}
-            </h1>
-            <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              {t('admin.plans.subtitle')}
-            </p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title={t('admin.plans.title')}
+        subtitle={t('admin.plans.subtitle')}
+        icon={<Package className="h-7 w-7" />}
+        actions={
           <button
             onClick={handleCreatePlan}
-            className="bg-[#D95B26] hover:bg-[#b8491f] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium text-sm sm:text-base flex items-center gap-2 transition-colors whitespace-nowrap"
+            className="bg-white text-[#195083] hover:bg-[#F5F0E7] px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold text-sm sm:text-base flex items-center gap-2 transition-colors whitespace-nowrap"
           >
             <Plus size={20} />
             {t('admin.plans.createPlan')}
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('common.total')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#195083]">
-              {data?.estadisticas.total || 0}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.plans.filters.active')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
-              {data?.estadisticas.activos || 0}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.plans.filters.inactive')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
-              {data?.estadisticas.inactivos || 0}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.reservations.stats.filtered')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-purple-600">
-              {planesFiltrados.length || 0}
-            </p>
-          </div>
-        </div>
-      </div>
+      <ListStatsGrid
+        columns={4}
+        stats={[
+          { label: t('common.total'), value: data?.estadisticas.total || 0, color: '#195083' },
+          { label: t('admin.plans.filters.active'), value: data?.estadisticas.activos || 0, color: '#16a34a' },
+          { label: t('admin.plans.filters.inactive'), value: data?.estadisticas.inactivos || 0, color: '#dc2626' },
+          { label: t('admin.reservations.stats.filtered'), value: planesFiltrados.length || 0, color: '#9333ea' },
+        ]}
+      />
 
       {/* Filtros y Búsqueda */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
@@ -491,94 +464,87 @@ function AdminPlanes() {
               const isSelected = selectedPlanes.includes(plan.id);
               
               return (
-                <div key={plan.id} className={`bg-white rounded-xl p-4 sm:p-6 shadow-sm border transition-all ${isSelected ? 'border-[#195083] bg-blue-50' : 'border-gray-100 hover:shadow-md'}`}>
-                  <div className="space-y-4">
+                <SlideRevealCard
+                  key={plan.id}
+                  buttonCount={3}
+                  actions={
+                    <>
+                      <SlideButton
+                        icon={<Eye className="h-4 w-4" />}
+                        onClick={() => openModal(plan)}
+                        title={t('admin.plans.viewDetails')}
+                        hoverColor="hover:bg-blue-50 hover:text-blue-600"
+                      />
+                      <SlideButton
+                        icon={<Edit3 className="h-4 w-4" />}
+                        onClick={() => handleEditPlan(plan.id)}
+                        title={t('admin.plans.editPlan')}
+                        hoverColor="hover:bg-[#195083]/10 hover:text-[#195083]"
+                      />
+                      <SlideButton
+                        icon={<Trash2 className="h-4 w-4" />}
+                        onClick={() => handleDelete([plan.id])}
+                        title={t('admin.plans.deletePlan')}
+                        hoverColor="hover:bg-red-50 hover:text-red-600"
+                      />
+                    </>
+                  }
+                  onClick={() => openModal(plan)}
+                >
+                  <div className={`space-y-4 ${isSelected ? 'bg-blue-50/50 -m-3 p-3 rounded-xl' : ''}`}>
                     {/* Header del plan */}
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <button
-                          onClick={() => handleSelectPlan(plan.id)}
-                          className="p-1 hover:bg-gray-200 rounded mt-1 flex-shrink-0"
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="h-5 w-5 text-[#195083]" />
-                          ) : (
-                            <Square className="h-5 w-5 text-gray-400" />
-                          )}
-                        </button>
-                        
-                        <div className="bg-[#195083]/10 p-2 rounded-lg flex-shrink-0">
-                          <Package className="h-5 w-5 text-[#195083]" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
-                              {plan.nombre}
-                            </h3>
-                            <button
-                              onClick={() => handleToggleEstado(plan.id, plan.estado)}
-                              disabled={toggleLoading === plan.id}
-                              className="flex items-center gap-1"
-                            >
-                              {toggleLoading === plan.id ? (
-                                <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
-                              ) : plan.estado ? (
-                                <ToggleRight className="h-5 w-5 text-green-500 hover:text-green-600" />
-                              ) : (
-                                <ToggleLeft className="h-5 w-5 text-red-500 hover:text-red-600" />
-                              )}
-                              <span className={`text-xs font-medium ${plan.estado ? 'text-green-600' : 'text-red-600'}`}>
-                                {plan.estado ? t('common.active') : t('common.inactive')}
-                              </span>
-                            </button>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">
-                            ID: {plan.id.slice(-8)}
-                          </p>
-                          
-                          {/* Precio */}
-                          {plan.precio && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <DollarSign className="h-4 w-4 text-green-600" />
-                              <span className="font-bold text-green-600">
-                                {formatCurrency(plan.precio)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-start gap-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSelectPlan(plan.id); }}
+                        className="p-1 hover:bg-gray-200 rounded mt-1 flex-shrink-0"
+                      >
+                        {isSelected ? (
+                          <CheckSquare className="h-5 w-5 text-[#195083]" />
+                        ) : (
+                          <Square className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                      <div className="bg-[#195083]/10 p-2 rounded-lg flex-shrink-0">
+                        <Package className="h-5 w-5 text-[#195083]" />
                       </div>
-                      
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => openModal(plan)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title={t('admin.plans.viewDetails')}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleEditPlan(plan.id)}
-                          className="p-2 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                          title={t('admin.plans.editPlan')}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDelete([plan.id])}
-                          disabled={deleteLoading}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title={t('admin.plans.deletePlan')}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
+                            {plan.nombre}
+                          </h3>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleEstado(plan.id, plan.estado); }}
+                            disabled={toggleLoading === plan.id}
+                            className="flex items-center gap-1"
+                          >
+                            {toggleLoading === plan.id ? (
+                              <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
+                            ) : plan.estado ? (
+                              <ToggleRight className="h-5 w-5 text-green-500 hover:text-green-600" />
+                            ) : (
+                              <ToggleLeft className="h-5 w-5 text-red-500 hover:text-red-600" />
+                            )}
+                            <span className={`text-xs font-medium ${plan.estado ? 'text-green-600' : 'text-red-600'}`}>
+                              {plan.estado ? t('common.active') : t('common.inactive')}
+                            </span>
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          ID: {plan.id.slice(-8)}
+                        </p>
+                        {plan.precio && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <span className="font-bold text-green-600">
+                              {formatCurrency(plan.precio)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Detalles compactos */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {/* Fechas */}
                       {(plan.fecha_inicio || plan.fecha_final) && (
                         <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                           <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -592,8 +558,6 @@ function AdminPlanes() {
                           </div>
                         </div>
                       )}
-
-                      {/* Horarios */}
                       {(plan.hora_inicio || plan.hora_final) && (
                         <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                           <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -607,8 +571,6 @@ function AdminPlanes() {
                           </div>
                         </div>
                       )}
-
-                      {/* Servicios */}
                       {plan.servicios_asociados && (
                         <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -624,7 +586,6 @@ function AdminPlanes() {
                       )}
                     </div>
 
-                    {/* Descripción */}
                     {plan.descripcion && (
                       <div className="p-3 bg-blue-50 rounded-lg">
                         <p className="text-sm text-gray-700 line-clamp-2">
@@ -633,7 +594,7 @@ function AdminPlanes() {
                       </div>
                     )}
                   </div>
-                </div>
+                </SlideRevealCard>
               );
             })}
           </>
@@ -663,182 +624,160 @@ function AdminPlanes() {
       </div>
 
       {/* Modal de detalles */}
-      {showModal && selectedPlan && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={closeModal}
-          ></div>
-          
-          <div className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
-            <div className="p-6">
-              {/* Header del modal */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="bg-[#195083]/10 p-3 rounded-lg">
-                    <Package className="h-6 w-6 text-[#195083]" />
+      <ListDetailModal
+        theme={ROLE_THEMES.admin}
+        open={showModal && !!selectedPlan}
+        onClose={closeModal}
+        title={selectedPlan?.nombre ?? ""}
+        subtitle={t('admin.plans.modal.fullDetails')}
+      >
+        {selectedPlan && (
+          <>
+            {/* Estado y precio */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  {t('admin.plans.modal.statusAndPrice')}
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
+                      selectedPlan.estado 
+                        ? 'bg-green-100 text-green-800 border border-green-200'
+                        : 'bg-red-100 text-red-800 border border-red-200'
+                    }`}>
+                      {selectedPlan.estado ? (
+                        <CheckCircle className="h-4 w-4" />
+                      ) : (
+                        <XCircle className="h-4 w-4" />
+                      )}
+                      {selectedPlan.estado ? t('common.active') : t('common.inactive')}
+                    </span>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">{selectedPlan.nombre}</h2>
-                    <p className="text-gray-600">{t('admin.plans.modal.fullDetails')}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={closeModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
-              </div>
-
-              {/* Estado y precio */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    {t('admin.plans.modal.statusAndPrice')}
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
-                        selectedPlan.estado 
-                          ? 'bg-green-100 text-green-800 border border-green-200'
-                          : 'bg-red-100 text-red-800 border border-red-200'
-                      }`}>
-                        {selectedPlan.estado ? (
-                          <CheckCircle className="h-4 w-4" />
-                        ) : (
-                          <XCircle className="h-4 w-4" />
-                        )}
-                        {selectedPlan.estado ? t('common.active') : t('common.inactive')}
-                      </span>
-                    </div>
-                    {selectedPlan.precio && (
-                      <p className="text-2xl font-bold text-green-600">
-                        {formatCurrency(selectedPlan.precio)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">{t('admin.plans.modal.systemRecord')}</h4>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p>{t('admin.plans.modal.created')}: {formatDateForModal(selectedPlan.created_at)}</p>
-                    {selectedPlan.updated_at !== selectedPlan.created_at && (
-                      <p>{t('admin.plans.modal.updated')}: {formatDateForModal(selectedPlan.updated_at)}</p>
-                    )}
-                    <p className="text-xs text-gray-500">ID: {selectedPlan.id}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Vigencia y horarios */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Vigencia */}
-                {(selectedPlan.fecha_inicio || selectedPlan.fecha_final) && (
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {t('admin.plans.modal.planValidity')}
-                    </h4>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-sm text-gray-600">{t('admin.plans.modal.startDate')}</p>
-                        <p className="font-medium text-gray-900">{formatDate(selectedPlan.fecha_inicio)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">{t('admin.plans.modal.endDate')}</p>
-                        <p className="font-medium text-gray-900">{formatDate(selectedPlan.fecha_final)}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Horarios */}
-                {(selectedPlan.hora_inicio || selectedPlan.hora_final) && (
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {t('admin.plans.modal.serviceHours')}
-                    </h4>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-sm text-gray-600">{t('admin.plans.modal.startTime')}</p>
-                        <p className="font-medium text-gray-900">{formatTime(selectedPlan.hora_inicio)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">{t('admin.plans.modal.endTime')}</p>
-                        <p className="font-medium text-gray-900">{formatTime(selectedPlan.hora_final)}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Servicios asociados */}
-              {selectedPlan.servicios_asociados && (
-                <div className="bg-green-50 p-4 rounded-lg mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    {t('admin.plans.modal.associatedServices')}
-                  </h4>
-                  <p className="text-gray-700 leading-relaxed">{formatServicios(selectedPlan.servicios_asociados)}</p>
-                </div>
-              )}
-
-              {/* Descripción */}
-              {selectedPlan.descripcion && (
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    {t('admin.plans.modal.planDescription')}
-                  </h4>
-                  <p className="text-gray-700 leading-relaxed">{selectedPlan.descripcion}</p>
-                </div>
-              )}
-
-              {/* Acciones */}
-              <div className="flex gap-3 pt-4 border-t">
-                <button
-                  onClick={() => {
-                    closeModal();
-                    handleEditPlan(selectedPlan.id);
-                  }}
-                  className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  {t('admin.plans.modal.editPlan')}
-                </button>
-                <button
-                  onClick={() => handleToggleEstado(selectedPlan.id, selectedPlan.estado)}
-                  disabled={toggleLoading === selectedPlan.id}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    selectedPlan.estado 
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-green-500 text-white hover:bg-green-600'
-                  }`}
-                >
-                  {toggleLoading === selectedPlan.id ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : selectedPlan.estado ? (
-                    <ToggleLeft className="h-4 w-4" />
-                  ) : (
-                    <ToggleRight className="h-4 w-4" />
+                  {selectedPlan.precio && (
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatCurrency(selectedPlan.precio)}
+                    </p>
                   )}
-                  {selectedPlan.estado ? t('admin.plans.modal.deactivate') : t('admin.plans.modal.activate')}
-                </button>
-                <button
-                  onClick={closeModal}
-                  className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
-                >
-                  {t('common.close')}
-                </button>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">{t('admin.plans.modal.systemRecord')}</h4>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>{t('admin.plans.modal.created')}: {formatDateForModal(selectedPlan.created_at)}</p>
+                  {selectedPlan.updated_at !== selectedPlan.created_at && (
+                    <p>{t('admin.plans.modal.updated')}: {formatDateForModal(selectedPlan.updated_at)}</p>
+                  )}
+                  <p className="text-xs text-gray-500">ID: {selectedPlan.id}</p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+
+            {/* Vigencia y horarios */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {(selectedPlan.fecha_inicio || selectedPlan.fecha_final) && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {t('admin.plans.modal.planValidity')}
+                  </h4>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-sm text-gray-600">{t('admin.plans.modal.startDate')}</p>
+                      <p className="font-medium text-gray-900">{formatDate(selectedPlan.fecha_inicio)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">{t('admin.plans.modal.endDate')}</p>
+                      <p className="font-medium text-gray-900">{formatDate(selectedPlan.fecha_final)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(selectedPlan.hora_inicio || selectedPlan.hora_final) && (
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {t('admin.plans.modal.serviceHours')}
+                  </h4>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-sm text-gray-600">{t('admin.plans.modal.startTime')}</p>
+                      <p className="font-medium text-gray-900">{formatTime(selectedPlan.hora_inicio)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">{t('admin.plans.modal.endTime')}</p>
+                      <p className="font-medium text-gray-900">{formatTime(selectedPlan.hora_final)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Servicios asociados */}
+            {selectedPlan.servicios_asociados && (
+              <div className="bg-green-50 p-4 rounded-lg mb-6">
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  {t('admin.plans.modal.associatedServices')}
+                </h4>
+                <p className="text-gray-700 leading-relaxed">{formatServicios(selectedPlan.servicios_asociados)}</p>
+              </div>
+            )}
+
+            {/* Descripción */}
+            {selectedPlan.descripcion && (
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  {t('admin.plans.modal.planDescription')}
+                </h4>
+                <p className="text-gray-700 leading-relaxed">{selectedPlan.descripcion}</p>
+              </div>
+            )}
+
+            {/* Acciones */}
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  closeModal();
+                  handleEditPlan(selectedPlan.id);
+                }}
+                className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              >
+                <Edit3 className="h-4 w-4" />
+                {t('admin.plans.modal.editPlan')}
+              </button>
+              <button
+                onClick={() => handleToggleEstado(selectedPlan.id, selectedPlan.estado)}
+                disabled={toggleLoading === selectedPlan.id}
+                className={`flex-1 px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 ${
+                  selectedPlan.estado 
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+              >
+                {toggleLoading === selectedPlan.id ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : selectedPlan.estado ? (
+                  <ToggleLeft className="h-4 w-4" />
+                ) : (
+                  <ToggleRight className="h-4 w-4" />
+                )}
+                {selectedPlan.estado ? t('admin.plans.modal.deactivate') : t('admin.plans.modal.activate')}
+              </button>
+              <button
+                onClick={closeModal}
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+          </>
+        )}
+      </ListDetailModal>
     </div>
   );
 }

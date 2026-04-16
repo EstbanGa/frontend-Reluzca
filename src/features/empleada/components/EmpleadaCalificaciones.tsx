@@ -14,6 +14,8 @@ import {
   User,
   Sparkles
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
 
 interface Calificacion {
   id: string;
@@ -123,76 +125,27 @@ function EmpleadaCalificaciones() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="space-y-6">
       {/* Header con degradado */}
-      <div className="bg-gradient-to-r from-[#4894AD] to-[#D95B26] rounded-2xl p-6 sm:p-8 mb-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 p-4 rounded-xl">
-              <Award className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                {t('empleada.ratings.title')}
-              </h1>
-              <p className="text-white/90 text-sm">
-                {t('empleada.ratings.subtitle')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.empleada}
+        title={t('empleada.ratings.title')}
+        subtitle={t('empleada.ratings.subtitle')}
+        icon={<Award className="h-7 w-7" />}
+      />
 
       {data && (
         <>
           {/* Estadísticas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.averageGeneral')}</p>
-                <Sparkles className="h-5 w-5 text-yellow-500" />
-              </div>
-              <p className="text-3xl font-bold text-[#4894AD]">
-                {data.estadisticas.promedio_general.toFixed(1)}
-              </p>
-              <div className="flex items-center gap-1 mt-2">
-                {renderStars(Math.round(data.estadisticas.promedio_general))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.total')}</p>
-                <MessageSquare className="h-5 w-5 text-[#D95B26]" />
-              </div>
-              <p className="text-3xl font-bold text-[#D95B26]">
-                {data.estadisticas.total_calificaciones}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">{t('empleada.ratings.stats.ratingsReceived')}</p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.service')}</p>
-                <Star className="h-5 w-5 text-blue-500" />
-              </div>
-              <p className="text-3xl font-bold text-blue-600">
-                {data.estadisticas.promedio_servicio.toFixed(1)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">{t('empleada.ratings.stats.serviceQuality')}</p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">{t('empleada.ratings.stats.employee')}</p>
-                <User className="h-5 w-5 text-green-500" />
-              </div>
-              <p className="text-3xl font-bold text-green-600">
-                {data.estadisticas.promedio_empleada.toFixed(1)}
-              </p>
-              <p className="text-xs text-gray-500 mt-2">{t('empleada.ratings.stats.personalAttention')}</p>
-            </div>
-          </div>
+          <ListStatsGrid
+            columns={4}
+            stats={[
+              { label: t('empleada.ratings.stats.averageGeneral'), value: data.estadisticas.promedio_general.toFixed(1), color: '#4894AD', icon: <Sparkles className="h-4 w-4 text-yellow-500" /> },
+              { label: t('empleada.ratings.stats.total'), value: data.estadisticas.total_calificaciones, color: '#D95B26', icon: <MessageSquare className="h-4 w-4 text-[#D95B26]" /> },
+              { label: t('empleada.ratings.stats.service'), value: data.estadisticas.promedio_servicio.toFixed(1), color: '#2563eb', icon: <Star className="h-4 w-4 text-blue-500" /> },
+              { label: t('empleada.ratings.stats.employee'), value: data.estadisticas.promedio_empleada.toFixed(1), color: '#16a34a', icon: <User className="h-4 w-4 text-green-500" /> },
+            ]}
+          />
 
           {/* Lista de calificaciones */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">

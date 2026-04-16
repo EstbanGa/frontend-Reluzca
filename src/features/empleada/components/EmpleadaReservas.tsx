@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 import { 
   Calendar,
   Clock,
@@ -777,25 +780,21 @@ function EmpleadaServicios() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#D95B26] to-[#4894AD] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              {t('empleada.services.title')}
-            </h1>
-            <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              {t('empleada.services.subtitle')}
-            </p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.empleada}
+        title={t('empleada.services.title')}
+        subtitle={t('empleada.services.subtitle')}
+        icon={<Calendar className="h-7 w-7" />}
+        actions={
           <button
             onClick={fetchServicios}
-            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
+            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
             title="Recargar"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-5 w-5" />
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── BANNER EN CURSO (Rappi style) ── */}
       {reservaEnCurso && (
@@ -835,32 +834,15 @@ function EmpleadaServicios() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.total')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#D95B26]">{data.estadisticas.total}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.pending')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">{data.estadisticas.por_estado.pendientes}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Confirmadas</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-indigo-600">{data.estadisticas.por_estado.confirmadas ?? 0}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('empleada.services.stats.completed')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">{data.estadisticas.por_estado.completados}</p>
-          </div>
-        </div>
-      </div>
+      <ListStatsGrid
+        columns={4}
+        stats={[
+          { label: t('empleada.services.stats.total'), value: data.estadisticas.total, color: '#D95B26' },
+          { label: t('empleada.services.stats.pending'), value: data.estadisticas.por_estado.pendientes, color: '#ca8a04' },
+          { label: 'Confirmadas', value: data.estadisticas.por_estado.confirmadas ?? 0, color: '#4f46e5' },
+          { label: t('empleada.services.stats.completed'), value: data.estadisticas.por_estado.completados, color: '#16a34a' },
+        ]}
+      />
 
       {/* Filtros y Búsqueda */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
@@ -903,61 +885,59 @@ function EmpleadaServicios() {
             const EstadoIcon = estadoInfo.icon;
 
             return (
-              <div key={servicio.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                {/* Botón oculto - se revela al hacer hover */}
-                <div className="absolute left-0 inset-y-0 flex items-center px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                  <button
+              <SlideRevealCard
+                key={servicio.id}
+                buttonCount={1}
+                actions={
+                  <SlideButton
+                    icon={<Eye className="h-4 w-4" />}
                     onClick={() => openDetail(servicio)}
-                    className="p-2 rounded-lg text-[#195083] hover:bg-[#195083]/10 transition-colors"
                     title={t('empleada.services.viewDetails')}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                </div>
-                {/* Contenido de la tarjeta - se desliza a la derecha al hover */}
-                <div className="relative z-10 bg-white p-4 sm:p-5 transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <div className="bg-[#D95B26]/10 p-2 rounded-lg flex-shrink-0">
-                          <TipoIcon className="h-5 w-5 text-[#D95B26]" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                            {servicio.ubicacion?.nombre || t('empleada.services.noName')}
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {t('empleada.services.clientLabel')} <span className="font-medium text-gray-700">{servicio.cliente.nombre}</span>
-                          </p>
-                        </div>
+                    hoverColor="hover:bg-[#D95B26]/10 hover:text-[#D95B26]"
+                  />
+                }
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div className="bg-[#D95B26]/10 p-2 rounded-lg flex-shrink-0">
+                        <TipoIcon className="h-5 w-5 text-[#D95B26]" />
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${estadoInfo.color}`}>
-                          <EstadoIcon className="h-3 w-3" />
-                          {estadoInfo.label}
-                        </span>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                          {servicio.ubicacion?.nombre || t('empleada.services.noName')}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {t('empleada.services.clientLabel')} <span className="font-medium text-gray-700">{servicio.cliente.nombre}</span>
+                        </p>
                       </div>
                     </div>
-
-                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {formatDate(servicio.fecha)}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${estadoInfo.color}`}>
+                        <EstadoIcon className="h-3 w-3" />
+                        {estadoInfo.label}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {formatTime(servicio.hora_inicio)} — {formatTime(servicio.hora_final)}
-                      </span>
-                      {servicio.plan && (
-                        <span className="flex items-center gap-1">
-                          <Package className="h-3.5 w-3.5" />
-                          {servicio.plan.nombre}
-                        </span>
-                      )}
                     </div>
                   </div>
+
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {formatDate(servicio.fecha)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {formatTime(servicio.hora_inicio)} — {formatTime(servicio.hora_final)}
+                    </span>
+                    {servicio.plan && (
+                      <span className="flex items-center gap-1">
+                        <Package className="h-3.5 w-3.5" />
+                        {servicio.plan.nombre}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </SlideRevealCard>
             );
           })
         ) : (

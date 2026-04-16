@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
 import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
 import {
   TrendingUp,
   DollarSign,
@@ -120,15 +122,12 @@ function EmpleadaGanancias() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header con degradado */}
-      <div className="bg-gradient-to-r from-[#D95B26] to-[#195083] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2 flex items-center gap-3">
-              <TrendingUp className="w-7 h-7" />
-              {t("empleada.earnings.title")}
-            </h1>
-            <p className="text-[#FCF7F0]/80 text-sm sm:text-base">{t("empleada.earnings.subtitle")}</p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.empleada}
+        title={t("empleada.earnings.title")}
+        subtitle={t("empleada.earnings.subtitle")}
+        icon={<TrendingUp className="w-7 h-7" />}
+        actions={
           <div className="flex items-center gap-2">
             <select
               value={mes}
@@ -143,14 +142,14 @@ function EmpleadaGanancias() {
             </select>
             <button
               onClick={fetchGanancias}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
               title="Recargar"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-5 h-5" />
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Error */}
       {error && (
@@ -168,61 +167,15 @@ function EmpleadaGanancias() {
       ) : data ? (
         <>
           {/* Stats cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                </div>
-                <p className="text-xs sm:text-sm text-gray-500">{t("empleada.earnings.totalEarned")}</p>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                {formatCOP(data.resumen.total_neto)}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {t("empleada.earnings.rate")}: {data.resumen.porcentaje_empleada}%
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-blue-600" />
-                </div>
-                <p className="text-xs sm:text-sm text-gray-500">{t("empleada.earnings.completedServices")}</p>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                {data.resumen.total_servicios}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">{t("empleada.earnings.services")}</p>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <BarChart2 className="w-5 h-5 text-purple-600" />
-                </div>
-                <p className="text-xs sm:text-sm text-gray-500">{t("empleada.earnings.avgPerService")}</p>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                {data.resumen.total_servicios > 0
-                  ? formatCOP(data.resumen.total_neto / data.resumen.total_servicios)
-                  : "—"}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-[#D95B26]" />
-                </div>
-                <p className="text-xs sm:text-sm text-gray-500">{t("empleada.earnings.grossTotal")}</p>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                {formatCOP(data.resumen.total_bruto)}
-              </p>
-            </div>
-          </div>
+          <ListStatsGrid
+            columns={4}
+            stats={[
+              { label: t("empleada.earnings.totalEarned"), value: formatCOP(data.resumen.total_neto), color: '#16a34a', icon: <DollarSign className="w-4 h-4 text-green-600" /> },
+              { label: t("empleada.earnings.completedServices"), value: data.resumen.total_servicios, color: '#2563eb', icon: <CheckCircle className="w-4 h-4 text-blue-600" /> },
+              { label: t("empleada.earnings.avgPerService"), value: data.resumen.total_servicios > 0 ? formatCOP(data.resumen.total_neto / data.resumen.total_servicios) : '—', color: '#7c3aed', icon: <BarChart2 className="w-4 h-4 text-purple-600" /> },
+              { label: t("empleada.earnings.grossTotal"), value: formatCOP(data.resumen.total_bruto), color: '#D95B26', icon: <TrendingUp className="w-4 h-4 text-[#D95B26]" /> },
+            ]}
+          />
 
           {/* Detalle del mes */}
           {data.detalle.length === 0 ? (

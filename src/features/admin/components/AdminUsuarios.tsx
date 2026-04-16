@@ -7,8 +7,10 @@ import * as XLSX from "xlsx";
 import {
   Users, Search, Crown, UserCheck, Briefcase, Eye, EyeOff,
   RefreshCw, AlertCircle, Download, Star, X, KeyRound, Save,
-  ChevronLeft, ChevronRight,
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListPagination from "@/components/ui/ListPagination";
 
 // â”€â”€â”€ Interfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Usuario {
@@ -217,14 +219,11 @@ function AdminUsuarios() {
       `}</style>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] rounded-xl p-5 sm:p-7 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F0E7] mb-1">Usuarios</h1>
-            <p className="text-[#F5F0E7]/80 text-sm">
-              {usuarios.length} usuarios registrados â€” {filtered.length} mostrados
-            </p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title="Usuarios"
+        subtitle={`${usuarios.length} usuarios registrados — ${filtered.length} mostrados`}
+        actions={
           <button
             onClick={exportToExcel}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
@@ -232,8 +231,8 @@ function AdminUsuarios() {
             <Download className="h-4 w-4" />
             Exportar Excel
           </button>
-        </div>
-
+        }
+      >
         {/* Role filter chips */}
         <div className="flex flex-wrap gap-3 mt-4">
           {[
@@ -253,7 +252,7 @@ function AdminUsuarios() {
             </button>
           ))}
         </div>
-      </div>
+      </ListPageHeader>
 
       {/* Search bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -281,23 +280,13 @@ function AdminUsuarios() {
           const RolIcon = rolCfg.icon;
           const isActivo = u.estado === "activo";
           return (
-            <div key={u.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-              {/* Botón oculto a la izquierda del card */}
-              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                <button
-                  onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
-                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
-                  title="Ver detalle"
-                >
-                  <Eye className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Card content - se desliza a la derecha en hover */}
-              <div
-                className="relative z-10 flex items-start gap-3 p-3 bg-white cursor-pointer transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11"
-                onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
-              >
+            <SlideRevealCard
+              key={u.id}
+              buttonCount={1}
+              actions={<SlideButton icon={<Eye className="h-4 w-4" />} onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)} title="Ver detalle" />}
+              onClick={() => navigate(`/admin/usuarios/detalle/${u.id}`)}
+            >
+              <div className="flex items-start gap-3">
                 {/* Avatar */}
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
@@ -348,23 +337,11 @@ function AdminUsuarios() {
                   </div>
                 </div>
               </div>
-            </div>
+            </SlideRevealCard>
           );
         })}
 
-        {pages > 1 && (
-          <div className="px-4 py-3 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-sm text-gray-600">
-            <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}</span>
-            <div className="flex gap-1">
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button disabled={page >= pages} onClick={() => setPage(p => p + 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <ListPagination page={page} totalPages={pages} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
       </div>
 
       {/* â•â•â•â•â•â•â•â•â•â• MODAL CONTRASEÃ‘A â•â•â•â•â•â•â•â•â•â• */}

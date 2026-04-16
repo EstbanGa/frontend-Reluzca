@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface Actividad {
   id: string;
@@ -210,31 +212,30 @@ function AdminActividades() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Activity className="w-7 h-7 text-blue-600" />
-            {t("admin.activities.title")}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">{t("admin.activities.subtitle")}</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={fetchActividades}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Recargar"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            {t("admin.activities.createActivity")}
-          </button>
-        </div>
-      </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title={t("admin.activities.title")}
+        subtitle={t("admin.activities.subtitle")}
+        icon={<Activity className="w-7 h-7" />}
+        actions={
+          <div className="flex gap-2">
+            <button
+              onClick={fetchActividades}
+              className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+              title="Recargar"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-[#195083] rounded-lg hover:bg-[#F5F0E7] transition-colors text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              {t("admin.activities.createActivity")}
+            </button>
+          </div>
+        }
+      />
 
       {/* Filters */}
       <div className="flex gap-2">
@@ -244,8 +245,8 @@ function AdminActividades() {
             onClick={() => setFiltro(f)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filtro === f
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                ? "bg-[#195083] text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             {t(`admin.activities.filter${f.charAt(0).toUpperCase() + f.slice(1)}`)}
@@ -255,7 +256,7 @@ function AdminActividades() {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -269,7 +270,7 @@ function AdminActividades() {
       ) : filtradas.length === 0 ? (
         <div className="text-center py-16">
           <Activity className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">{t("admin.activities.empty")}</p>
+          <p className="text-gray-500">{t("admin.activities.empty")}</p>
           <button
             onClick={openCreate}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -280,38 +281,32 @@ function AdminActividades() {
       ) : (
         <div className="flex flex-col gap-2">
           {filtradas.map((a) => (
-            <div key={a.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-              {/* Botones ocultos a la izquierda del card */}
-              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                <button
-                  onClick={() => handleToggle(a)}
-                  title={t("admin.activities.fields.active")}
-                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-gray-100 transition-colors"
-                >
-                  {a.activa ? (
-                    <ToggleRight className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <ToggleLeft className="w-4 h-4 text-gray-400" />
-                  )}
-                </button>
-                <button
-                  onClick={() => openEdit(a)}
-                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
-                  title={t("admin.activities.editActivity")}
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setDeleteConfirm(a)}
-                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                  title={t("common.delete")}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Card content - se desliza a la derecha en hover */}
-              <div className="relative z-10 flex items-center gap-3 p-3 bg-white transition-all duration-200 ease-out group-hover:translate-x-28 group-hover:mr-28">
+            <SlideRevealCard
+              key={a.id}
+              buttonCount={3}
+              actions={
+                <>
+                  <SlideButton
+                    icon={a.activa ? <ToggleRight className="w-4 h-4 text-green-500" /> : <ToggleLeft className="w-4 h-4 text-gray-400" />}
+                    onClick={() => handleToggle(a)}
+                    title={t("admin.activities.fields.active")}
+                  />
+                  <SlideButton
+                    icon={<Edit3 className="w-4 h-4" />}
+                    onClick={() => openEdit(a)}
+                    title={t("admin.activities.editActivity")}
+                    hoverColor="hover:bg-blue-50 hover:text-blue-600"
+                  />
+                  <SlideButton
+                    icon={<Trash2 className="w-4 h-4" />}
+                    onClick={() => setDeleteConfirm(a)}
+                    title={t("common.delete")}
+                    hoverColor="hover:bg-red-50 hover:text-red-600"
+                  />
+                </>
+              }
+            >
+              <div className="flex items-center gap-3">
                 {/* Indicador activa/inactiva */}
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                   a.activa ? "bg-green-100" : "bg-gray-100"
@@ -345,7 +340,7 @@ function AdminActividades() {
                   </div>
                 </div>
               </div>
-            </div>
+            </SlideRevealCard>
           ))}
         </div>
       )}
@@ -353,16 +348,16 @@ function AdminActividades() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="font-semibold text-gray-900 dark:text-white">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-900">
                 {editingId
                   ? t("admin.activities.editActivity")
                   : t("admin.activities.createActivity")}
               </h2>
               <button
                 onClick={closeForm}
-                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="p-1 hover:bg-gray-100:bg-gray-700 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -370,14 +365,14 @@ function AdminActividades() {
 
             <div className="p-5 space-y-4">
               {formError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm flex items-center gap-2">
+                <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {formError}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t("admin.activities.fields.name")} *
                 </label>
                 <input
@@ -385,12 +380,12 @@ function AdminActividades() {
                   value={form.nombre}
                   onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                   placeholder={t("admin.activities.fields.namePlaceholder")}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t("admin.activities.fields.price")}
                 </label>
                 <input
@@ -398,12 +393,12 @@ function AdminActividades() {
                   min={0}
                   value={form.precio_unitario}
                   onChange={(e) => setForm({ ...form, precio_unitario: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t("admin.activities.fields.duration")}
                 </label>
                 <input
@@ -413,19 +408,19 @@ function AdminActividades() {
                   onChange={(e) =>
                     setForm({ ...form, duracion_estimada_minutos: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Descripción
                 </label>
                 <textarea
                   rows={2}
                   value={form.descripcion}
                   onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30 resize-none"
                 />
               </div>
 
@@ -436,16 +431,16 @@ function AdminActividades() {
                   onChange={(e) => setForm({ ...form, activa: e.target.checked })}
                   className="w-4 h-4 text-blue-600"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700">
                   {t("admin.activities.fields.active")}
                 </span>
               </label>
             </div>
 
-            <div className="flex justify-end gap-2 p-5 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-end gap-2 p-5 border-t border-gray-200">
               <button
                 onClick={closeForm}
-                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50:bg-gray-700 transition-colors"
               >
                 {t("admin.activities.cancel")}
               </button>
@@ -469,14 +464,14 @@ function AdminActividades() {
       {/* Delete confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
-            <p className="text-gray-800 dark:text-gray-200 text-sm mb-5">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+            <p className="text-gray-800 text-sm mb-5">
               {t("admin.activities.confirmDelete", { name: deleteConfirm.nombre })}
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50:bg-gray-700"
               >
                 {t("admin.activities.cancel")}
               </button>

@@ -4,6 +4,9 @@ import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useTranslation } from "react-i18next";
 import { Bell, BellOff, Check, CheckCheck, Trash2, RefreshCw, Calendar, Clock, AlertCircle, Info } from "lucide-react";
 import { API_BASE_URL } from "@/config/env";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface Notificacion {
   id: string;
@@ -222,48 +225,37 @@ function ClienteNotificaciones() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                <Bell className="w-8 h-8 text-[#4894AD]" />
-                {t('cliente.notifications.title')}
-              </h1>
-              <p className="text-gray-600 mt-2">
-                {t('cliente.notifications.subtitle')}
-              </p>
-            </div>
-            <button
-              onClick={fetchNotificaciones}
-              className="p-2 text-gray-600 hover:text-[#4894AD] hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <RefreshCw className="w-6 h-6" />
-            </button>
-          </div>
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <ListPageHeader
+        theme={ROLE_THEMES.cliente}
+        title={t('cliente.notifications.title')}
+        subtitle={t('cliente.notifications.subtitle')}
+        icon={<Bell className="h-7 w-7" />}
+        actions={
+          <button
+            onClick={fetchNotificaciones}
+            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          >
+            <RefreshCw className="w-6 h-6" />
+          </button>
+        }
+      />
 
-          {/* Estadísticas */}
-          {data && (
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="text-sm text-gray-600">{t('cliente.notifications.stats.total')}</div>
-                <div className="text-2xl font-bold text-gray-800">{data.estadisticas.total}</div>
-              </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="text-sm text-gray-600">{t('cliente.notifications.stats.unread')}</div>
-                <div className="text-2xl font-bold text-blue-600">{data.estadisticas.no_leidas}</div>
-              </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="text-sm text-gray-600">{t('cliente.notifications.stats.read')}</div>
-                <div className="text-2xl font-bold text-green-600">{data.estadisticas.leidas}</div>
-              </div>
-            </div>
-          )}
+      {/* Estadísticas */}
+      {data && (
+        <ListStatsGrid
+          columns={3}
+          stats={[
+            { label: t('cliente.notifications.stats.total'), value: data.estadisticas.total, color: '#4894AD' },
+            { label: t('cliente.notifications.stats.unread'), value: data.estadisticas.no_leidas, color: '#2563eb' },
+            { label: t('cliente.notifications.stats.read'), value: data.estadisticas.leidas, color: '#16a34a' },
+          ]}
+        />
+      )}
 
-          {/* Filtros y Acciones */}
-          <div className="flex items-center justify-between">
+      {/* Filtros y Acciones */}
+      <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <button
                 onClick={() => setFiltro("todas")}
@@ -306,8 +298,7 @@ function ClienteNotificaciones() {
                 {t('cliente.notifications.markAllRead')}
               </button>
             )}
-          </div>
-        </div>
+      </div>
 
         {/* Lista de Notificaciones */}
         <div className="space-y-3">
@@ -317,40 +308,32 @@ function ClienteNotificaciones() {
               const colorClass = TIPO_COLORS[notificacion.tipo_notificacion] || "text-gray-600 bg-gray-50";
 
               return (
-                <div key={notificacion.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                  {/* Botones ocultos a la izquierda del card */}
-                  <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                    {!notificacion.leida && (
-                      <button
-                        onClick={() => marcarComoLeida(notificacion.id)}
-                        className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
-                        title="Marcar como leída"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => eliminarNotificacion(notificacion.id)}
-                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Card content - se desliza a la derecha en hover */}
-                  <div
-                    className={`relative z-10 p-4 transition-all duration-200 ease-out group-hover:translate-x-20 group-hover:mr-20 ${
-                      !notificacion.leida ? "border-l-4 border-l-blue-500 bg-white" : "bg-white"
-                    }`}
-                  >
-                  <div className="flex items-start gap-4">
-                    {/* Icono */}
+                <SlideRevealCard
+                  key={notificacion.id}
+                  buttonCount={2}
+                  actions={
+                    <>
+                      {!notificacion.leida && (
+                        <SlideButton
+                          icon={<Check className="w-4 h-4" />}
+                          onClick={() => marcarComoLeida(notificacion.id)}
+                          title="Marcar como leída"
+                          hoverColor="hover:bg-blue-50 hover:text-blue-600"
+                        />
+                      )}
+                      <SlideButton
+                        icon={<Trash2 className="w-4 h-4" />}
+                        onClick={() => eliminarNotificacion(notificacion.id)}
+                        title="Eliminar"
+                        hoverColor="hover:bg-red-50 hover:text-red-600"
+                      />
+                    </>
+                  }
+                >
+                  <div className={`flex items-start gap-4 ${!notificacion.leida ? 'border-l-4 border-l-blue-500 -ml-3 pl-3' : ''}`}>
                     <div className={`p-3 rounded-full ${colorClass}`}>
                       <Icon className="w-6 h-6" />
                     </div>
-
-                    {/* Contenido */}
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
@@ -359,10 +342,8 @@ function ClienteNotificaciones() {
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">{notificacion.mensaje}</p>
                         </div>
-
                       </div>
 
-                      {/* Detalles de la reserva */}
                       {notificacion.reserva && (
                         <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm">
                           <div className="grid grid-cols-2 gap-3">
@@ -389,14 +370,12 @@ function ClienteNotificaciones() {
                         </div>
                       )}
 
-                      {/* Fecha */}
                       <div className="mt-3 text-xs text-gray-500">
                         {formatearFecha(notificacion.created_at)}
                       </div>
                     </div>
                   </div>
-                </div>
-                </div>
+                </SlideRevealCard>
               );
             })
           ) : (
@@ -415,7 +394,6 @@ function ClienteNotificaciones() {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

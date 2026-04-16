@@ -21,6 +21,9 @@ import {
   ArrowRight,
   RefreshCw
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface Reserva {
   id: string;
@@ -249,61 +252,32 @@ function ClienteReservas() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#4894AD] to-[#D95B26] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              {t('cliente.reservations.title')}
-            </h1>
-            <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              {t('cliente.reservations.subtitle')}
-            </p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.cliente}
+        title={t('cliente.reservations.title')}
+        subtitle={t('cliente.reservations.subtitle')}
+        icon={<Calendar className="h-7 w-7" />}
+        actions={
           <button 
             onClick={handleCrearReserva}
-            className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2 flex-shrink-0"
+            className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-sm sm:text-base flex items-center gap-2 flex-shrink-0"
           >
             <Plus size={18} />
             {t('cliente.reservations.newReservation')}
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.total')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#4894AD]">
-              {data.estadisticas.total}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.active')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-600">
-              {data.estadisticas.activas}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.completed')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
-              {data.estadisticas.completadas}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.reservations.stats.cancelled')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
-              {data.estadisticas.canceladas}
-            </p>
-          </div>
-        </div>
-      </div>
+      <ListStatsGrid
+        columns={4}
+        stats={[
+          { label: t('cliente.reservations.stats.total'), value: data.estadisticas.total, color: '#4894AD' },
+          { label: t('cliente.reservations.stats.active'), value: data.estadisticas.activas, color: '#2563eb' },
+          { label: t('cliente.reservations.stats.completed'), value: data.estadisticas.completadas, color: '#16a34a' },
+          { label: t('cliente.reservations.stats.cancelled'), value: data.estadisticas.canceladas, color: '#dc2626' },
+        ]}
+      />
 
       {/* Filtros y Búsqueda */}
 {/* Filtros y Búsqueda */}
@@ -349,22 +323,20 @@ function ClienteReservas() {
             const StatusIcon = estadoConfig.icon;
             
             return (
-              <div key={reserva.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                {/* Botón oculto a la izquierda del card */}
-                {puedeEditarse(reserva) && (
-                  <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                    <button
+              <SlideRevealCard
+                key={reserva.id}
+                buttonCount={1}
+                actions={
+                  puedeEditarse(reserva) ? (
+                    <SlideButton
+                      icon={<Edit3 className="h-4 w-4" />}
                       onClick={() => handleEditarReserva(reserva.id)}
-                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#4894AD] transition-colors"
                       title={t('cliente.reservations.editReservation')}
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* Card content - se desliza a la derecha en hover */}
-                <div className={`relative z-10 bg-white p-4 sm:p-6 transition-all duration-200 ease-out ${puedeEditarse(reserva) ? 'group-hover:translate-x-11 group-hover:mr-11' : ''}`}>
+                      hoverColor="hover:bg-blue-50 hover:text-[#4894AD]"
+                    />
+                  ) : undefined
+                }
+              >
                 <div className="space-y-4">
                   {/* Header de la reserva */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -393,7 +365,6 @@ function ClienteReservas() {
 
                   {/* Detalles de la reserva */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Empleada */}
                     {reserva.empleada && (
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div className="w-8 h-8 bg-gradient-to-br from-[#4894AD] to-[#D95B26] rounded-full flex items-center justify-center flex-shrink-0">
@@ -413,7 +384,6 @@ function ClienteReservas() {
                       </div>
                     )}
 
-                    {/* Ubicación */}
                     {reserva.lugar && (
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div className="w-8 h-8 bg-[#D95B26]/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -430,7 +400,6 @@ function ClienteReservas() {
                       </div>
                     )}
 
-                    {/* Plan y Precio */}
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <DollarSign className="h-4 w-4 text-green-600" />
@@ -458,7 +427,6 @@ function ClienteReservas() {
                     </div>
                   </div>
 
-                  {/* Descripción */}
                   {reserva.descripcion && (
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-gray-700">
@@ -467,8 +435,7 @@ function ClienteReservas() {
                     </div>
                   )}
                 </div>
-                </div>
-              </div>
+              </SlideRevealCard>
             );
           })
         ) : (

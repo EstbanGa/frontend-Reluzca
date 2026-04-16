@@ -1633,6 +1633,40 @@
         "title": "You don't have any ratings yet",
         "message": "Your clients' ratings will appear here"
       }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Stay informed about your services and updates",
+      "stats": {
+        "total": "Total",
+        "unread": "Unread",
+        "read": "Read"
+      },
+      "filters": {
+        "all": "All",
+        "unread": "Unread",
+        "read": "Read"
+      },
+      "markAllRead": "Mark all as read",
+      "time": {
+        "justNow": "Just now",
+        "minutes_one": "{{count}} minute ago",
+        "minutes_other": "{{count}} minutes ago",
+        "hours_one": "{{count}} hour ago",
+        "hours_other": "{{count}} hours ago",
+        "days_one": "{{count}} day ago",
+        "days_other": "{{count}} days ago"
+      },
+      "planLabel": "Plan:",
+      "empty": {
+        "all": "No notifications",
+        "allDetail": "You don't have any notifications yet",
+        "unread": "No unread notifications",
+        "read": "No read notifications"
+      },
+      "errorLoading": "Error loading notifications",
+      "loading": "Loading notifications...",
+      "confirmDelete": "Are you sure you want to delete this notification?"
     }
   }
 }

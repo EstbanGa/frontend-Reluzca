@@ -5,6 +5,9 @@ import { withClienteRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 import { 
   MapPin,
   Plus,
@@ -553,55 +556,31 @@ function ClienteUbicaciones() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#4894AD] to-[#D95B26] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              {t('cliente.locations.title')}
-            </h1>
-            <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              {t('cliente.locations.subtitle')}
-            </p>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button 
-              onClick={() => navigate('/cliente/ubicaciones/crear')}
-              className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2"
-            >
-              <Plus size={18} />
-              {t('cliente.locations.newLocation')}
-            </button>
-          </div>
-        </div>
-      </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.cliente}
+        title={t('cliente.locations.title')}
+        subtitle={t('cliente.locations.subtitle')}
+        icon={<MapPin className="h-7 w-7" />}
+        actions={
+          <button 
+            onClick={() => navigate('/cliente/ubicaciones/crear')}
+            className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2"
+          >
+            <Plus size={18} />
+            {t('cliente.locations.newLocation')}
+          </button>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.locations.stats.total')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#4894AD]">
-              {data.estadisticas.total}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.locations.stats.active')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
-              {data.estadisticas.activas}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.locations.stats.inactive')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
-              {data.estadisticas.inactivas}
-            </p>
-          </div>
-        </div>
-      </div>
+      <ListStatsGrid
+        columns={3}
+        stats={[
+          { label: t('cliente.locations.stats.total'), value: data.estadisticas.total, color: '#4894AD' },
+          { label: t('cliente.locations.stats.active'), value: data.estadisticas.activas, color: '#16a34a' },
+          { label: t('cliente.locations.stats.inactive'), value: data.estadisticas.inactivas, color: '#dc2626' },
+        ]}
+      />
 
       {/* Filtros y Búsqueda */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
@@ -702,41 +681,39 @@ function ClienteUbicaciones() {
               const isSelected = selectedUbicaciones.includes(ubicacion.id);
               
               return (
-                <div key={ubicacion.id} className={`group relative rounded-xl overflow-hidden shadow-sm ${isSelected ? 'border-2 border-[#4894AD]' : 'border border-gray-100'}`}>
-                  {/* Botones ocultos a la izquierda del card */}
-                  <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                    <button
-                      onClick={() => openModal(ubicacion)}
-                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
-                      title={t('cliente.locations.viewDetails')}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleOpenEditModal(ubicacion)}
-                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-[#4894AD]/10 text-gray-500 hover:text-[#4894AD] transition-colors"
-                      title={t('cliente.locations.editLocation')}
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete([ubicacion.id])}
-                      disabled={deleteLoading}
-                      className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
-                      title={t('cliente.locations.deleteLocation')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {/* Card content - se desliza a la derecha en hover */}
-                  <div className={`relative z-10 p-4 sm:p-6 bg-white transition-all duration-200 ease-out group-hover:translate-x-28 group-hover:mr-28 ${isSelected ? 'bg-blue-50' : ''}`}>
+                <SlideRevealCard
+                  key={ubicacion.id}
+                  buttonCount={3}
+                  className={isSelected ? 'border-2 border-[#4894AD]' : ''}
+                  actions={
+                    <>
+                      <SlideButton
+                        icon={<Eye className="h-4 w-4" />}
+                        onClick={() => openModal(ubicacion)}
+                        title={t('cliente.locations.viewDetails')}
+                        hoverColor="hover:bg-blue-50 hover:text-blue-600"
+                      />
+                      <SlideButton
+                        icon={<Edit3 className="h-4 w-4" />}
+                        onClick={() => handleOpenEditModal(ubicacion)}
+                        title={t('cliente.locations.editLocation')}
+                        hoverColor="hover:bg-[#4894AD]/10 hover:text-[#4894AD]"
+                      />
+                      <SlideButton
+                        icon={<Trash2 className="h-4 w-4" />}
+                        onClick={() => handleDelete([ubicacion.id])}
+                        title={t('cliente.locations.deleteLocation')}
+                        hoverColor="hover:bg-red-50 hover:text-red-600"
+                      />
+                    </>
+                  }
+                >
                   <div className="space-y-4">
-                    {/* Header de la ubicación - Responsive mejorado */}
+                    {/* Header de la ubicación */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         <button
-                          onClick={() => handleSelectUbicacion(ubicacion.id)}
+                          onClick={(e) => { e.stopPropagation(); handleSelectUbicacion(ubicacion.id); }}
                           className="p-1 hover:bg-gray-200 rounded mt-1 flex-shrink-0"
                         >
                           {isSelected ? (
@@ -766,13 +743,10 @@ function ClienteUbicaciones() {
                         </div>
                       </div>
                       
-                      {/* Botones - Debajo del nombre en móvil, al lado en desktop */}
                       <div className="flex items-center gap-2 flex-shrink-0 sm:mt-0 mt-2 justify-start sm:justify-end">
                         <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${ubicacion.estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {ubicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                         </span>
-                        
-
                       </div>
                     </div>
 
@@ -814,8 +788,7 @@ function ClienteUbicaciones() {
                       </div>
                     )}
                   </div>
-                </div>
-                </div>
+                </SlideRevealCard>
               );
             })}
           </>

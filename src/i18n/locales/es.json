@@ -1633,6 +1633,40 @@
         "title": "Aún no tienes calificaciones",
         "message": "Las calificaciones de tus clientes aparecerán aquí"
       }
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "subtitle": "Mantente informada sobre tus servicios y novedades",
+      "stats": {
+        "total": "Total",
+        "unread": "No leídas",
+        "read": "Leídas"
+      },
+      "filters": {
+        "all": "Todas",
+        "unread": "No leídas",
+        "read": "Leídas"
+      },
+      "markAllRead": "Marcar todas como leídas",
+      "time": {
+        "justNow": "Hace un momento",
+        "minutes_one": "Hace {{count}} minuto",
+        "minutes_other": "Hace {{count}} minutos",
+        "hours_one": "Hace {{count}} hora",
+        "hours_other": "Hace {{count}} horas",
+        "days_one": "Hace {{count}} día",
+        "days_other": "Hace {{count}} días"
+      },
+      "planLabel": "Plan:",
+      "empty": {
+        "all": "No hay notificaciones",
+        "allDetail": "Aún no tienes ninguna notificación",
+        "unread": "No tienes notificaciones sin leer",
+        "read": "No tienes notificaciones leídas"
+      },
+      "errorLoading": "Error al cargar notificaciones",
+      "loading": "Cargando notificaciones...",
+      "confirmDelete": "¿Estás seguro de eliminar esta notificación?"
     }
   }
 }

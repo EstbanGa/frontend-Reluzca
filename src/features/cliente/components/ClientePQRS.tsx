@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, Plus, Trash2, AlertCircle, CheckCircle, Clock, XCircle, MessageSquare } from "lucide-react";
 import { API_BASE_URL } from "@/config/env";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface PQRSData {
   pqrs: Array<{
@@ -234,54 +237,41 @@ function PQRSPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <FileText className="h-8 w-8 text-[#4894AD]" />
-              {t('cliente.pqrs.title')}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              {t('cliente.pqrs.subtitle')}
-            </p>
-          </div>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <ListPageHeader
+        theme={ROLE_THEMES.cliente}
+        title={t('cliente.pqrs.title')}
+        subtitle={t('cliente.pqrs.subtitle')}
+        icon={<FileText className="h-7 w-7" />}
+        actions={
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-[#4894AD] text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#3a7a91] transition-colors"
+            className="bg-white text-[#4894AD] px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#F5F0E7] transition-colors font-semibold"
           >
             <Plus className="h-5 w-5" />
             {t('cliente.pqrs.newPQRS')}
           </button>
-        </div>
+        }
+      />
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
 
         {/* Statistics */}
         {data && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.total')}</div>
-              <div className="text-2xl font-bold text-gray-900">{data.estadisticas.total}</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.pending')}</div>
-              <div className="text-2xl font-bold text-yellow-600">{data.estadisticas.pendientes}</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.inProgress')}</div>
-              <div className="text-2xl font-bold text-blue-600">{data.estadisticas.en_proceso}</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="text-sm text-gray-600">{t('cliente.pqrs.stats.resolved')}</div>
-              <div className="text-2xl font-bold text-green-600">{data.estadisticas.resueltos}</div>
-            </div>
-          </div>
+          <ListStatsGrid
+            columns={4}
+            stats={[
+              { label: t('cliente.pqrs.stats.total'), value: data.estadisticas.total, color: '#4894AD' },
+              { label: t('cliente.pqrs.stats.pending'), value: data.estadisticas.pendientes, color: '#ca8a04' },
+              { label: t('cliente.pqrs.stats.inProgress'), value: data.estadisticas.en_proceso, color: '#2563eb' },
+              { label: t('cliente.pqrs.stats.resolved'), value: data.estadisticas.resueltos, color: '#16a34a' },
+            ]}
+          />
         )}
 
         {/* Filters */}
@@ -339,42 +329,41 @@ function PQRSPage() {
             </div>
           ) : (
             pqrsFiltrados.map((pqrs) => (
-              <div key={pqrs.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                {/* Botón oculto a la izquierda del card */}
-                <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                  <button
+              <SlideRevealCard
+                key={pqrs.id}
+                buttonCount={1}
+                actions={
+                  <SlideButton
+                    icon={<Trash2 className="h-4 w-4" />}
                     onClick={() => handleDelete(pqrs.id)}
-                    className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* Card content - se desliza a la derecha en hover */}
-                <div className="relative z-10 bg-white p-6 transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    {getEstadoIcon(pqrs.estado)}
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTipoColor(pqrs.tipo)}`}>
-                          {TIPOS_PQRS.find((t) => t.value === pqrs.tipo)?.label || pqrs.tipo}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getEstadoColor(pqrs.estado)}`}>
-                          {t('common.statuses.' + pqrs.estado, pqrs.estado.replace("_", " "))}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPrioridadColor(pqrs.prioridad)}`}>
-                          {PRIORIDADES.find((p) => p.value === pqrs.prioridad)?.label || pqrs.prioridad}
-                        </span>
+                    title={t('cliente.pqrs.delete')}
+                    hoverColor="hover:bg-red-50 hover:text-red-600"
+                  />
+                }
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      {getEstadoIcon(pqrs.estado)}
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTipoColor(pqrs.tipo)}`}>
+                            {TIPOS_PQRS.find((t) => t.value === pqrs.tipo)?.label || pqrs.tipo}
+                          </span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getEstadoColor(pqrs.estado)}`}>
+                            {t('common.statuses.' + pqrs.estado, pqrs.estado.replace("_", " "))}
+                          </span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPrioridadColor(pqrs.prioridad)}`}>
+                            {PRIORIDADES.find((p) => p.value === pqrs.prioridad)?.label || pqrs.prioridad}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {t('cliente.pqrs.createdLabel')} {pqrs.fecha_creacion ? formatFecha(pqrs.fecha_creacion) : 'N/A'}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-500">
-                        {t('cliente.pqrs.createdLabel')} {pqrs.fecha_creacion ? formatFecha(pqrs.fecha_creacion) : 'N/A'}
-                      </p>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-3">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">{t('cliente.pqrs.descriptionLabel')}</h3>
                     <p className="text-gray-700">{pqrs.descripcion}</p>
@@ -401,12 +390,10 @@ function PQRSPage() {
                     </div>
                   )}
                 </div>
-                </div>
-              </div>
+              </SlideRevealCard>
             ))
           )}
         </div>
-      </div>
 
       {/* Create Modal */}
       {showCreateModal && (

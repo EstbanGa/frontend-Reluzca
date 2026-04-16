@@ -19,6 +19,9 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface NotifUsuario {
   id: string;
@@ -190,15 +193,12 @@ function AdminNotificaciones() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="bg-linear-to-r from-[#195083] to-[#4894AD] rounded-2xl p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F0E7] mb-1 flex items-center gap-2">
-              <Bell className="h-7 w-7" />
-              {t('admin.notifications.title')}
-            </h1>
-            <p className="text-[#F5F0E7]/80 text-sm">{t('admin.notifications.subtitle')}</p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title={t('admin.notifications.title')}
+        subtitle={t('admin.notifications.subtitle')}
+        icon={<Bell className="h-7 w-7" />}
+        actions={
           <div className="flex gap-2">
             <button
               onClick={fetchNotificaciones}
@@ -215,25 +215,19 @@ function AdminNotificaciones() {
               {t('admin.notifications.send')}
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats */}
       {estadisticas && (
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-            <p className="text-xs text-gray-500">{t('common.total')}</p>
-            <p className="text-2xl font-bold text-[#195083]">{estadisticas.total}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-            <p className="text-xs text-gray-500">{t('admin.notifications.stats.read')}</p>
-            <p className="text-2xl font-bold text-green-600">{estadisticas.leidas}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-            <p className="text-xs text-gray-500">{t('admin.notifications.stats.unread')}</p>
-            <p className="text-2xl font-bold text-orange-500">{estadisticas.no_leidas}</p>
-          </div>
-        </div>
+        <ListStatsGrid
+          columns={3}
+          stats={[
+            { label: t('common.total'), value: estadisticas.total, color: '#195083' },
+            { label: t('admin.notifications.stats.read'), value: estadisticas.leidas, color: '#16a34a' },
+            { label: t('admin.notifications.stats.unread'), value: estadisticas.no_leidas, color: '#f97316' },
+          ]}
+        />
       )}
 
       {/* Feedback messages */}
@@ -403,32 +397,28 @@ function AdminNotificaciones() {
         ) : (
           <div className="flex flex-col gap-2">
             {notificaciones.map(n => (
-              <div key={n.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-                {/* Botones ocultos a la izquierda del card */}
-                <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === n.id ? null : n.id); }}
-                    className="p-2 rounded-lg bg-white shadow-sm hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    {expandedId === n.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
-                    className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* Card content - se desliza a la derecha en hover */}
-                <div
-                  className={`relative z-10 flex items-start gap-3 p-3 cursor-pointer transition-all duration-200 ease-out group-hover:translate-x-20 group-hover:mr-20 ${n.leida ? 'bg-white' : 'bg-blue-50/40'}`}
-                  onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
-                >
-                  {/* Indicador leída */}
+              <SlideRevealCard
+                key={n.id}
+                buttonCount={2}
+                actions={
+                  <>
+                    <SlideButton
+                      icon={expandedId === n.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
+                      title={expandedId === n.id ? "Colapsar" : "Expandir"}
+                    />
+                    <SlideButton
+                      icon={<X className="h-4 w-4" />}
+                      onClick={() => handleDelete(n.id)}
+                      title="Eliminar"
+                      hoverColor="hover:bg-red-50 hover:text-red-600"
+                    />
+                  </>
+                }
+                onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
+              >
+                <div className={`flex items-start gap-3 ${!n.leida ? 'bg-blue-50/40 -m-3 p-3 rounded-xl' : ''}`}>
                   <div className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${n.leida ? 'bg-gray-300' : 'bg-blue-500'}`} />
-
-                  {/* Contenido */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
                       <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${getTipoColor(n.tipo)}`}>{n.tipo}</span>
@@ -451,7 +441,7 @@ function AdminNotificaciones() {
                     )}
                   </div>
                 </div>
-              </div>
+              </SlideRevealCard>
             ))}
           </div>
         )}

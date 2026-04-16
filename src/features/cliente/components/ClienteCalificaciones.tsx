@@ -7,6 +7,9 @@ import {
   Calendar, User, MessageSquare, X, Check, Image, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { API_BASE_URL } from "@/config/env";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface Calificacion {
   id: string;
@@ -289,86 +292,49 @@ function CalificacionesPage() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#4894AD] to-[#D95B26] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#FCF7F0] mb-2">
-              {t('cliente.ratings.title')}
-            </h1>
-            <p className="text-[#FCF7F0]/80 text-sm sm:text-base">
-              {t('cliente.ratings.subtitle')}
-            </p>
-          </div>
-          <button 
+      <ListPageHeader
+        theme={ROLE_THEMES.cliente}
+        title={t('cliente.ratings.title')}
+        subtitle={t('cliente.ratings.subtitle')}
+        icon={<Star className="h-7 w-7" />}
+        actions={
+          <button
             onClick={handleOpenCreateModal}
             className="bg-white text-[#4894AD] px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base flex items-center gap-2 flex-shrink-0"
           >
             <Plus size={18} />
             {t('cliente.ratings.newRating')}
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.total')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#4894AD]">
-              {data.estadisticas.total}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.service')}</p>
-            <div className="flex items-center justify-center gap-1">
-              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
-              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">
-                {data.estadisticas.promedio_servicio.toFixed(1)}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.employees')}</p>
-            <div className="flex items-center justify-center gap-1">
-              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-current" />
-              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">
-                {data.estadisticas.promedio_empleada.toFixed(1)}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-100">
-          <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('cliente.ratings.stats.fiveStars')}</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
-              {data.estadisticas.por_calificacion[5] || 0}
-            </p>
-          </div>
-        </div>
-      </div>
+      <ListStatsGrid
+        columns={4}
+        stats={[
+          { label: t('cliente.ratings.stats.total'), value: data.estadisticas.total, color: '#4894AD' },
+          { label: t('cliente.ratings.stats.service'), value: data.estadisticas.promedio_servicio.toFixed(1), color: '#ca8a04', icon: <Star className="h-4 w-4 text-yellow-500 fill-current" /> },
+          { label: t('cliente.ratings.stats.employees'), value: data.estadisticas.promedio_empleada.toFixed(1), color: '#ca8a04', icon: <Star className="h-4 w-4 text-yellow-500 fill-current" /> },
+          { label: t('cliente.ratings.stats.fiveStars'), value: data.estadisticas.por_calificacion[5] || 0, color: '#16a34a' },
+        ]}
+      />
 
       {/* Lista de Calificaciones */}
       <div className="space-y-3 sm:space-y-4">
         {data.calificaciones.length > 0 ? (
           data.calificaciones.map((cal) => (
-            <div key={cal.id} className="group relative rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-              {/* Botón oculto a la izquierda del card */}
-              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                <button
+            <SlideRevealCard
+              key={cal.id}
+              buttonCount={1}
+              actions={
+                <SlideButton
+                  icon={<Trash2 className="h-4 w-4" />}
                   onClick={() => handleDeleteCalificacion(cal.id)}
-                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
                   title="Eliminar calificación"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Card content - se desliza a la derecha en hover */}
-              <div className="relative z-10 bg-white p-4 sm:p-6 transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11">
+                  hoverColor="hover:bg-red-50 hover:text-red-600"
+                />
+              }
+            >
               <div className="space-y-4">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -454,8 +420,7 @@ function CalificacionesPage() {
                   </div>
                 )}
               </div>
-              </div>
-            </div>
+            </SlideRevealCard>
           ))
         ) : (
           <div className="bg-white rounded-xl p-8 sm:p-12 shadow-sm border border-gray-100 text-center">

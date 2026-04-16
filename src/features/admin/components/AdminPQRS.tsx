@@ -12,14 +12,16 @@ import {
   XCircle,
   AlertCircle,
   MessageSquare,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   X,
   RefreshCw,
   Users,
   List,
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListPagination from "@/components/ui/ListPagination";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -246,29 +248,25 @@ function AdminPQRS() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] rounded-xl p-5 sm:p-7">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F0E7] mb-1">PQRS</h1>
-        <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-          Gestiona las peticiones, quejas, reclamos y sugerencias de tus clientes.
-        </p>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title="PQRS"
+        subtitle="Gestiona las peticiones, quejas, reclamos y sugerencias de tus clientes."
+        icon={<FileText className="h-7 w-7" />}
+      />
 
-        {estadisticas && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-5">
-            {[
-              { label: "Total", value: estadisticas.total, bg: "bg-white/10" },
-              { label: "Pendientes", value: estadisticas.pendientes, bg: "bg-yellow-500/20" },
-              { label: "En proceso", value: estadisticas.en_proceso, bg: "bg-blue-500/20" },
-              { label: "Resueltos", value: estadisticas.resueltos, bg: "bg-green-500/20" },
-              { label: "Cerrados", value: estadisticas.cerrados, bg: "bg-gray-500/20" },
-            ].map((s) => (
-              <div key={s.label} className={`${s.bg} rounded-lg p-3 text-center`}>
-                <p className="text-2xl font-extrabold text-white">{s.value}</p>
-                <p className="text-xs text-white/70 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {estadisticas && (
+        <ListStatsGrid
+          columns={5}
+          stats={[
+            { label: "Total", value: estadisticas.total, color: "#195083" },
+            { label: "Pendientes", value: estadisticas.pendientes, color: "#ca8a04" },
+            { label: "En proceso", value: estadisticas.en_proceso, color: "#2563eb" },
+            { label: "Resueltos", value: estadisticas.resueltos, color: "#16a34a" },
+            { label: "Cerrados", value: estadisticas.cerrados, color: "#6b7280" },
+          ]}
+        />
+      )}
 
       {error && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -358,36 +356,28 @@ function AdminPQRS() {
             <>
               <div className="flex flex-col gap-2 p-3">
                 {pagedList.map((pqrs) => (
-                  <div key={pqrs.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-                    {/* Botón oculto a la izquierda del card */}
-                    <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                      <button
+                  <SlideRevealCard
+                    key={pqrs.id}
+                    buttonCount={1}
+                    actions={
+                      <SlideButton
+                        icon={<MessageSquare className="h-4 w-4" />}
                         onClick={() => openRespondModal(pqrs)}
-                        className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
                         title={pqrs.respuesta ? "Editar respuesta" : "Responder"}
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    {/* Card content - se desliza a la derecha en hover */}
-                    <div
-                      className="relative z-10 flex items-start gap-3 p-3 bg-white cursor-pointer transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11"
-                      onClick={() => openRespondModal(pqrs)}
-                    >
-                      {/* Avatar tipo */}
+                        hoverColor="hover:bg-blue-50 hover:text-[#195083]"
+                      />
+                    }
+                    onClick={() => openRespondModal(pqrs)}
+                  >
+                    <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
                         <FileText className="h-5 w-5 text-gray-500" />
                       </div>
-
-                      {/* Contenido principal */}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-sm text-gray-900 truncate">
                           {pqrs.usuario ? `${pqrs.usuario.nombre} ${pqrs.usuario.apellido}` : "Desconocido"}
                         </h4>
                         <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{pqrs.descripcion}</p>
-
-                        {/* Tags */}
                         <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
                           <TipoBadge tipo={pqrs.tipo} />
                           <PrioridadBadge prioridad={pqrs.prioridad} />
@@ -395,32 +385,23 @@ function AdminPQRS() {
                           {pqrs.respuesta && <span className="text-[10px] text-green-600 font-semibold">✓ Respondida</span>}
                         </div>
                       </div>
-
-                      {/* Fecha */}
                       <div className="flex-shrink-0 text-right">
                         <span className="text-[10px] text-gray-400">
                           {pqrs.fecha_creacion ? formatDate(pqrs.fecha_creacion) : pqrs.created_at ? formatDate(pqrs.created_at) : "—"}
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </SlideRevealCard>
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="p-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
-                  <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredList.length)} de {filteredList.length}</span>
-                  <div className="flex gap-1 items-center">
-                    <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="px-2 text-xs">{page}/{totalPages}</span>
-                    <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
+              <ListPagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={filteredList.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
             </>
           )}
         </div>

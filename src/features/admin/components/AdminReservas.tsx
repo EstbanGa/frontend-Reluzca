@@ -5,9 +5,14 @@ import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
   Calendar, Clock, MapPin, User, Edit3, Search, CheckCircle, AlertCircle,
-  XCircle, RefreshCw, Eye, ChevronLeft, ChevronRight, X, DollarSign,
+  XCircle, RefreshCw, Eye, DollarSign,
   Download, Star, Phone, Mail, Filter
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListDetailModal from "@/components/ui/ListDetailModal";
+import ListPagination from "@/components/ui/ListPagination";
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 interface Cliente {
@@ -210,14 +215,11 @@ function AdminReservas() {
       `}</style>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] rounded-xl p-5 sm:p-7 text-white">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F0E7] mb-1">Reservas</h1>
-            <p className="text-[#F5F0E7]/80 text-sm">
-              {reservas.length} reservas totales — {filtered.length} mostradas
-            </p>
-          </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title="Reservas"
+        subtitle={`${reservas.length} reservas totales — ${filtered.length} mostradas`}
+        actions={
           <button
             onClick={exportToExcel}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
@@ -225,25 +227,21 @@ function AdminReservas() {
             <Download className="h-4 w-4" />
             Exportar Excel
           </button>
-        </div>
+        }
+      />
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-4">
-          {[
-            { label: "Pendientes",  val: stats.pendientes,  cls: "text-yellow-300" },
-            { label: "Confirmadas", val: stats.confirmadas, cls: "text-blue-300"   },
-            { label: "En proceso",  val: stats.en_proceso,  cls: "text-orange-300" },
-            { label: "Completadas", val: stats.completadas, cls: "text-green-300"  },
-            { label: "Canceladas",  val: stats.canceladas,  cls: "text-red-300"    },
-            { label: "Ingresos",    val: fmtCOP(stats.ingresos), cls: "text-emerald-300" },
-          ].map(({ label, val, cls }) => (
-            <div key={label} className="bg-white/10 rounded-lg p-2 text-center">
-              <p className="text-[#F5F0E7]/70 text-xs">{label}</p>
-              <p className={`font-bold text-sm ${cls}`}>{val}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Stats */}
+      <ListStatsGrid
+        columns={6}
+        stats={[
+          { label: "Pendientes",  value: stats.pendientes,  color: "#ca8a04" },
+          { label: "Confirmadas", value: stats.confirmadas, color: "#2563eb" },
+          { label: "En proceso",  value: stats.en_proceso,  color: "#ea580c" },
+          { label: "Completadas", value: stats.completadas, color: "#16a34a" },
+          { label: "Canceladas",  value: stats.canceladas,  color: "#dc2626" },
+          { label: "Ingresos",    value: fmtCOP(stats.ingresos), color: "#059669" },
+        ]}
+      />
 
       {/* Filters bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -302,23 +300,13 @@ function AdminReservas() {
           const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
           const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
           return (
-            <div key={r.id} className="group relative rounded-xl overflow-hidden border border-gray-100">
-              {/* Botón oculto a la izquierda del card */}
-              <div className="absolute left-0 inset-y-0 flex items-center gap-1 px-2 bg-gray-50 pointer-events-none group-hover:pointer-events-auto">
-                <button
-                  onClick={() => setDetailReserva(r)}
-                  className="p-2 rounded-lg bg-white shadow-sm hover:bg-blue-50 text-gray-500 hover:text-[#195083] transition-colors"
-                  title="Ver detalle"
-                >
-                  <Eye className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Card content - se desliza a la derecha en hover */}
-              <div
-                className="relative z-10 flex items-start gap-3 p-3 bg-white cursor-pointer transition-all duration-200 ease-out group-hover:translate-x-11 group-hover:mr-11"
-                onClick={() => setDetailReserva(r)}
-              >
+            <SlideRevealCard
+              key={r.id}
+              buttonCount={1}
+              actions={<SlideButton icon={<Eye className="h-4 w-4" />} onClick={() => setDetailReserva(r)} title="Ver detalle" />}
+              onClick={() => setDetailReserva(r)}
+            >
+              <div className="flex items-start gap-3">
                 {/* Avatar fecha */}
                 <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0"
                   style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}>
@@ -365,42 +353,23 @@ function AdminReservas() {
                   )}
                 </div>
               </div>
-            </div>
+            </SlideRevealCard>
           );
         })}
 
-        {pages > 1 && (
-          <div className="px-4 py-3 bg-white rounded-xl border border-gray-100 flex items-center justify-between text-sm text-gray-600">
-            <span>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}</span>
-            <div className="flex gap-1">
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="px-2 py-1 text-xs text-gray-500">Pág. {page} / {pages}</span>
-              <button disabled={page >= pages} onClick={() => setPage(p => p + 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <ListPagination page={page} totalPages={pages} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
       </div>
 
       {/* ══════════ MODAL DETALLE RESERVA ══════════ */}
-      {detailReserva && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDetailReserva(null)} />
-          <div className="modal-enter relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="font-bold text-[#F5F0E7] text-lg">Detalle de Reserva</h2>
-                <p className="text-[#F5F0E7]/70 text-xs">{fmtDate(detailReserva.fecha)} · {detailReserva.hora_inicio} – {detailReserva.hora_final}</p>
-              </div>
-              <button onClick={() => setDetailReserva(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+      <ListDetailModal
+        theme={ROLE_THEMES.admin}
+        open={!!detailReserva}
+        onClose={() => setDetailReserva(null)}
+        title="Detalle de Reserva"
+        subtitle={detailReserva ? `${fmtDate(detailReserva.fecha)} · ${detailReserva.hora_inicio} – ${detailReserva.hora_final}` : ""}
+      >
+        {detailReserva && (
+          <>
               <div className="flex items-center gap-3">
                 {(() => {
                   const estCfg = ESTADO_CONFIG[detailReserva.estado] ?? ESTADO_CONFIG.pendiente;
@@ -494,10 +463,9 @@ function AdminReservas() {
                   <p className="text-gray-700 text-sm">{detailReserva.descripcion}</p>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </ListDetailModal>
     </div>
   );
 }
