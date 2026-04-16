@@ -36,34 +36,7 @@ const defaultCenter = {
   lng: -74.0060
 };
 
-const US_STATES = [
-  { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" }, { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" }, { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" }, { value: "DE", label: "Delaware" },
-  { value: "FL", label: "Florida" }, { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" }, { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" }, { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" }, { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" }, { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" }, { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" }, { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" }, { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" }, { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" }, { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" }, { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" }, { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" }, { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" }, { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" }, { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" }, { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" }, { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" }, { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" }, { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" }, { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" }, { value: "WY", label: "Wyoming" },
-  { value: "DC", label: "Washington D.C." },
-];
+
 
 interface FormData {
   nombre: string;
@@ -78,8 +51,6 @@ interface FormData {
   numero_apartamento: string;
   bloque: string;
   referencias: string;
-  state: string;
-  city: string;
 }
 
 interface MapPosition {
@@ -87,13 +58,18 @@ interface MapPosition {
   lng: number;
 }
 
-// Hook personalizado para Google Maps con manejo mejorado
+// Hook personalizado para Google Maps — carga diferida
 const useGoogleMaps = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [enabled, setEnabled] = useState(false);
   const scriptsLoadedRef = useRef(false);
 
+  const load = useCallback(() => setEnabled(true), []);
+
   useEffect(() => {
+    if (!enabled) return;
+
     if (scriptsLoadedRef.current) {
       setIsLoaded(true);
       return;
@@ -105,8 +81,14 @@ const useGoogleMaps = () => {
       return;
     }
 
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      setLoadError('Google Maps API key no configurada (VITE_GOOGLE_MAPS_API_KEY)');
+      return;
+    }
+
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
     script.async = true;
     script.defer = true;
 
@@ -126,15 +108,15 @@ const useGoogleMaps = () => {
     return () => {
       // No remover el script para evitar recargas
     };
-  }, []);
+  }, [enabled]);
 
-  return { isLoaded, loadError };
+  return { isLoaded, loadError, load };
 };
 
 function CrearUbicacion() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isLoaded: mapsLoaded, loadError } = useGoogleMaps();
+  const { isLoaded: mapsLoaded, loadError, load: loadMaps } = useGoogleMaps();
   
   // Refs para manejo de Google Maps
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -173,20 +155,35 @@ function CrearUbicacion() {
     numero_apartamento: '',
     bloque: '',
     referencias: '',
-    state: '',
-    city: '',
   });
 
   const [markerPosition, setMarkerPosition] = useState<MapPosition>(defaultCenter);
+
+  // Cooldown: no recargar el mapa más de una vez cada 5 minutos
+  const MAP_COOLDOWN_MS = 5 * 60 * 1000;
+  const lastMapLoadRef = useRef<number>(0);
+
+  // El mapa se muestra cuando la dirección tiene al menos 10 caracteres
+  const showMap = formData.direccion.trim().length >= 10;
 
   const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(null);
   };
 
-  // Inicializar mapa cuando Google Maps esté cargado
+  // Cargar Google Maps cuando showMap se activa (con cooldown de 5 min)
   useEffect(() => {
-    if (!mapsLoaded || mapInitialized || !mapContainerRef.current) return;
+    if (!showMap) return;
+    const now = Date.now();
+    if (now - lastMapLoadRef.current < MAP_COOLDOWN_MS && lastMapLoadRef.current > 0) return;
+    lastMapLoadRef.current = now;
+    loadMaps();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMap]);
+
+  // Inicializar mapa cuando Google Maps esté cargado y el mapa sea visible
+  useEffect(() => {
+    if (!showMap || !mapsLoaded || mapInitialized || !mapContainerRef.current) return;
 
     try {
       // Crear el mapa
@@ -301,7 +298,7 @@ function CrearUbicacion() {
     } catch (err) {
       setError(t('cliente.createLocation.mapInitError'));
     }
-  }, [mapsLoaded, mapInitialized, isReverseGeocoding]);
+  }, [showMap, mapsLoaded, mapInitialized]);
 
   // Geocoding con debounce
   const geocodeAddress = useCallback(async (address: string) => {
@@ -361,6 +358,10 @@ function CrearUbicacion() {
       setMapLoading(false);
     }
   }, [isGeocodingFromAddress]);
+
+  // Ref estable para evitar loops en el efecto de debounce
+  const geocodeAddressRef = useRef(geocodeAddress);
+  geocodeAddressRef.current = geocodeAddress;
 
   // Reverse geocoding
   const reverseGeocode = useCallback(async (position: MapPosition) => {
@@ -432,7 +433,7 @@ function CrearUbicacion() {
 
     if (formData.direccion && formData.direccion.length >= 10 && mapInitialized) {
       debounceTimeoutRef.current = setTimeout(() => {
-        geocodeAddress(formData.direccion);
+        geocodeAddressRef.current(formData.direccion);
       }, 1500);
     }
 
@@ -441,26 +442,21 @@ function CrearUbicacion() {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [formData.direccion, geocodeAddress, mapInitialized]);
+  }, [formData.direccion, mapInitialized]);
 
-  // Centrar mapa cuando cambia estado/ciudad
+  // Disparar resize del mapa solo una vez cuando se revela
+  const mapRevealedRef = useRef(false);
   useEffect(() => {
-    if (!mapsLoaded || !mapInitialized || !geocoderRef.current) return;
-    if (!formData.city && !formData.state) return;
-    const parts = [formData.city, formData.state, 'USA'].filter(Boolean);
-    const query = parts.join(', ');
-    geocoderRef.current.geocode({ address: query }, (results, status) => {
-      if (status === 'OK' && results?.[0]?.geometry?.location) {
-        const loc = results[0].geometry.location;
-        const pos = { lat: loc.lat(), lng: loc.lng() };
-        mapRef.current?.panTo(pos);
-        mapRef.current?.setZoom(12);
-        markerRef.current?.setPosition(pos);
-        setMarkerPosition(pos);
+    if (!showMap || !mapRef.current || !mapInitialized || mapRevealedRef.current) return;
+    mapRevealedRef.current = true;
+    const t = setTimeout(() => {
+      if (window.google?.maps?.event) {
+        window.google.maps.event.trigger(mapRef.current!, 'resize');
       }
-    });
+    }, 300);
+    return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.city, formData.state, mapsLoaded, mapInitialized]);
+  }, [showMap, mapInitialized]);
 
   // Detectar ubicación actual
   const detectCurrentLocation = () => {
@@ -794,52 +790,56 @@ function CrearUbicacion() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Características */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Ruler className="h-5 w-5 text-[#4894AD]" />
               {t('cliente.createLocation.sections.characteristics')}
             </h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Ruler className="h-4 w-4" />
-                  Área
-                </label>
+
+            {/* Área — fila completa */}
+            <div className="mb-4">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Ruler className="h-4 w-4" />
+                Área
+              </label>
+              <div className="flex items-center gap-3">
                 {/* Toggle ft² / m² */}
-                <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-2 w-fit">
+                <div className="flex rounded-lg overflow-hidden border border-gray-300 shrink-0">
                   <button
                     type="button"
                     onClick={() => setAreaUnit('ft2')}
-                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${areaUnit === 'ft2' ? 'bg-[#4894AD] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                    className={`px-3 py-2.5 text-xs font-semibold transition-colors ${areaUnit === 'ft2' ? 'bg-[#4894AD] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                   >ft²</button>
                   <button
                     type="button"
                     onClick={() => setAreaUnit('m2')}
-                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${areaUnit === 'm2' ? 'bg-[#4894AD] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                    className={`px-3 py-2.5 text-xs font-semibold transition-colors ${areaUnit === 'm2' ? 'bg-[#4894AD] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                   >m²</button>
                 </div>
-                <input
-                  type="number"
-                  value={formData.tamaño}
-                  onChange={(e) => handleInputChange('tamaño', e.target.value)}
-                  placeholder={areaUnit === 'ft2' ? 'Ej: 1200 ft²' : 'Ej: 112 m²'}
-                  min="1"
-                  max={areaUnit === 'ft2' ? '10000' : '929'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
-                />
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={formData.tamaño}
+                    onChange={(e) => handleInputChange('tamaño', e.target.value)}
+                    placeholder={areaUnit === 'ft2' ? 'Ej: 1200 ft²' : 'Ej: 112 m²'}
+                    min="1"
+                    max={areaUnit === 'ft2' ? '10000' : '929'}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
+                  />
+                </div>
                 {formData.tamaño && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {areaUnit === 'ft2'
-                      ? `≈ ${(Number(formData.tamaño) / 10.7639).toFixed(0)} m²`
-                      : `≈ ${(Number(formData.tamaño) * 10.7639).toFixed(0)} ft²`
+                  <span className="text-xs text-gray-400 shrink-0">
+                    ≈ {areaUnit === 'ft2'
+                      ? `${(Number(formData.tamaño) / 10.7639).toFixed(0)} m²`
+                      : `${(Number(formData.tamaño) * 10.7639).toFixed(0)} ft²`
                     }
-                  </p>
+                  </span>
                 )}
               </div>
+            </div>
+
+            {/* Baños + Pisos — dos columnas */}
+            <div className="grid grid-cols-2 gap-4">
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -905,75 +905,63 @@ function CrearUbicacion() {
               </div>
             </div>
 
-            {/* Selector estado / ciudad (centra el mapa) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                <select
-                  value={formData.state}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 bg-white"
-                >
-                  <option value="">Seleccionar estado...</option>
-                  {US_STATES.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  placeholder="Ej: Miami, Houston..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-gray-900 placeholder-gray-500"
-                />
-              </div>
-            </div>
+            {/* Hint: el mapa aparece al escribir la dirección */}
+            {!showMap && (
+              <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-400">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                Escribe la dirección completa para ver el mapa interactivo
+              </p>
+            )}
 
-            {/* Información de ubicación seleccionada */}
-            {(markerPosition.lat !== defaultCenter.lat || markerPosition.lng !== defaultCenter.lng) && formData.direccion && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-blue-800 mb-1">{t('cliente.createLocation.selectedLocation')}</h3>
-                    <p className="text-blue-700 text-sm mb-2">{formData.direccion}</p>
-                    <div className="text-xs text-blue-600 grid grid-cols-2 gap-2">
-                      <span>Latitud: {markerPosition.lat.toFixed(6)}</span>
-                      <span>Longitud: {markerPosition.lng.toFixed(6)}</span>
+            {/* Mapa — transición suave al revelar */}
+            <div
+              className={`overflow-hidden transition-all duration-500 ease-out${
+                showMap ? ' mt-4 max-h-140 opacity-100' : ' max-h-0 opacity-0'
+              }`}
+            >
+              {/* Información de ubicación seleccionada */}
+              {(markerPosition.lat !== defaultCenter.lat || markerPosition.lng !== defaultCenter.lng) && formData.direccion && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-blue-800 mb-1">{t('cliente.createLocation.selectedLocation')}</h3>
+                      <p className="text-blue-700 text-sm mb-2">{formData.direccion}</p>
+                      <div className="text-xs text-blue-600 grid grid-cols-2 gap-2">
+                        <span>Latitud: {markerPosition.lat.toFixed(6)}</span>
+                        <span>Longitud: {markerPosition.lng.toFixed(6)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Contenedor del Mapa */}
-            <div className="mb-4 relative overflow-hidden rounded-lg" style={{ touchAction: 'none' }}>
-              {mapLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
-                  <div className="flex items-center gap-2 text-[#4894AD]">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm">{t('cliente.createLocation.updatingLocation')}</span>
+              {/* Contenedor del Mapa */}
+              <div className="mb-4 relative overflow-hidden rounded-lg" style={{ touchAction: 'none' }}>
+                {mapLoading && (
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                    <div className="flex items-center gap-2 text-[#4894AD]">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="text-sm">{t('cliente.createLocation.updatingLocation')}</span>
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              {!mapsLoaded ? (
-                <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>{t('common.loading')}</span>
+                )}
+
+                {!mapsLoaded ? (
+                  <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>{t('common.loading')}</span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div
-                  ref={mapContainerRef}
-                  className="w-full h-[400px] rounded-lg"
-                  style={{ minHeight: '400px' }}
-                />
-              )}
+                ) : (
+                  <div
+                    ref={mapContainerRef}
+                    className="w-full h-[400px] rounded-lg"
+                    style={{ minHeight: '400px' }}
+                  />
+                )}
+              </div>
             </div>
 
             {/* Nombre del lugar */}

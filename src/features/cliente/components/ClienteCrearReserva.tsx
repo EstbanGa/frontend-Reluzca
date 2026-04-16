@@ -833,13 +833,23 @@ function CrearReserva() {
                       <h4 className="font-semibold text-gray-900 mb-1">{plan.nombre}</h4>
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">{plan.descripcion}</p>
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-2">
                         <span className="text-lg font-bold text-[#195083]">
                           {formatCurrency(plan.precio)}<span className="text-xs text-gray-500 font-normal ml-1">/ día</span>
                         </span>
-                        <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                      </div>
+
+                      {/* Horario e info de horas */}
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="bg-[#195083]/10 text-[#195083] px-2 py-1 rounded font-medium flex items-center gap-1">
+                          <Clock size={12} />
                           {plan.horas_servicio}h de trabajo
                         </span>
+                        {plan.hora_inicio && plan.hora_final && (
+                          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                            {plan.hora_inicio} - {plan.hora_final}
+                          </span>
+                        )}
                       </div>
 
                       {/* Actividades incluidas */}
@@ -857,6 +867,17 @@ function CrearReserva() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Subtotal del plan seleccionado */}
+              {planSeleccionado && !actividadesSeleccionadas.length && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-sm font-semibold text-blue-800">
+                    Subtotal plan:{' '}
+                    {formatCurrency(planSeleccionado.precio)}
+                    <span className="font-normal text-blue-600 ml-1">/ día · {planSeleccionado.horas_servicio}h de trabajo</span>
+                  </p>
                 </div>
               )}
             </div>
@@ -926,18 +947,39 @@ function CrearReserva() {
               )}
 
               {/* Subtotal actividades */}
-              {actividadesSeleccionadas.length > 0 && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
-                  <p className="text-sm font-semibold text-green-800">
-                    Subtotal actividades individuales:{' '}
-                    {formatCurrency(
-                      actividadesDisponibles
-                        .filter((a) => actividadesSeleccionadas.includes(a.id))
-                        .reduce((s, a) => s + (a.precio_unitario ? Number(a.precio_unitario) : 0), 0)
+              {actividadesSeleccionadas.length > 0 && (() => {
+                const subtotalActividades = actividadesDisponibles
+                  .filter((a) => actividadesSeleccionadas.includes(a.id))
+                  .reduce((s, a) => s + (a.precio_unitario ? Number(a.precio_unitario) : 0), 0);
+                const subtotalPlan = planSeleccionado ? planSeleccionado.precio : 0;
+                const total = subtotalActividades + subtotalPlan;
+                return (
+                  <div className="mt-4 space-y-2">
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                      <p className="text-sm font-semibold text-green-800">
+                        Subtotal actividades individuales:{' '}
+                        {formatCurrency(subtotalActividades)}
+                      </p>
+                    </div>
+                    {planSeleccionado && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                        <p className="text-sm font-semibold text-blue-800">
+                          Subtotal plan ({planSeleccionado.nombre}):{' '}
+                          {formatCurrency(subtotalPlan)}
+                          <span className="font-normal text-blue-600 ml-1">/ día</span>
+                        </p>
+                      </div>
                     )}
-                  </p>
-                </div>
-              )}
+                    <div className="p-3 bg-[#195083]/5 border border-[#195083]/20 rounded-xl">
+                      <p className="text-sm font-bold text-[#195083]">
+                        Total estimado:{' '}
+                        {formatCurrency(total)}
+                        {planSeleccionado && <span className="font-normal text-[#195083]/70 ml-1">/ día</span>}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -950,17 +992,27 @@ function CrearReserva() {
                 {t('cliente.createReservation.selectSchedule.title')}
               </h2>
               {planSeleccionado ? (
-                <p className="text-gray-600">
-                  {t('cliente.createReservation.selectSchedule.plan')}{" "}
-                  <span className="font-semibold text-gray-900">{planSeleccionado.nombre}</span>
-                  {" "}({planSeleccionado.horas_servicio}h de trabajo)
-                </p>
+                <div>
+                  <p className="text-gray-600">
+                    {t('cliente.createReservation.selectSchedule.plan')}{" "}
+                    <span className="font-semibold text-gray-900">{planSeleccionado.nombre}</span>
+                  </p>
+                  <div className="mt-2 inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-medium">
+                    <Clock size={14} />
+                    {planSeleccionado.horas_servicio}h de trabajo
+                    {planSeleccionado.hora_inicio && planSeleccionado.hora_final && (
+                      <span className="text-blue-600 font-normal">
+                        ({planSeleccionado.hora_inicio} - {planSeleccionado.hora_final})
+                      </span>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <p className="text-gray-600">
-                  Solo actividades individuales — elige cuántas horas necesitas
+                  Solo actividades individuales — <span className="font-semibold text-gray-900">elige cuántas horas de servicio necesitas</span>
                 </p>
               )}
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 mt-2">
                 {t('cliente.createReservation.selectSchedule.subtitle')}
               </p>
             </div>
@@ -997,7 +1049,7 @@ function CrearReserva() {
                     </h4>
                     
                     <p className="text-sm text-gray-600 mb-2">
-                      {t('cliente.createReservation.selectSchedule.hoursOfService', { n: horario.horas_duracion })}
+                      {horario.horas_duracion}h de servicio
                     </p>
 
                     {horario.sobrecargo_sabado > 0 && (
@@ -1363,14 +1415,35 @@ function CrearReserva() {
                   </div>
                 </div>
 
-                {/* Plan y Horario */}
+                {/* Plan / Actividades y Horario */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                     <Package className="h-4 w-4" />
-                    {t('cliente.createReservation.confirm.planAndSchedule')}
+                    {planSeleccionado ? t('cliente.createReservation.confirm.planAndSchedule') : 'Servicio y Horario'}
                   </h4>
-                  <p className="text-gray-700 font-medium">{planSeleccionado?.nombre}</p>
-                  <p className="text-sm text-gray-600">{planSeleccionado?.descripcion}</p>
+                  {planSeleccionado ? (
+                    <>
+                      <p className="text-gray-700 font-medium">{planSeleccionado.nombre}</p>
+                      <p className="text-sm text-gray-600">{planSeleccionado.descripcion}</p>
+                      <p className="text-xs text-gray-500 mt-1">{planSeleccionado.horas_servicio}h de trabajo incluidas</p>
+                    </>
+                  ) : (
+                    <p className="text-gray-700 font-medium">Solo actividades individuales</p>
+                  )}
+                  {actividadesSeleccionadas.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 font-medium mb-1">Actividades seleccionadas:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {actividadesDisponibles
+                          .filter(a => actividadesSeleccionadas.includes(a.id))
+                          .map(a => (
+                            <span key={a.id} className="text-xs bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">
+                              {a.nombre}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-2 bg-white p-2 rounded border">
                     <p className="text-sm font-medium text-gray-900">
                       {t('cliente.createReservation.confirm.schedule')} {horarioSeleccionado?.hora_inicio} - {horarioSeleccionado?.hora_final}
