@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard from "@/components/ui/SlideRevealCard";
 
 interface Calificacion {
   id: string;
@@ -148,33 +149,29 @@ function EmpleadaCalificaciones() {
           />
 
           {/* Lista de calificaciones */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">{t('empleada.ratings.recentTitle')}</h2>
-            </div>
-
-            <div className="divide-y divide-gray-100">
-              {data.calificaciones.length > 0 ? (
-                data.calificaciones.map((calificacion) => (
-                  <div key={calificacion.id} className="p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4894AD] to-[#D95B26] flex items-center justify-center">
+          <div className="flex flex-col gap-2">
+            {data.calificaciones.length > 0 ? (
+              data.calificaciones.map((calificacion) => (
+                <SlideRevealCard key={calificacion.id} buttonCount={1} actions={<></>}>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#4894AD] to-[#D95B26] flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-semibold text-sm">
                             {calificacion.cliente.nombre[0]}
                           </span>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                             {calificacion.cliente.nombre} {calificacion.cliente.apellido}
-                          </p>
-                          <p className="text-sm text-gray-500">
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-0.5">
                             {calificacion.reserva.plan.nombre}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1 mb-1">
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-0.5">
                           {renderStars(calificacion.calificacion_empleada)}
                         </div>
                         <p className="text-xs text-gray-500">
@@ -184,37 +181,35 @@ function EmpleadaCalificaciones() {
                     </div>
 
                     {calificacion.comentario && (
-                      <div className="bg-gray-50 rounded-lg p-3 mt-3">
+                      <div className="bg-gray-50 rounded-lg p-3">
                         <p className="text-sm text-gray-700">{calificacion.comentario}</p>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-blue-500" />
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 text-blue-500" />
                         {t('empleada.ratings.serviceRating', { n: calificacion.calificacion_servicio })}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3 text-green-500" />
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3.5 w-3.5 text-green-500" />
                         {t('empleada.ratings.employeeRating', { n: calificacion.calificacion_empleada })}
-                      </div>
+                      </span>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-12 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Star className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {t('empleada.ratings.empty.title')}
-                  </h3>
-                  <p className="text-gray-600">
-                    {t('empleada.ratings.empty.message')}
-                  </p>
-                </div>
-              )}
-            </div>
+                </SlideRevealCard>
+              ))
+            ) : (
+              <div className="text-center py-8 sm:py-12">
+                <Star className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                  {t('empleada.ratings.empty.title')}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  {t('empleada.ratings.empty.message')}
+                </p>
+              </div>
+            )}
           </div>
         </>
       )}

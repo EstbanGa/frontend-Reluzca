@@ -261,11 +261,9 @@ function ClienteUbicaciones() {
   const [data, setData] = useState<UbicacionesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [busqueda, setBusqueda] = useState('');
   const [ubicacionesFiltradas, setUbicacionesFiltradas] = useState<Ubicacion[]>([]);
-  const [selectedUbicaciones, setSelectedUbicaciones] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedUbicacion, setSelectedUbicacion] = useState<Ubicacion | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -303,7 +301,7 @@ function ClienteUbicaciones() {
     if (data) {
       filtrarUbicaciones();
     }
-  }, [data, filtroTipo, filtroEstado, busqueda]);
+  }, [data, filtroEstado, busqueda]);
 
   const fetchUbicaciones = async () => {
     try {
@@ -342,11 +340,6 @@ function ClienteUbicaciones() {
 
     let ubicaciones = [...data.ubicaciones];
 
-    // Filtro por tipo
-    if (filtroTipo !== 'todos') {
-      ubicaciones = ubicaciones.filter(ubicacion => ubicacion.tipo_lugar === filtroTipo);
-    }
-
     // Filtro por estado
     if (filtroEstado !== 'todos') {
       const estadoBool = filtroEstado === 'activas';
@@ -366,22 +359,6 @@ function ClienteUbicaciones() {
     }
 
     setUbicacionesFiltradas(ubicaciones);
-  };
-
-  const handleSelectUbicacion = (id: string) => {
-    setSelectedUbicaciones(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedUbicaciones.length === ubicacionesFiltradas.length) {
-      setSelectedUbicaciones([]);
-    } else {
-      setSelectedUbicaciones(ubicacionesFiltradas.map(u => u.id));
-    }
   };
 
   const handleDelete = async (ids: string[]) => {
@@ -411,7 +388,6 @@ function ClienteUbicaciones() {
       
       // Refrescar datos
       await fetchUbicaciones();
-      setSelectedUbicaciones([]);
     } catch (err) {
       alert(err instanceof Error ? err.message : t('cliente.locations.deleteError'));
     } finally {
@@ -585,7 +561,6 @@ function ClienteUbicaciones() {
       {/* Filtros y Búsqueda */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
         <div className="flex flex-col gap-4">
-          {/* Primera fila: Búsqueda */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
@@ -596,20 +571,7 @@ function ClienteUbicaciones() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-
-          {/* Segunda fila: Filtros */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <select
-              value={filtroTipo}
-              onChange={(e) => setFiltroTipo(e.target.value)}
-              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
-            >
-              <option value="todos">{t('cliente.locations.filterType.all')}</option>
-              {TIPOS_LUGAR.map(tipo => (
-                <option key={tipo} value={tipo}>{t(`cliente.locations.placeTypes.${tipo}`)}</option>
-              ))}
-            </select>
-
             <select
               value={filtroEstado}
               onChange={(e) => setFiltroEstado(e.target.value)}
@@ -623,68 +585,18 @@ function ClienteUbicaciones() {
         </div>
       </div>
 
-      {/* Acciones de selección múltiple */}
-      {selectedUbicaciones.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-blue-700 font-medium">
-              {t('cliente.locations.selectedCount', { n: selectedUbicaciones.length })}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSelectedUbicaciones([])}
-              className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded text-sm"
-            >
-              {t('cliente.locations.clearSelection')}
-            </button>
-            <button
-              onClick={() => handleDelete(selectedUbicaciones)}
-              disabled={deleteLoading}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
-            >
-              {deleteLoading ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              {t('cliente.locations.delete')}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Lista de Ubicaciones */}
       <div className="space-y-3 sm:space-y-4">
         {ubicacionesFiltradas.length > 0 ? (
           <>
-            {/* Header de tabla con selección múltiple */}
-            <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-3">
-              <button
-                onClick={handleSelectAll}
-                className="p-1 hover:bg-gray-200 rounded"
-              >
-                {selectedUbicaciones.length === ubicacionesFiltradas.length ? (
-                  <CheckSquare className="h-5 w-5 text-[#4894AD]" />
-                ) : (
-                  <Square className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              <span className="text-sm text-gray-600 font-medium">
-                {t('cliente.locations.selectAll')}
-              </span>
-            </div>
-
             {ubicacionesFiltradas.map((ubicacion) => {
               const tipoInfo = getTipoInfo(ubicacion.tipo_lugar || 'otro');
               const TipoIcon = tipoInfo.icon;
-              const isSelected = selectedUbicaciones.includes(ubicacion.id);
               
               return (
                 <SlideRevealCard
                   key={ubicacion.id}
                   buttonCount={3}
-                  className={isSelected ? 'border-2 border-[#4894AD]' : ''}
                   actions={
                     <>
                       <SlideButton
@@ -708,85 +620,53 @@ function ClienteUbicaciones() {
                     </>
                   }
                 >
-                  <div className="space-y-4">
-                    {/* Header de la ubicación */}
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleSelectUbicacion(ubicacion.id); }}
-                          className="p-1 hover:bg-gray-200 rounded mt-1 flex-shrink-0"
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="h-5 w-5 text-[#4894AD]" />
-                          ) : (
-                            <Square className="h-5 w-5 text-gray-400" />
-                          )}
-                        </button>
-                        
                         <div className="bg-[#4894AD]/10 p-2 rounded-lg flex-shrink-0">
                           <TipoIcon className="h-5 w-5 text-[#4894AD]" />
                         </div>
-                        
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-gray-900 text-base sm:text-lg break-words">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                             {ubicacion.nombre}
                           </h3>
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-1 flex-wrap">
-                            <span className="capitalize">{t(`cliente.locations.placeTypes.${tipoInfo.value}`)}</span>
-                            {ubicacion.nombre_lugar && (
-                              <>
-                                <span className="hidden sm:inline">•</span>
-                                <span className="break-words">{ubicacion.nombre_lugar}</span>
-                              </>
-                            )}
-                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {t(`cliente.locations.placeTypes.${tipoInfo.value}`)}
+                            {ubicacion.nombre_lugar ? ` · ${ubicacion.nombre_lugar}` : ''}
+                          </p>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2 flex-shrink-0 sm:mt-0 mt-2 justify-start sm:justify-end">
-                        <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${ubicacion.estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${ubicacion.estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {ubicacion.estado ? t('cliente.locations.active') : t('cliente.locations.inactive')}
                         </span>
                       </div>
                     </div>
 
-                    {/* Información resumida */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                      {ubicacion.tamaño && formatTamano(ubicacion.tamaño) !== 'No especificado' && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Ruler className="h-4 w-4" />
-                          <span>{formatTamano(ubicacion.tamaño)}</span>
-                        </div>
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                      {ubicacion.tamaño && formatTamano(ubicacion.tamaño) !== t('cliente.locations.notSpecified') && (
+                        <span className="flex items-center gap-1">
+                          <Ruler className="h-3.5 w-3.5" />
+                          {formatTamano(ubicacion.tamaño)}
+                        </span>
                       )}
-                      
-                      {ubicacion.baños && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Bath className="h-4 w-4" />
-                          <span>{ubicacion.baños} {ubicacion.baños !== 1 ? t('cliente.locations.bathroomPlural') : t('cliente.locations.bathroomSingular')}</span>
-                        </div>
+                      {ubicacion.baños != null && (
+                        <span className="flex items-center gap-1">
+                          <Bath className="h-3.5 w-3.5" />
+                          {ubicacion.baños} {ubicacion.baños !== 1 ? t('cliente.locations.bathroomPlural') : t('cliente.locations.bathroomSingular')}
+                        </span>
                       )}
-                      
-                      {ubicacion.pisos && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Layers className="h-4 w-4" />
-                          <span>{ubicacion.pisos} {ubicacion.pisos !== 1 ? t('cliente.locations.floorPlural') : t('cliente.locations.floorSingular')}</span>
-                        </div>
+                      {ubicacion.pisos != null && (
+                        <span className="flex items-center gap-1">
+                          <Layers className="h-3.5 w-3.5" />
+                          {ubicacion.pisos} {ubicacion.pisos !== 1 ? t('cliente.locations.floorPlural') : t('cliente.locations.floorSingular')}
+                        </span>
                       )}
-                      
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(ubicacion.created_at)}</span>
-                      </div>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDate(ubicacion.created_at)}
+                      </span>
                     </div>
-
-                    {/* Descripción */}
-                    {ubicacion.descripcion && (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700 line-clamp-2">
-                          {ubicacion.descripcion}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </SlideRevealCard>
               );
@@ -796,18 +676,18 @@ function ClienteUbicaciones() {
           <div className="text-center py-8 sm:py-12">
             <MapPin className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-              {busqueda || filtroTipo !== 'todos' || filtroEstado !== 'todos' 
+              {busqueda || filtroEstado !== 'todos' 
                 ? t('cliente.locations.noResults') 
                 : t('cliente.locations.empty')
               }
             </h3>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              {busqueda || filtroTipo !== 'todos' || filtroEstado !== 'todos'
+              {busqueda || filtroEstado !== 'todos'
                 ? t('cliente.locations.tryOtherFilters')
                 : t('cliente.locations.emptyMessage')
               }
             </p>
-            {(!busqueda && filtroTipo === 'todos' && filtroEstado === 'todos') && (
+            {(!busqueda && filtroEstado === 'todos') && (
               <button 
                 onClick={() => navigate('/cliente/ubicaciones/crear')}
                 className="bg-[#4894AD] text-white px-6 py-3 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm sm:text-base flex items-center gap-2 mx-auto"

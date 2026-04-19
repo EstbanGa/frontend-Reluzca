@@ -19,11 +19,13 @@ import {
   Star,
   DollarSign,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Eye
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import ListStatsGrid from "@/components/ui/ListStatsGrid";
 import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListDetailModal from "@/components/ui/ListDetailModal";
 
 interface Reserva {
   id: string;
@@ -77,6 +79,7 @@ function ClienteReservas() {
   const [filtroEstado, setFiltroEstado] = useState<string>('todas');
   const [busqueda, setBusqueda] = useState('');
   const [reservasFiltradas, setReservasFiltradas] = useState<Reserva[]>([]);
+  const [detailReserva, setDetailReserva] = useState<Reserva | null>(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -250,6 +253,7 @@ function ClienteReservas() {
   }
 
   return (
+    <>
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
       <ListPageHeader
@@ -280,36 +284,30 @@ function ClienteReservas() {
       />
 
       {/* Filtros y Búsqueda */}
-{/* Filtros y Búsqueda */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Búsqueda */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-              <input
-                type="text"
-                placeholder={t('cliente.reservations.search')}
-                className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-              />
-            </div>
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <input
+              type="text"
+              placeholder={t('cliente.reservations.search')}
+              className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
           </div>
-
-          {/* Filtro por Estado */}
-          <div className="flex-shrink-0">
+          <div className="flex flex-col sm:flex-row gap-4">
             <select
               value={filtroEstado}
               onChange={(e) => setFiltroEstado(e.target.value)}
-              className="w-full sm:w-auto px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
+              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              <option value="todas" className="text-gray-900">{t('cliente.reservations.filters.all')}</option>
-              <option value="pendiente" className="text-gray-900">{t('cliente.reservations.filters.pending')}</option>
-              <option value="confirmada" className="text-gray-900">{t('cliente.reservations.filters.confirmed')}</option>
-              <option value="en_proceso" className="text-gray-900">{t('cliente.reservations.filters.inProgress')}</option>
-              <option value="completada" className="text-gray-900">{t('cliente.reservations.filters.completed')}</option>
-              <option value="cancelada" className="text-gray-900">{t('cliente.reservations.filters.cancelled')}</option>
+              <option value="todas">{t('cliente.reservations.filters.all')}</option>
+              <option value="pendiente">{t('cliente.reservations.filters.pending')}</option>
+              <option value="confirmada">{t('cliente.reservations.filters.confirmed')}</option>
+              <option value="en_proceso">{t('cliente.reservations.filters.inProgress')}</option>
+              <option value="completada">{t('cliente.reservations.filters.completed')}</option>
+              <option value="cancelada">{t('cliente.reservations.filters.cancelled')}</option>
             </select>
           </div>
         </div>
@@ -325,115 +323,83 @@ function ClienteReservas() {
             return (
               <SlideRevealCard
                 key={reserva.id}
-                buttonCount={1}
+                buttonCount={puedeEditarse(reserva) ? 2 : 1}
                 actions={
-                  puedeEditarse(reserva) ? (
+                  <>
                     <SlideButton
-                      icon={<Edit3 className="h-4 w-4" />}
-                      onClick={() => handleEditarReserva(reserva.id)}
-                      title={t('cliente.reservations.editReservation')}
+                      icon={<Eye className="h-4 w-4" />}
+                      onClick={() => setDetailReserva(reserva)}
+                      title={t('cliente.reservations.viewDetails')}
                       hoverColor="hover:bg-blue-50 hover:text-[#4894AD]"
                     />
-                  ) : undefined
+                    {puedeEditarse(reserva) && (
+                      <SlideButton
+                        icon={<Edit3 className="h-4 w-4" />}
+                        onClick={() => handleEditarReserva(reserva.id)}
+                        title={t('cliente.reservations.editReservation')}
+                        hoverColor="hover:bg-blue-50 hover:text-[#4894AD]"
+                      />
+                    )}
+                  </>
                 }
+                onClick={() => setDetailReserva(reserva)}
               >
-                <div className="space-y-4">
-                  {/* Header de la reserva */}
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className="bg-[#4894AD]/10 p-2 rounded-lg flex-shrink-0">
                         <Calendar className="h-5 w-5 text-[#4894AD]" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {formatDate(reserva.fecha)}
                         </h3>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{formatTime(reserva.hora_inicio)} - {formatTime(reserva.hora_final)}</span>
-                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {reserva.empleada ? `${reserva.empleada.nombre} ${reserva.empleada.apellido}` : ''}
+                          {reserva.lugar ? ` · ${reserva.lugar.nombre}` : ''}
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 ${estadoConfig.color}`}>
-                        <StatusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${estadoConfig.color}`}>
+                        <StatusIcon className="h-3 w-3" />
                         {estadoConfig.label}
                       </span>
                     </div>
                   </div>
 
-                  {/* Detalles de la reserva */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {reserva.empleada && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-gradient-to-br from-[#4894AD] to-[#D95B26] rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 text-sm truncate">
-                            {reserva.empleada.nombre} {reserva.empleada.apellido}
-                          </p>
-                          {reserva.empleada.ranking && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                              <span className="text-xs text-gray-600">{reserva.empleada.ranking}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {formatTime(reserva.hora_inicio)} - {formatTime(reserva.hora_final)}
+                    </span>
+                    {reserva.plan && (
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="h-3.5 w-3.5" />
+                        {reserva.plan.nombre}
+                      </span>
                     )}
-
-                    {reserva.lugar && (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-[#D95B26]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <MapPin className="h-4 w-4 text-[#D95B26]" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 text-sm truncate">
-                            {reserva.lugar.nombre}
-                          </p>
-                          <p className="text-xs text-gray-600 truncate">
-                            {reserva.lugar.tipo_lugar}
-                          </p>
-                        </div>
-                      </div>
+                    {reserva.precio_total && (
+                      <span className="flex items-center gap-1 font-medium text-green-600">
+                        {formatCurrency(reserva.precio_total)}
+                      </span>
                     )}
-
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900 text-sm truncate">
-                          {reserva.plan?.nombre || t('cliente.reservations.customPlan')}
-                        </p>
-                        {reserva.precio_total && (
-                          <p className="text-xs text-gray-600">
-                            {formatCurrency(reserva.precio_total)}
-                          </p>
-                        )}
-                        {reserva.estado_pago && (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                            reserva.estado_pago === 'PAGADO' ? 'bg-green-100 text-green-800' :
-                            reserva.estado_pago === 'PARCIAL' ? 'bg-yellow-100 text-yellow-800' :
-                            reserva.estado_pago === 'REEMBOLSADO' ? 'bg-purple-100 text-purple-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {t(`common.paymentStatus.${reserva.estado_pago}`, { defaultValue: reserva.estado_pago })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    {reserva.empleada?.ranking && (
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 text-yellow-500 fill-current" />
+                        {reserva.empleada.ranking}
+                      </span>
+                    )}
+                    {reserva.estado_pago && (
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        reserva.estado_pago === 'PAGADO' ? 'bg-green-100 text-green-800' :
+                        reserva.estado_pago === 'PARCIAL' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {t(`common.paymentStatus.${reserva.estado_pago}`, { defaultValue: reserva.estado_pago })}
+                      </span>
+                    )}
                   </div>
-
-                  {reserva.descripcion && (
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">{t('cliente.reservations.description')}</span> {reserva.descripcion}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </SlideRevealCard>
             );
@@ -463,6 +429,99 @@ function ClienteReservas() {
         )}
       </div>
     </div>
+
+      {/* Modal detalle reserva */}
+      <ListDetailModal
+        theme={ROLE_THEMES.cliente}
+        open={!!detailReserva}
+        onClose={() => setDetailReserva(null)}
+        title={t('cliente.reservations.viewDetails')}
+        subtitle={detailReserva ? `${formatDate(detailReserva.fecha)} · ${formatTime(detailReserva.hora_inicio)} – ${formatTime(detailReserva.hora_final)}` : ""}
+      >
+        {detailReserva && (() => {
+          const estadoConfig = getEstadoConfig(detailReserva.estado);
+          const StatusIcon = estadoConfig.icon;
+          return (
+            <>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 ${estadoConfig.color}`}>
+                  <StatusIcon className="h-4 w-4" />
+                  {estadoConfig.label}
+                </span>
+                {detailReserva.precio_total != null && (
+                  <span className="ml-auto font-bold text-lg text-gray-900">
+                    {formatCurrency(detailReserva.precio_total)}
+                  </span>
+                )}
+              </div>
+
+              {detailReserva.empleada && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{t('cliente.reservations.employee')}</p>
+                  <p className="font-semibold text-gray-900">{detailReserva.empleada.nombre} {detailReserva.empleada.apellido}</p>
+                  {detailReserva.empleada.telefono && (
+                    <p className="text-sm text-gray-600 mt-1">{detailReserva.empleada.telefono}</p>
+                  )}
+                  {detailReserva.empleada.ranking != null && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
+                      <span className="text-sm text-gray-600">{Number(detailReserva.empleada.ranking).toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                {detailReserva.plan && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t('cliente.reservations.plan')}</p>
+                    <p className="font-semibold text-gray-900 text-sm">{detailReserva.plan.nombre}</p>
+                    {detailReserva.plan.precio != null && (
+                      <p className="text-xs text-gray-500 mt-0.5">{formatCurrency(detailReserva.plan.precio)}</p>
+                    )}
+                  </div>
+                )}
+                {detailReserva.lugar && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t('cliente.reservations.location')}</p>
+                    <p className="font-semibold text-gray-900 text-sm">{detailReserva.lugar.nombre}</p>
+                    {detailReserva.lugar.direccion && (
+                      <p className="text-xs text-gray-500 mt-0.5">{detailReserva.lugar.direccion}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {detailReserva.estado_pago && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t('cliente.reservations.paymentStatus')}</p>
+                  <p className="font-semibold text-gray-900 text-sm capitalize">{detailReserva.estado_pago}</p>
+                </div>
+              )}
+
+              {detailReserva.descripcion && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t('common.notes')}</p>
+                  <p className="text-gray-700 text-sm">{detailReserva.descripcion}</p>
+                </div>
+              )}
+
+              {puedeEditarse(detailReserva) && (
+                <div className="flex gap-3 pt-4 border-t">
+                  <button
+                    onClick={() => { setDetailReserva(null); handleEditarReserva(detailReserva.id); }}
+                    className="flex-1 bg-[#4894AD] text-white px-4 py-2 rounded-lg hover:bg-[#195083] transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    {t('cliente.reservations.editReservation')}
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </ListDetailModal>
+    </>
   );
 }
 

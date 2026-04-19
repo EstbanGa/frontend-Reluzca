@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard from "@/components/ui/SlideRevealCard";
 import {
   TrendingUp,
   DollarSign,
@@ -184,32 +185,34 @@ function EmpleadaGanancias() {
               <p className="text-gray-500">{t("empleada.earnings.empty")}</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#D95B26]" />
-                <h2 className="font-semibold text-gray-900 text-sm">
-                  {t("admin.createPlan.activities")} — {mesOptions.find(o => o.value === mes)?.label ?? mes}
-                </h2>
+            <>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#D95B26]" />
+                  <h2 className="font-semibold text-gray-900 text-sm">
+                    {t("admin.createPlan.activities")} — {mesOptions.find(o => o.value === mes)?.label ?? mes}
+                  </h2>
+                </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">
-                        {t("empleada.earnings.table.date")}
-                      </th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">
-                        {t("empleada.earnings.table.gross")}
-                      </th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">
-                        {t("empleada.earnings.table.earnings")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {data.detalle.map((row) => (
-                      <tr key={row.id_reserva} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-700">
+              <div className="flex flex-col gap-2">
+                {data.detalle.map((row) => (
+                  <SlideRevealCard key={row.id_reserva} buttonCount={1} actions={<></>}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0"
+                        style={{ background: "linear-gradient(135deg, #D95B26, #4894AD)" }}>
+                        <span className="text-[10px] font-bold leading-none">
+                          {row.fecha
+                            ? new Date(row.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })
+                            : "—"}
+                        </span>
+                        <span className="text-[8px] uppercase leading-none mt-0.5">
+                          {row.fecha
+                            ? new Date(row.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-gray-900">
                           {row.fecha
                             ? new Date(row.fecha + "T00:00:00").toLocaleDateString("es-CO", {
                                 day: "2-digit",
@@ -217,30 +220,31 @@ function EmpleadaGanancias() {
                                 year: "numeric",
                               })
                             : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-600">
-                          {formatCOP(row.precio_total)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold text-green-600">
-                          {formatCOP(row.ganancia)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-gray-50 border-t border-gray-200">
-                    <tr>
-                      <td className="px-4 py-3 font-semibold text-gray-900">Total</td>
-                      <td className="px-4 py-3 text-right font-semibold text-gray-600">
-                        {formatCOP(data.resumen.total_bruto)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-green-600">
-                        {formatCOP(data.resumen.total_neto)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                        </h4>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          {t("empleada.earnings.table.gross")}: {formatCOP(row.precio_total)}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <span className="text-sm font-bold text-green-600">{formatCOP(row.ganancia)}</span>
+                        <p className="text-[10px] text-gray-400">{t("empleada.earnings.table.earnings")}</p>
+                      </div>
+                    </div>
+                  </SlideRevealCard>
+                ))}
+
+                {/* Total row */}
+                <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-gray-900 text-sm">Total</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-600">{formatCOP(data.resumen.total_bruto)}</span>
+                      <span className="text-sm font-bold text-green-600">{formatCOP(data.resumen.total_neto)}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* CXP — Cuentas por Pagar */}
@@ -261,80 +265,71 @@ function EmpleadaGanancias() {
             });
 
             return (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-purple-600" />
-                    <div>
-                      <h2 className="font-semibold text-gray-900 text-sm">CXP — Cuentas por Pagar</h2>
-                      <p className="text-xs text-gray-500">Historial de pagos por período</p>
+              <div className="space-y-4">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-purple-600" />
+                      <div>
+                        <h2 className="font-semibold text-gray-900 text-sm">CXP — Cuentas por Pagar</h2>
+                        <p className="text-xs text-gray-500">Historial de pagos por período</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                    {(['mensual', 'quincenal'] as const).map(p => (
-                      <button
-                        key={p}
-                        onClick={() => setPeriodoDisplay(p)}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all capitalize ${
-                          periodoDisplay === p
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Período</th>
-                        <th className="text-right px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Servicios</th>
-                        <th className="text-right px-4 py-3 font-medium text-gray-600">Monto</th>
-                        <th className="text-center px-4 py-3 font-medium text-gray-600">Estado</th>
-                        <th className="text-center px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Comprobante</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {cxpRows.map((row) => (
-                        <tr
-                          key={row.key}
-                          className={`hover:bg-gray-50 transition-colors ${
-                            row.isCurrent ? 'bg-orange-50' : ''
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                      {(['mensual', 'quincenal'] as const).map(p => (
+                        <button
+                          key={p}
+                          onClick={() => setPeriodoDisplay(p)}
+                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all capitalize ${
+                            periodoDisplay === p
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-500 hover:text-gray-700'
                           }`}
                         >
-                          <td className="px-4 py-3 text-gray-700 font-medium">{row.label}</td>
-                          <td className="px-4 py-3 text-right text-gray-600 hidden sm:table-cell">{row.servicios}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-green-600">{formatCOP(row.monto)}</td>
-                          <td className="px-4 py-3 text-center">
-                            {row.pagado ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                                <CheckCircle className="w-3 h-3" />
-                                Pagado
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-                                <Clock className="w-3 h-3" />
-                                Pendiente
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-center hidden sm:table-cell">
-                            {row.pagado ? (
-                              <button className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors">
-                                <FileText className="w-3.5 h-3.5" />
-                                Ver
-                              </button>
-                            ) : (
-                              <span className="text-xs text-gray-400">—</span>
-                            )}
-                          </td>
-                        </tr>
+                          {p}
+                        </button>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {cxpRows.map((row) => (
+                    <SlideRevealCard key={row.key} buttonCount={1} actions={<></>}>
+                      <div className={`flex items-center gap-3 ${row.isCurrent ? 'bg-orange-50/50 -m-3 p-3 sm:-m-4 sm:p-4 rounded-xl' : ''}`}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          row.pagado ? 'bg-green-100' : 'bg-yellow-100'
+                        }`}>
+                          {row.pagado ? (
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <Clock className="w-5 h-5 text-yellow-600" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-gray-900 truncate">{row.label}</h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[11px] text-gray-500">{row.servicios} servicios</span>
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              row.pagado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${row.pagado ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                              {row.pagado ? 'Pagado' : 'Pendiente'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                          <span className="text-sm font-bold text-green-600">{formatCOP(row.monto)}</span>
+                          {row.pagado && (
+                            <button className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-700">
+                              <FileText className="w-3 h-3" />
+                              Ver
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </SlideRevealCard>
+                  ))}
                 </div>
               </div>
             );

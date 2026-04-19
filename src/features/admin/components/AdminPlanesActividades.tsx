@@ -10,14 +10,17 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  ChevronLeft,
-  ChevronRight,
   X,
   AlertCircle,
   Clock,
   DollarSign,
   RefreshCw,
+  Eye,
 } from "lucide-react";
+import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListPagination from "@/components/ui/ListPagination";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -381,7 +384,7 @@ function AdminPlanesActividades() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-full">
       <style>{`
         @keyframes modalScaleIn {
           from { opacity: 0; transform: scale(0.95); }
@@ -395,22 +398,23 @@ function AdminPlanesActividades() {
         .panel-enter { animation: panelSlideIn 0.25s ease-out forwards; }
       `}</style>
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] rounded-xl p-5 sm:p-7 text-white">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F0E7] mb-1">
-          Planes y Actividades
-        </h1>
-        <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-          Gestiona los planes de servicio y las actividades individuales disponibles para tus clientes.
-        </p>
-        <div className="flex gap-4 mt-4 text-sm">
-          <span className="bg-white/20 rounded-lg px-3 py-1">
-            {planes.length} plan{planes.length !== 1 ? "es" : ""}
-          </span>
-          <span className="bg-white/20 rounded-lg px-3 py-1">
-            {actividades.length} actividad{actividades.length !== 1 ? "es" : ""}
-          </span>
-        </div>
-      </div>
+      <ListPageHeader
+        theme={ROLE_THEMES.admin}
+        title="Planes y Actividades"
+        subtitle="Gestiona los planes de servicio y las actividades individuales disponibles para tus clientes."
+        icon={<CreditCard className="h-7 w-7" />}
+      />
+
+      {/* Stats */}
+      <ListStatsGrid
+        columns={4}
+        stats={[
+          { label: "Planes", value: planes.length, color: "#195083" },
+          { label: "Planes activos", value: planes.filter(p => p.estado).length, color: "#16a34a" },
+          { label: "Actividades", value: actividades.length, color: "#7c3aed" },
+          { label: "Actividades activas", value: actividades.filter(a => a.activa).length, color: "#2563eb" },
+        ]}
+      />
 
       {globalError && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -468,283 +472,220 @@ function AdminPlanesActividades() {
 
       {/* ══════════ TAB PLANES ══════════ */}
       {activeTab === "planes" && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Toolbar */}
-          <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar planes..."
-                value={planSearch}
-                onChange={(e) => { setPlanSearch(e.target.value); setPlanPage(1); }}
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-              />
+        <>
+          {/* Search + create */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar planes..."
+                  value={planSearch}
+                  onChange={(e) => { setPlanSearch(e.target.value); setPlanPage(1); }}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+                />
+              </div>
+              <button
+                onClick={openCreatePlan}
+                className="flex items-center gap-2 bg-[#195083] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f3a5f] transition-colors whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4" />
+                Nuevo plan
+              </button>
             </div>
-            <button
-              onClick={openCreatePlan}
-              className="flex items-center gap-2 bg-[#195083] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f3a5f] transition-colors whitespace-nowrap"
-            >
-              <Plus className="h-4 w-4" />
-              Nuevo plan
-            </button>
           </div>
 
           {loadingPlanes ? (
-            <div className="p-12 flex justify-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-[#195083]" />
+            <div className="flex items-center justify-center min-h-64">
+              <RefreshCw className="h-10 w-10 animate-spin text-[#195083]" />
             </div>
           ) : pagedPlanes.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <CreditCard className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
+              <CreditCard className="h-10 w-10 mx-auto mb-2 text-gray-200" />
               {planSearch ? "Sin resultados para la búsqueda." : "Aún no hay planes. ¡Crea el primero!"}
             </div>
           ) : (
-            <>
-              {/* Table header */}
-              <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                <span>Plan</span>
-                <span>Precio / día</span>
-                <span>Horas</span>
-                <span>Actividades</span>
-                <span>Acciones</span>
-              </div>
-
+            <div className="flex flex-col gap-2">
               {pagedPlanes.map((plan) => (
-                <div
+                <SlideRevealCard
                   key={plan.id}
-                  className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 md:gap-4 px-4 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 transition-colors items-center"
+                  buttonCount={3}
+                  actions={
+                    <>
+                      <SlideButton
+                        icon={plan.estado ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-gray-400" />}
+                        onClick={() => handleTogglePlan(plan)}
+                        title={plan.estado ? "Desactivar" : "Activar"}
+                      />
+                      <SlideButton
+                        icon={<Edit3 className="h-4 w-4" />}
+                        onClick={() => openEditPlan(plan)}
+                        title="Editar"
+                        hoverColor="hover:bg-[#195083]/10 hover:text-[#195083]"
+                      />
+                      <SlideButton
+                        icon={<Trash2 className="h-4 w-4" />}
+                        onClick={() => confirmDelete("plan", plan.id, plan.nombre)}
+                        title="Eliminar"
+                        hoverColor="hover:bg-red-50 hover:text-red-600"
+                      />
+                    </>
+                  }
                 >
-                  {/* Nombre + descripción */}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-900 text-sm">{plan.nombre}</p>
-                      <span
-                        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-                          plan.estado
-                            ? "bg-green-50 text-green-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {plan.estado ? "Activo" : "Inactivo"}
-                      </span>
+                  <div className="flex items-start gap-3">
+                    {/* Icon */}
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#195083]/10">
+                      <CreditCard className="h-5 w-5 text-[#195083]" />
                     </div>
-                    {plan.descripcion && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{plan.descripcion}</p>
-                    )}
-                  </div>
 
-                  {/* Precio */}
-                  <div className="flex items-center gap-1.5 text-sm text-gray-800">
-                    <DollarSign className="h-4 w-4 text-gray-400 shrink-0" />
-                    {fmtCOP(plan.precio)}
-                  </div>
-
-                  {/* Horas */}
-                  <div className="flex items-center gap-1.5 text-sm text-gray-800">
-                    <Clock className="h-4 w-4 text-gray-400 shrink-0" />
-                    {plan.horas_servicio != null ? `${plan.horas_servicio}h` : "—"}
-                  </div>
-
-                  {/* Actividades */}
-                  <div>
-                    {plan.actividades.length === 0 ? (
-                      <span className="text-xs text-gray-400">Sin actividades</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {plan.actividades.slice(0, 3).map((a) => (
-                          <span key={a.id} className="text-xs bg-[#195083]/10 text-[#195083] px-2 py-0.5 rounded-full">
-                            {a.nombre}
-                          </span>
-                        ))}
-                        {plan.actividades.length > 3 && (
-                          <span className="text-xs text-gray-500">+{plan.actividades.length - 3}</span>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm text-gray-900 truncate">{plan.nombre}</h4>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                          plan.estado ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${plan.estado ? "bg-green-500" : "bg-gray-400"}`} />
+                          {plan.estado ? "Activo" : "Inactivo"}
+                        </span>
+                      </div>
+                      {plan.descripcion && (
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">{plan.descripcion}</p>
+                      )}
+                      <div className="flex items-center gap-3 flex-wrap mt-1.5">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                          <DollarSign className="h-3 w-3 text-gray-400" />
+                          {fmtCOP(plan.precio)}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                          <Clock className="h-3 w-3 text-gray-400" />
+                          {plan.horas_servicio != null ? `${plan.horas_servicio}h` : "—"}
+                        </span>
+                        {plan.actividades.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {plan.actividades.slice(0, 3).map((a) => (
+                              <span key={a.id} className="text-[10px] bg-[#195083]/10 text-[#195083] px-1.5 py-0.5 rounded-full font-medium">
+                                {a.nombre}
+                              </span>
+                            ))}
+                            {plan.actividades.length > 3 && (
+                              <span className="text-[10px] text-gray-500">+{plan.actividades.length - 3}</span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
+                    </div>
                   </div>
-
-                  {/* Acciones */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleTogglePlan(plan)}
-                      title={plan.estado ? "Desactivar" : "Activar"}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        plan.estado
-                          ? "text-green-600 hover:bg-green-50"
-                          : "text-gray-400 hover:bg-gray-100"
-                      }`}
-                    >
-                      {plan.estado ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    </button>
-                    <button
-                      onClick={() => openEditPlan(plan)}
-                      title="Editar"
-                      className="p-1.5 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => confirmDelete("plan", plan.id, plan.nombre)}
-                      title="Eliminar"
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                </SlideRevealCard>
               ))}
 
-              {/* Pagination planes */}
-              {planPages > 1 && (
-                <div className="p-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
-                  <span>
-                    {(planPage - 1) * PAGE_SIZE + 1}–{Math.min(planPage * PAGE_SIZE, filteredPlanes.length)} de{" "}
-                    {filteredPlanes.length}
-                  </span>
-                  <div className="flex gap-1">
-                    <button
-                      disabled={planPage === 1}
-                      onClick={() => setPlanPage((p) => p - 1)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                      disabled={planPage >= planPages}
-                      onClick={() => setPlanPage((p) => p + 1)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+              <ListPagination page={planPage} totalPages={planPages} totalItems={filteredPlanes.length} pageSize={PAGE_SIZE} onPageChange={setPlanPage} />
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* ══════════ TAB ACTIVIDADES ══════════ */}
       {activeTab === "actividades" && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Toolbar */}
-          <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar actividades..."
-                value={actSearch}
-                onChange={(e) => { setActSearch(e.target.value); setActPage(1); }}
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-              />
+        <>
+          {/* Search + create */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar actividades..."
+                  value={actSearch}
+                  onChange={(e) => { setActSearch(e.target.value); setActPage(1); }}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+                />
+              </div>
+              <button
+                onClick={() => openCreateActividad(false)}
+                className="flex items-center gap-2 bg-[#195083] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f3a5f] transition-colors whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4" />
+                Nueva actividad
+              </button>
             </div>
-            <button
-              onClick={() => openCreateActividad(false)}
-              className="flex items-center gap-2 bg-[#195083] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0f3a5f] transition-colors whitespace-nowrap"
-            >
-              <Plus className="h-4 w-4" />
-              Nueva actividad
-            </button>
           </div>
 
           {loadingActividades ? (
-            <div className="p-12 flex justify-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-[#195083]" />
+            <div className="flex items-center justify-center min-h-64">
+              <RefreshCw className="h-10 w-10 animate-spin text-[#195083]" />
             </div>
           ) : pagedActs.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <Zap className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
+              <Zap className="h-10 w-10 mx-auto mb-2 text-gray-200" />
               {actSearch ? "Sin resultados para la búsqueda." : "Aún no hay actividades. ¡Crea la primera!"}
             </div>
           ) : (
-            <>
-              <div className="hidden md:grid grid-cols-[2fr_1fr_auto] gap-4 px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                <span>Actividad</span>
-                <span>Precio unitario</span>
-                <span>Acciones</span>
-              </div>
-
+            <div className="flex flex-col gap-2">
               {pagedActs.map((act) => (
-                <div
+                <SlideRevealCard
                   key={act.id}
-                  className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-3 md:gap-4 px-4 py-4 border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 transition-colors items-center"
+                  buttonCount={3}
+                  actions={
+                    <>
+                      <SlideButton
+                        icon={act.activa ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-gray-400" />}
+                        onClick={() => handleToggleActiva(act)}
+                        title={act.activa ? "Desactivar" : "Activar"}
+                      />
+                      <SlideButton
+                        icon={<Edit3 className="h-4 w-4" />}
+                        onClick={() => openEditActividad(act)}
+                        title="Editar"
+                        hoverColor="hover:bg-[#195083]/10 hover:text-[#195083]"
+                      />
+                      <SlideButton
+                        icon={<Trash2 className="h-4 w-4" />}
+                        onClick={() => confirmDelete("actividad", act.id, act.nombre)}
+                        title="Eliminar"
+                        hoverColor="hover:bg-red-50 hover:text-red-600"
+                      />
+                    </>
+                  }
                 >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-900 text-sm">{act.nombre}</p>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          act.activa ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {act.activa ? "Activa" : "Inactiva"}
-                      </span>
+                  <div className="flex items-start gap-3">
+                    {/* Icon */}
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      act.activa ? "bg-green-100" : "bg-gray-100"
+                    }`}>
+                      <Zap className={`h-5 w-5 ${act.activa ? "text-green-600" : "text-gray-400"}`} />
                     </div>
-                    {act.descripcion && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{act.descripcion}</p>
-                    )}
-                  </div>
 
-                  <div className="flex items-center gap-1.5 text-sm text-gray-800">
-                    <DollarSign className="h-4 w-4 text-gray-400 shrink-0" />
-                    {fmtCOP(act.precio_unitario)}
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm text-gray-900 truncate">{act.nombre}</h4>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                          act.activa ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${act.activa ? "bg-green-500" : "bg-gray-400"}`} />
+                          {act.activa ? "Activa" : "Inactiva"}
+                        </span>
+                      </div>
+                      {act.descripcion && (
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">{act.descripcion}</p>
+                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                          <DollarSign className="h-3 w-3 text-gray-400" />
+                          {fmtCOP(act.precio_unitario)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleToggleActiva(act)}
-                      title={act.activa ? "Desactivar" : "Activar"}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        act.activa ? "text-green-600 hover:bg-green-50" : "text-gray-400 hover:bg-gray-100"
-                      }`}
-                    >
-                      {act.activa ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    </button>
-                    <button
-                      onClick={() => openEditActividad(act)}
-                      className="p-1.5 text-gray-400 hover:text-[#195083] hover:bg-[#195083]/10 rounded-lg transition-colors"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => confirmDelete("actividad", act.id, act.nombre)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                </SlideRevealCard>
               ))}
 
-              {actPages > 1 && (
-                <div className="p-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
-                  <span>
-                    {(actPage - 1) * PAGE_SIZE + 1}–{Math.min(actPage * PAGE_SIZE, filteredActs.length)} de{" "}
-                    {filteredActs.length}
-                  </span>
-                  <div className="flex gap-1">
-                    <button
-                      disabled={actPage === 1}
-                      onClick={() => setActPage((p) => p - 1)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                      disabled={actPage >= actPages}
-                      onClick={() => setActPage((p) => p + 1)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+              <ListPagination page={actPage} totalPages={actPages} totalItems={filteredActs.length} pageSize={PAGE_SIZE} onPageChange={setActPage} />
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* ══════════ MODAL PLAN ══════════ */}

@@ -8,22 +8,15 @@ import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/ut
 import { 
   Calendar, 
   Clock,
-  DollarSign,
-  User,
   Edit3,
   Search,
   CheckCircle,
   AlertCircle,
   XCircle,
-  Filter,
-  Star,
-  ArrowRight,
   RefreshCw,
   Eye,
   X,
   Check,
-  Square,
-  CheckSquare,
   Trash2,
   Plus,
   Package,
@@ -190,22 +183,6 @@ function AdminPlanes() {
     setFiltroEstado(estado);
   };
 
-  const handleSelectPlan = (id: string) => {
-    setSelectedPlanes(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedPlanes.length === planesFiltrados.length) {
-      setSelectedPlanes([]);
-    } else {
-      setSelectedPlanes(planesFiltrados.map(p => p.id));
-    }
-  };
-
   const handleToggleEstado = async (id: string, currentEstado: boolean) => {
     try {
       setToggleLoading(id);
@@ -269,7 +246,6 @@ function AdminPlanes() {
         alert(result.message);
         // Refrescar datos
         await fetchPlanes();
-        setSelectedPlanes([]);
       } else {
         throw new Error(result.error || 'Error al eliminar planes');
       }
@@ -408,62 +384,11 @@ function AdminPlanes() {
         </div>
       </div>
 
-      {/* Acciones de selección múltiple */}
-      {selectedPlanes.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-blue-700 font-medium">
-              {t('admin.plans.selectedCount', { n: selectedPlanes.length })}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSelectedPlanes([])}
-              className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded text-sm"
-            >
-              {t('admin.plans.clearSelection')}
-            </button>
-            <button
-              onClick={() => handleDelete(selectedPlanes)}
-              disabled={deleteLoading}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
-            >
-              {deleteLoading ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              {t('admin.plans.delete')}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Lista de Planes */}
       <div className="space-y-3 sm:space-y-4">
         {planesFiltrados.length > 0 ? (
           <>
-            {/* Header de tabla con selección múltiple */}
-            <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-3">
-              <button
-                onClick={handleSelectAll}
-                className="p-1 hover:bg-gray-200 rounded"
-              >
-                {selectedPlanes.length === planesFiltrados.length ? (
-                  <CheckSquare className="h-5 w-5 text-[#195083]" />
-                ) : (
-                  <Square className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-              <span className="text-sm text-gray-600 font-medium">
-                {t('admin.plans.selectAll')}
-              </span>
-            </div>
-
-            {planesFiltrados.map((plan) => {
-              const isSelected = selectedPlanes.includes(plan.id);
-              
-              return (
+            {planesFiltrados.map((plan) => (
                 <SlideRevealCard
                   key={plan.id}
                   buttonCount={3}
@@ -491,112 +416,65 @@ function AdminPlanes() {
                   }
                   onClick={() => openModal(plan)}
                 >
-                  <div className={`space-y-4 ${isSelected ? 'bg-blue-50/50 -m-3 p-3 rounded-xl' : ''}`}>
-                    {/* Header del plan */}
-                    <div className="flex items-start gap-3">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleSelectPlan(plan.id); }}
-                        className="p-1 hover:bg-gray-200 rounded mt-1 flex-shrink-0"
-                      >
-                        {isSelected ? (
-                          <CheckSquare className="h-5 w-5 text-[#195083]" />
-                        ) : (
-                          <Square className="h-5 w-5 text-gray-400" />
-                        )}
-                      </button>
-                      <div className="bg-[#195083]/10 p-2 rounded-lg flex-shrink-0">
-                        <Package className="h-5 w-5 text-[#195083]" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="bg-[#195083]/10 p-2 rounded-lg flex-shrink-0">
+                          <Package className="h-5 w-5 text-[#195083]" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                             {plan.nombre}
                           </h3>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleToggleEstado(plan.id, plan.estado); }}
-                            disabled={toggleLoading === plan.id}
-                            className="flex items-center gap-1"
-                          >
-                            {toggleLoading === plan.id ? (
-                              <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
-                            ) : plan.estado ? (
-                              <ToggleRight className="h-5 w-5 text-green-500 hover:text-green-600" />
-                            ) : (
-                              <ToggleLeft className="h-5 w-5 text-red-500 hover:text-red-600" />
-                            )}
-                            <span className={`text-xs font-medium ${plan.estado ? 'text-green-600' : 'text-red-600'}`}>
-                              {plan.estado ? t('common.active') : t('common.inactive')}
-                            </span>
-                          </button>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            ID: {plan.id.slice(-8)}
+                            {plan.precio ? ` · ${formatCurrency(plan.precio)}` : ''}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          ID: {plan.id.slice(-8)}
-                        </p>
-                        {plan.precio && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                            <span className="font-bold text-green-600">
-                              {formatCurrency(plan.precio)}
-                            </span>
-                          </div>
-                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleToggleEstado(plan.id, plan.estado); }}
+                          disabled={toggleLoading === plan.id}
+                          className="flex items-center gap-1"
+                        >
+                          {toggleLoading === plan.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
+                          ) : plan.estado ? (
+                            <ToggleRight className="h-5 w-5 text-green-500 hover:text-green-600" />
+                          ) : (
+                            <ToggleLeft className="h-5 w-5 text-red-500 hover:text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${plan.estado ? 'text-green-600' : 'text-red-600'}`}>
+                            {plan.estado ? t('common.active') : t('common.inactive')}
+                          </span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Detalles compactos */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
                       {(plan.fecha_inicio || plan.fecha_final) && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Calendar className="h-3 w-3 text-blue-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">{t('admin.plans.validity')}</p>
-                            <p className="text-xs text-gray-600">
-                              {formatDate(plan.fecha_inicio)} - {formatDate(plan.fecha_final)}
-                            </p>
-                          </div>
-                        </div>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {formatDate(plan.fecha_inicio)} - {formatDate(plan.fecha_final)}
+                        </span>
                       )}
                       {(plan.hora_inicio || plan.hora_final) && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Clock className="h-3 w-3 text-orange-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">{t('admin.plans.schedule')}</p>
-                            <p className="text-xs text-gray-600">
-                              {formatTime(plan.hora_inicio)} - {formatTime(plan.hora_final)}
-                            </p>
-                          </div>
-                        </div>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {formatTime(plan.hora_inicio)} - {formatTime(plan.hora_final)}
+                        </span>
                       )}
                       {plan.servicios_asociados && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Tag className="h-3 w-3 text-green-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">{t('admin.plans.services')}</p>
-                            <p className="text-xs text-gray-600 truncate">
-                              {formatServicios(plan.servicios_asociados)}
-                            </p>
-                          </div>
-                        </div>
+                        <span className="flex items-center gap-1">
+                          <Tag className="h-3.5 w-3.5" />
+                          {formatServicios(plan.servicios_asociados)}
+                        </span>
                       )}
                     </div>
-
-                    {plan.descripcion && (
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-gray-700 line-clamp-2">
-                          <span className="font-medium">{t('admin.plans.description')}:</span> {plan.descripcion}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </SlideRevealCard>
-              );
-            })}
+            ))}
           </>
         ) : (
           <div className="text-center py-8 sm:py-12">

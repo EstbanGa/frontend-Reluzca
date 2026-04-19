@@ -9,6 +9,7 @@ import {
   RefreshCw, AlertCircle, Download, Star, X, KeyRound, Save,
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
 import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 import ListPagination from "@/components/ui/ListPagination";
 
@@ -210,19 +211,14 @@ function AdminUsuarios() {
   );
 
   return (
-    <div className="space-y-6 max-w-full">
-      <style>{`
-        @keyframes modalScaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-        .modal-enter { animation: modalScaleIn 0.2s ease-out forwards; }
-        .panel-slide-in { animation: slideInRight 0.25s ease-out forwards; }
-      `}</style>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
 
       {/* Header */}
       <ListPageHeader
         theme={ROLE_THEMES.admin}
         title="Usuarios"
         subtitle={`${usuarios.length} usuarios registrados — ${filtered.length} mostrados`}
+        icon={<Users className="h-7 w-7" />}
         actions={
           <button
             onClick={exportToExcel}
@@ -232,44 +228,49 @@ function AdminUsuarios() {
             Exportar Excel
           </button>
         }
-      >
-        {/* Role filter chips */}
-        <div className="flex flex-wrap gap-3 mt-4">
-          {[
-            { key: "todos",    label: "Todos",     count: usuarios.length },
-            { key: "admin",    label: "Admins",    count: usuarios.filter(u => u.rol === "admin").length },
-            { key: "cliente",  label: "Clientes",  count: usuarios.filter(u => u.rol === "cliente").length },
-            { key: "empleada", label: "Empleadas", count: usuarios.filter(u => u.rol === "empleada").length },
-          ].map(({ key, label, count }) => (
-            <button
-              key={key}
-              onClick={() => { setRolFilter(key as typeof rolFilter); setPage(1); }}
-              className={`px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
-                rolFilter === key ? "bg-white text-[#195083]" : "bg-white/20 text-white hover:bg-white/30"
-              }`}
-            >
-              {label} ({count})
-            </button>
-          ))}
-        </div>
-      </ListPageHeader>
+      />
 
-      {/* Search bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre, correo o telÃ©fono..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
-          />
+      {/* Stats */}
+      <ListStatsGrid
+        columns={4}
+        stats={[
+          { label: "Total", value: usuarios.length, color: "#195083" },
+          { label: "Admins", value: usuarios.filter(u => u.rol === "admin").length, color: "#7c3aed" },
+          { label: "Clientes", value: usuarios.filter(u => u.rol === "cliente").length, color: "#2563eb" },
+          { label: "Empleadas", value: usuarios.filter(u => u.rol === "empleada").length, color: "#059669" },
+        ]}
+      />
+
+      {/* Filtros y Búsqueda */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre, correo o teléfono..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <select
+              value={rolFilter}
+              onChange={(e) => { setRolFilter(e.target.value as typeof rolFilter); setPage(1); }}
+              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
+            >
+              <option value="todos">Todos los roles</option>
+              <option value="admin">Admins</option>
+              <option value="cliente">Clientes</option>
+              <option value="empleada">Empleadas</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Lista de usuarios */}
-      <div className="flex flex-col gap-2">
+      <div className="space-y-3 sm:space-y-4">
         {paged.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
             <Users className="h-10 w-10 mx-auto mb-2 text-gray-200" />
@@ -289,10 +290,10 @@ function AdminUsuarios() {
               <div className="flex items-start gap-3">
                 {/* Avatar */}
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
                   style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}
                 >
-                  {u.nombre[0]}{u.apellido[0]}
+                  <User className="h-5 w-5 text-white" />
                 </div>
 
                 {/* Contenido principal */}

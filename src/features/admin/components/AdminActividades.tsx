@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
+import ListStatsGrid from "@/components/ui/ListStatsGrid";
 import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 
 interface Actividad {
@@ -253,6 +254,16 @@ function AdminActividades() {
           </button>
         ))}
       </div>
+
+      {/* Stats */}
+      <ListStatsGrid
+        columns={3}
+        stats={[
+          { label: t("admin.activities.title"), value: actividades.length, color: "#195083" },
+          { label: t("admin.activities.filterActive"), value: actividades.filter(a => a.activa).length, color: "#16a34a" },
+          { label: t("admin.activities.filterInactive"), value: actividades.filter(a => !a.activa).length, color: "#dc2626" },
+        ]}
+      />
 
       {/* Error */}
       {error && (

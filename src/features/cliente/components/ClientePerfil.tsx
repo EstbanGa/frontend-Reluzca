@@ -69,9 +69,10 @@ function ClientePerfilPage() {
       if (!userStr) throw new Error(t("cliente.profile.userNotFound"));
 
       const user = JSON.parse(userStr);
+      const token = localStorage.getItem("access_token");
       const response = await fetch(
         `${API_BASE_URL}/api/usuarios/${user.id}`,
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
       );
 
       if (!response.ok) {
@@ -114,11 +115,12 @@ function ClientePerfilPage() {
         fecha_nacimiento: editForm.fecha_nacimiento || null,
       };
 
+      const token = localStorage.getItem("access_token");
       const response = await fetch(
         `${API_BASE_URL}/api/usuarios/${profile.id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify(payload),
         }
       );

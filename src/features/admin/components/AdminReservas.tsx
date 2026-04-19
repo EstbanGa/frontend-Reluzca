@@ -1,10 +1,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
-  Calendar, Clock, MapPin, User, Edit3, Search, CheckCircle, AlertCircle,
+  Calendar, Clock, MapPin, User, Edit3, Trash2, Search, CheckCircle, AlertCircle,
   XCircle, RefreshCw, Eye, DollarSign,
   Download, Star, Phone, Mail, Filter
 } from "lucide-react";
@@ -107,8 +108,28 @@ function AdminReservas() {
   const [page, setPage] = useState(1);
 
   const [detailReserva, setDetailReserva] = useState<Reserva | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => { loadReservas(); }, []);
+
+  const handleDeleteReserva = async (id: string) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setDetailReserva(null);
+      await loadReservas();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const loadReservas = async () => {
     setLoading(true);
@@ -208,11 +229,7 @@ function AdminReservas() {
   );
 
   return (
-    <div className="space-y-6 max-w-full">
-      <style>{`
-        @keyframes modalScaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .modal-enter { animation: modalScaleIn 0.2s ease-out forwards; }
-      `}</style>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
 
       {/* Header */}
       <ListPageHeader
@@ -243,26 +260,24 @@ function AdminReservas() {
         ]}
       />
 
-      {/* Filters bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      {/* Filtros y Búsqueda */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
               placeholder="Buscar por cliente, empleada, plan o lugar..."
               value={busqueda}
               onChange={e => { setBusqueda(e.target.value); setPage(1); }}
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+              className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
             />
           </div>
-
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          <div className="flex flex-col sm:flex-row gap-4">
             <select
               value={filtroEstado}
               onChange={e => { setFiltroEstado(e.target.value); setPage(1); }}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
               <option value="todos">Todos los estados</option>
               <option value="pendiente">Pendiente</option>
@@ -271,11 +286,10 @@ function AdminReservas() {
               <option value="completada">Completada</option>
               <option value="cancelada">Cancelada</option>
             </select>
-
             <select
               value={filtroEstadoPago}
               onChange={e => { setFiltroEstadoPago(e.target.value); setPage(1); }}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
               <option value="todos">Todo pago</option>
               <option value="pendiente">Pago pendiente</option>
@@ -288,7 +302,7 @@ function AdminReservas() {
       </div>
 
       {/* Lista de reservas */}
-      <div className="flex flex-col gap-2">
+      <div className="space-y-3 sm:space-y-4">
         {paged.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
             <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-200" />
@@ -302,39 +316,43 @@ function AdminReservas() {
           return (
             <SlideRevealCard
               key={r.id}
-              buttonCount={1}
-              actions={<SlideButton icon={<Eye className="h-4 w-4" />} onClick={() => setDetailReserva(r)} title="Ver detalle" />}
+              buttonCount={3}
+              actions={<>
+                <SlideButton icon={<Eye className="h-4 w-4" />} onClick={() => setDetailReserva(r)} title="Ver detalle" hoverColor="hover:bg-blue-50 hover:text-blue-600" />
+                <SlideButton icon={<Edit3 className="h-4 w-4" />} onClick={() => { setDetailReserva(null); navigate("/admin/reservas/editar", { state: { reserva: r } }); }} title="Editar reserva" hoverColor="hover:bg-[#195083]/10 hover:text-[#195083]" />
+                <SlideButton icon={<Trash2 className="h-4 w-4" />} onClick={() => handleDeleteReserva(r.id)} title="Eliminar reserva" hoverColor="hover:bg-red-50 hover:text-red-600" />
+              </>}
               onClick={() => setDetailReserva(r)}
             >
               <div className="flex items-start gap-3">
                 {/* Avatar fecha */}
-                <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white flex-shrink-0"
+                <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white shrink-0"
                   style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}>
-                  <span className="text-[10px] font-bold leading-none">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })}</span>
-                  <span className="text-[8px] uppercase leading-none mt-0.5">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })}</span>
+                  <span className="text-xs font-bold leading-none">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })}</span>
+                  <span className="text-[10px] uppercase leading-none mt-0.5">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })}</span>
                 </div>
 
                 {/* Contenido principal */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-sm text-gray-900 truncate">
+                  <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate">
                     {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "Sin cliente"}
                   </h4>
-                  <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
                     {r.hora_inicio} – {r.hora_final}{r.empleada ? ` · ${r.empleada.nombre} ${r.empleada.apellido}` : ""}{r.plan ? ` · ${r.plan.nombre}` : ""}
                   </p>
 
                   {/* Tags */}
                   <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${estCfg.bg} ${estCfg.color}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${estCfg.bg} ${estCfg.color}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${estCfg.color.replace("text-", "bg-")}`} />
                       {estCfg.label}
                     </span>
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${pagoCfg.color.replace("text-", "bg-")}`} />
                       {pagoCfg.label}
                     </span>
                     {r.lugar && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
+                      <span className="inline-flex items-center gap-0.5 text-xs text-gray-500">
                         <MapPin className="h-3 w-3" />
                         {r.lugar.nombre ?? r.lugar.direccion ?? ""}
                       </span>
@@ -343,12 +361,12 @@ function AdminReservas() {
                 </div>
 
                 {/* Sección derecha - precio */}
-                <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
+                <div className="shrink-0 flex flex-col items-end gap-1 text-right">
                   <span className="text-xs font-bold text-[#195083]">{fmtCOP(r.precio_total)}</span>
                   {r.empleada?.ranking != null && (
                     <div className="flex items-center gap-0.5">
                       <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      <span className="text-[10px] text-gray-500">{r.empleada.ranking.toFixed(1)}</span>
+                      <span className="text-xs text-gray-500">{r.empleada.ranking.toFixed(1)}</span>
                     </div>
                   )}
                 </div>
@@ -463,6 +481,25 @@ function AdminReservas() {
                   <p className="text-gray-700 text-sm">{detailReserva.descripcion}</p>
                 </div>
               )}
+
+              {/* Acciones */}
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  onClick={() => { setDetailReserva(null); navigate("/admin/reservas/editar", { state: { reserva: detailReserva } }); }}
+                  className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Editar reserva
+                </button>
+                <button
+                  onClick={() => handleDeleteReserva(detailReserva.id)}
+                  disabled={deleteLoading}
+                  className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {deleteLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  Eliminar
+                </button>
+              </div>
           </>
         )}
       </ListDetailModal>
