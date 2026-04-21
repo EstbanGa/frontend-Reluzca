@@ -397,18 +397,6 @@ function ClientePerfilPage() {
           </div>
         </div>
       </div>
-
-      {/* Nota contraseña */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-sm font-semibold text-amber-800">¿Deseas cambiar tu contraseña?</p>
-          <p className="text-sm text-amber-700 mt-0.5">
-            Los cambios de contraseña se realizan desde la página de inicio de sesión usando la opción
-            <strong> "¿Olvidaste tu contraseña?"</strong>.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
