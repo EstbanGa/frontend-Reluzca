@@ -29,7 +29,7 @@ export default function AdminLayout() {
     breadcrumbPrefix: t('admin.theme.breadcrumbPrefix'),
     avatarGradient: "from-[#4894AD] to-[#195083]",
     focusRing: "focus:ring-[#195083]",
-    profileRoute: "/admin/perfil",
+    profileRoute: "/admin/configuracion/index",
     settingsRoute: "/admin/configuracion/index",
     notificationsRoute: "/admin/notificaciones/index",
   };

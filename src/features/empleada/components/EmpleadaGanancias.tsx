@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import ListStatsGrid from "@/components/ui/ListStatsGrid";
-import SlideRevealCard from "@/components/ui/SlideRevealCard";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 import {
   TrendingUp,
   DollarSign,
@@ -16,6 +16,8 @@ import {
   Clock,
   FileText,
   CreditCard,
+  X,
+  Eye,
 } from "lucide-react";
 
 interface DetalleReserva {
@@ -80,6 +82,17 @@ function EmpleadaGanancias() {
   const [data, setData] = useState<GananciasData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  interface PeriodDetail {
+    key: string;
+    label: string;
+    servicios: number;
+    monto: number;
+    bruto: number;
+    pagado: boolean;
+    mesValue: string;
+  }
+  const [detailModal, setDetailModal] = useState<PeriodDetail | null>(null);
 
   const authHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -256,11 +269,11 @@ function EmpleadaGanancias() {
               const isPast = h.mes < currentMesStr;
               const mesLabel = new Date(h.mes + '-01').toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
               if (periodoDisplay === 'mensual') {
-                return [{ key: h.mes, label: mesLabel, servicios: h.total_servicios, monto: h.total_neto, pagado: isPast, isCurrent: h.mes === mes }];
+                return [{ key: h.mes, label: mesLabel, servicios: h.total_servicios, monto: h.total_neto, bruto: h.total_bruto, pagado: isPast, isCurrent: h.mes === mes, mesValue: h.mes }];
               }
               return [
-                { key: `${h.mes}-Q1`, label: `${mesLabel} · 1ª quincena`, servicios: Math.ceil(h.total_servicios / 2), monto: Math.round(h.total_neto / 2), pagado: isPast, isCurrent: h.mes === mes },
-                { key: `${h.mes}-Q2`, label: `${mesLabel} · 2ª quincena`, servicios: Math.floor(h.total_servicios / 2), monto: Math.round(h.total_neto / 2), pagado: isPast, isCurrent: h.mes === mes },
+                { key: `${h.mes}-Q1`, label: `${mesLabel} · 1ª quincena`, servicios: Math.ceil(h.total_servicios / 2), monto: Math.round(h.total_neto / 2), bruto: Math.round(h.total_bruto / 2), pagado: isPast, isCurrent: h.mes === mes, mesValue: h.mes },
+                { key: `${h.mes}-Q2`, label: `${mesLabel} · 2ª quincena`, servicios: Math.floor(h.total_servicios / 2), monto: Math.round(h.total_neto / 2), bruto: Math.round(h.total_bruto / 2), pagado: isPast, isCurrent: h.mes === mes, mesValue: h.mes },
               ];
             });
 
@@ -295,9 +308,20 @@ function EmpleadaGanancias() {
 
                 <div className="flex flex-col gap-2">
                   {cxpRows.map((row) => (
-                    <SlideRevealCard key={row.key} buttonCount={1} actions={<></>}>
+                    <SlideRevealCard
+                      key={row.key}
+                      buttonCount={1}
+                      actions={
+                        <SlideButton
+                          icon={<Eye className="w-4 h-4" />}
+                          onClick={() => setDetailModal(row)}
+                          title="Ver detalles"
+                          hoverColor="hover:bg-orange-50 hover:text-[#D95B26]"
+                        />
+                      }
+                    >
                       <div className={`flex items-center gap-3 ${row.isCurrent ? 'bg-orange-50/50 -m-3 p-3 sm:-m-4 sm:p-4 rounded-xl' : ''}`}>
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                           row.pagado ? 'bg-green-100' : 'bg-yellow-100'
                         }`}>
                           {row.pagado ? (
@@ -318,14 +342,8 @@ function EmpleadaGanancias() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                        <div className="shrink-0 text-right">
                           <span className="text-sm font-bold text-green-600">{formatCOP(row.monto)}</span>
-                          {row.pagado && (
-                            <button className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-700">
-                              <FileText className="w-3 h-3" />
-                              Ver
-                            </button>
-                          )}
                         </div>
                       </div>
                     </SlideRevealCard>
@@ -336,6 +354,69 @@ function EmpleadaGanancias() {
           })()}
         </>
       ) : null}
+
+      {/* ── MODAL DETALLE PERÍODO ── */}
+      {detailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setDetailModal(null)} />
+          <div className="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                  detailModal.pagado ? 'bg-green-100' : 'bg-yellow-100'
+                }`}>
+                  {detailModal.pagado
+                    ? <CheckCircle className="w-5 h-5 text-green-600" />
+                    : <Clock className="w-5 h-5 text-yellow-600" />}
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-900 text-sm leading-tight">{detailModal.label}</h2>
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold mt-0.5 ${
+                    detailModal.pagado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${detailModal.pagado ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                    {detailModal.pagado ? 'Pagado' : 'Pendiente'}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setDetailModal(null)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Resumen */}
+            <div className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-[11px] text-gray-500 mb-1">Servicios</p>
+                  <p className="text-xl font-bold text-gray-900">{detailModal.servicios}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-[11px] text-gray-500 mb-1">Total bruto</p>
+                  <p className="text-base font-bold text-gray-700">{formatCOP(detailModal.bruto)}</p>
+                </div>
+                <div className="col-span-2 bg-green-50 rounded-xl p-3">
+                  <p className="text-[11px] text-green-700 mb-1">Tus ganancias netas</p>
+                  <p className="text-2xl font-extrabold text-green-600">{formatCOP(detailModal.monto)}</p>
+                </div>
+              </div>
+
+              {/* Botón para ver el desglose completo del mes */}
+              <button
+                onClick={() => {
+                  setMes(detailModal.mesValue);
+                  setDetailModal(null);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-linear-to-r from-accent to-secondary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                <FileText className="w-4 h-4" />
+                Ver desglose completo del mes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

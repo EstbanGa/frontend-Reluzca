@@ -5,7 +5,7 @@ import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
-  Users, Search, Crown, UserCheck, Briefcase, Eye, EyeOff,
+  Users, User, Search, Crown, UserCheck, Briefcase, Eye, EyeOff,
   RefreshCw, AlertCircle, Download, Star, X, KeyRound, Save,
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";

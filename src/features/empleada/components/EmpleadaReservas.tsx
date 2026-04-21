@@ -3,18 +3,18 @@ import { useState, useEffect, useRef } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { formatDate, formatDateTime, formatTime, formatDateForModal } from "@/utils/dateUtils";
+import { formatDate, formatTime } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import ListStatsGrid from "@/components/ui/ListStatsGrid";
 import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
-import { 
+import { uploadFotoServicio, deleteFotoServicio } from "@/lib/storage";
+import {
   Calendar,
   Clock,
   User,
   MapPin,
   Search,
-  Filter,
   Home,
   Building2,
   Briefcase,
@@ -22,13 +22,9 @@ import {
   AlertCircle,
   RefreshCw,
   Eye,
-  Bath,
-  Layers,
-  Ruler,
   CheckCircle,
   XCircle,
   Loader2,
-  Map,
   Phone,
   Mail,
   FileText,
@@ -38,6 +34,8 @@ import {
   Image,
   Trash2,
   Play,
+  Upload,
+  Camera,
 } from "lucide-react";
 
 // Tipos predefinidos de ubicaciones (values only, labels translated at render)
@@ -323,6 +321,7 @@ function EmpleadaServicios() {
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [busqueda, setBusqueda] = useState('');
   const [serviciosFiltrados, setServiciosFiltrados] = useState<Servicio[]>([]);
+  const [empleadaId, setEmpleadaId] = useState<string | null>(null);
 
   // Vista: 'list' | 'detail'
   const [viewState, setViewState] = useState<'list' | 'detail'>('list');
@@ -332,11 +331,12 @@ function EmpleadaServicios() {
   const [checklistLoading, setChecklistLoading] = useState(false);
   const [fotos, setFotos] = useState<FotoItem[]>([]);
   const [fotosLoading, setFotosLoading] = useState(false);
-  const [newFotoUrl, setNewFotoUrl] = useState('');
   const [newFotoTipo, setNewFotoTipo] = useState('durante');
   const [newFotoDesc, setNewFotoDesc] = useState('');
-  const [savingFoto, setSavingFoto] = useState(false);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [iniciandoServicio, setIniciandoServicio] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Función auxiliar para mostrar el tamaño
   const formatTamano = (tamano: UbicacionInfo['tamaño']) => {
@@ -379,6 +379,7 @@ function EmpleadaServicios() {
       });
       if (!meRes.ok) throw new Error('No se pudo obtener la sesión');
       const me = await meRes.json();
+      setEmpleadaId(me.id ?? null);
 
       const res = await fetch(`${API_BASE_URL}/api/reservas/empleada/${me.id}/detalle`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -496,33 +497,52 @@ function EmpleadaServicios() {
     }
   };
 
-  const saveFoto = async (reservaId: string) => {
-    if (!newFotoUrl.trim()) return;
-    setSavingFoto(true);
+  const uploadFoto = async (reservaId: string, file: File) => {
+    if (!empleadaId) return;
+    setUploadingFoto(true);
+    setUploadError(null);
     try {
+      // 1. Subir a Supabase Storage
+      const { url } = await uploadFotoServicio(file, empleadaId, reservaId);
+
+      // 2. Guardar URL en la DB via backend
       const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos`, {
         method: 'POST',
         headers: authHeader(),
-        body: JSON.stringify({ url_foto: newFotoUrl.trim(), tipo: newFotoTipo, descripcion: newFotoDesc.trim() || null }),
+        body: JSON.stringify({
+          url_foto: url,
+          tipo: newFotoTipo,
+          descripcion: newFotoDesc.trim() || null,
+          subida_por: empleadaId,
+        }),
       });
       if (res.ok) {
         const foto: FotoItem = await res.json();
         setFotos(prev => [...prev, foto]);
-        setNewFotoUrl('');
         setNewFotoDesc('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } else {
+        throw new Error('Error guardando foto en la base de datos');
       }
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Error al subir la foto');
     } finally {
-      setSavingFoto(false);
+      setUploadingFoto(false);
     }
   };
 
   const deleteFoto = async (reservaId: string, fotoId: string) => {
+    const fotoToDelete = fotos.find(f => f.id === fotoId);
     const res = await fetch(`${API_BASE_URL}/api/reservas/${reservaId}/fotos/${fotoId}`, {
       method: 'DELETE',
       headers: authHeader(),
     });
     if (res.ok || res.status === 204) {
       setFotos(prev => prev.filter(f => f.id !== fotoId));
+      // Borrar de Supabase Storage si la URL es de Supabase
+      if (fotoToDelete?.url_foto) {
+        deleteFotoServicio(fotoToDelete.url_foto).catch(() => {/* ignore storage errors */});
+      }
     }
   };
 
@@ -597,15 +617,18 @@ function EmpleadaServicios() {
     const estadoInfo = getEstadoInfo(selectedServicio.estado || 'pendiente');
     const EstadoIcon = estadoInfo.icon;
 
+    const TABS = [
+      { key: 'details',   label: 'Detalles',   icon: FileText },
+      { key: 'checklist', label: 'Checklist',  icon: ListChecks },
+      { key: 'photos',    label: 'Fotos',      icon: Camera },
+    ] as const;
+
     return (
       <div className="space-y-4 sm:space-y-6">
-        {/* Header de la página de detalle */}
-        <div className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white ${esEnCurso ? 'bg-gradient-to-r from-[#195083] to-[#4894AD]' : 'bg-gradient-to-r from-[#D95B26] to-[#4894AD]'}`}>
+        {/* Header */}
+        <div className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white ${esEnCurso ? 'bg-linear-to-r from-[#195083] to-[#4894AD]' : 'bg-linear-to-r from-[#D95B26] to-[#4894AD]'}`}>
           <div className="flex items-center gap-3 mb-4">
-            <button
-              onClick={closeDetail}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex-shrink-0"
-            >
+            <button onClick={closeDetail} className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors shrink-0">
               <X className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">
@@ -618,8 +641,6 @@ function EmpleadaServicios() {
               </p>
             </div>
           </div>
-
-          {/* Info rápida en el header */}
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div className="bg-white/15 rounded-lg p-2 text-center">
               <Calendar className="h-4 w-4 mx-auto mb-1 text-[#FCF7F0]/80" />
@@ -636,141 +657,325 @@ function EmpleadaServicios() {
           </div>
         </div>
 
-        {/* Información del servicio */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-4 sm:p-6">
-            <div className="space-y-5">
-                {/* Cliente */}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-blue-600" />
-                    {t('empleada.services.modal.clientInfo')}
-                  </h4>
-                  <div className="space-y-2">
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex border-b border-gray-100">
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const active = detailTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setDetailTab(tab.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 ${
+                    active
+                      ? 'border-[#D95B26] text-[#D95B26]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                  {tab.key === 'checklist' && checklist.length > 0 && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-[#D95B26]/10 text-[#D95B26]' : 'bg-gray-100 text-gray-600'}`}>
+                      {checklist.filter(c => c.ejecutada).length}/{checklist.length}
+                    </span>
+                  )}
+                  {tab.key === 'photos' && fotos.length > 0 && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-[#D95B26]/10 text-[#D95B26]' : 'bg-gray-100 text-gray-600'}`}>
+                      {fotos.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── TAB: DETALLES ── */}
+          {detailTab === 'details' && (
+            <div className="p-4 sm:p-6 space-y-5">
+              {/* Cliente */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                  <User className="h-4 w-4 text-blue-600" />
+                  {t('empleada.services.modal.clientInfo')}
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <User className="h-3.5 w-3.5 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-900">{selectedServicio.cliente.nombre}</span>
+                  </div>
+                  {selectedServicio.cliente.telefono && (
                     <div className="flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">{selectedServicio.cliente.nombre}</span>
+                      <Phone className="h-3.5 w-3.5 text-gray-400" />
+                      <a href={`tel:${selectedServicio.cliente.telefono}`} className="text-sm text-blue-600 hover:underline">
+                        {selectedServicio.cliente.telefono}
+                      </a>
                     </div>
-                    {selectedServicio.cliente.telefono && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3.5 w-3.5 text-gray-400" />
-                        <a href={`tel:${selectedServicio.cliente.telefono}`} className="text-sm text-blue-600 hover:underline">
-                          {selectedServicio.cliente.telefono}
-                        </a>
+                  )}
+                  {selectedServicio.cliente.correo && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-gray-400" />
+                      <a href={`mailto:${selectedServicio.cliente.correo}`} className="text-sm text-blue-600 hover:underline truncate">
+                        {selectedServicio.cliente.correo}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Plan */}
+              {selectedServicio.plan && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                    <Package className="h-4 w-4 text-[#D95B26]" />
+                    {t('empleada.services.modal.cleaningPlan')}
+                  </h4>
+                  <p className="font-medium text-gray-900 text-sm">{selectedServicio.plan.nombre}</p>
+                  {selectedServicio.plan.descripcion && (
+                    <p className="text-sm text-gray-600 mt-1">{selectedServicio.plan.descripcion}</p>
+                  )}
+                  {selectedServicio.plan.servicios_asociados?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {selectedServicio.plan.servicios_asociados.map((srv, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-xs text-gray-700">
+                          {srv}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Ubicación */}
+              {selectedServicio.ubicacion && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-[#D95B26]" />
+                    {t('empleada.services.modal.locationDetails')}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {selectedServicio.ubicacion.nombre_lugar && (
+                      <div>
+                        <p className="text-xs text-gray-500">{t('empleada.services.modal.place')}</p>
+                        <p className="font-medium text-gray-900">{selectedServicio.ubicacion.nombre_lugar}</p>
                       </div>
                     )}
-                    {selectedServicio.cliente.correo && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3.5 w-3.5 text-gray-400" />
-                        <a href={`mailto:${selectedServicio.cliente.correo}`} className="text-sm text-blue-600 hover:underline truncate">
-                          {selectedServicio.cliente.correo}
-                        </a>
+                    {selectedServicio.ubicacion.tamaño && formatTamano(selectedServicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
+                      <div>
+                        <p className="text-xs text-gray-500">{t('empleada.services.size')}</p>
+                        <p className="font-medium text-gray-900">{formatTamano(selectedServicio.ubicacion.tamaño)}</p>
+                      </div>
+                    )}
+                    {selectedServicio.ubicacion.baños != null && (
+                      <div>
+                        <p className="text-xs text-gray-500">{t('empleada.services.bathrooms')}</p>
+                        <p className="font-medium text-gray-900">{selectedServicio.ubicacion.baños}</p>
+                      </div>
+                    )}
+                    {selectedServicio.ubicacion.pisos != null && (
+                      <div>
+                        <p className="text-xs text-gray-500">{t('empleada.services.floors')}</p>
+                        <p className="font-medium text-gray-900">{selectedServicio.ubicacion.pisos}</p>
                       </div>
                     )}
                   </div>
+                  {selectedServicio.ubicacion.descripcion && (
+                    <p className="text-sm text-gray-600 mt-3">{selectedServicio.ubicacion.descripcion}</p>
+                  )}
+                  {selectedServicio.ubicacion.ubicacion && (
+                    <div className="mt-3">
+                      {(selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion) && (
+                        <p className="text-sm text-gray-700 mb-3">
+                          📍 {selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion}
+                        </p>
+                      )}
+                      <InteractiveMap ubicacion={selectedServicio.ubicacion.ubicacion} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedServicio.descripcion && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                    <FileText className="h-4 w-4" />
+                    {t('empleada.services.modal.additionalNotes')}
+                  </h4>
+                  <p className="text-sm text-gray-700">{selectedServicio.descripcion}</p>
+                </div>
+              )}
+
+              {/* Botón iniciar servicio */}
+              {['confirmada', 'programada'].includes((selectedServicio.estado || '').toLowerCase()) && (
+                <button
+                  onClick={() => iniciarServicio(selectedServicio.id)}
+                  disabled={iniciandoServicio}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#195083] hover:bg-[#143f69] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors shadow-sm"
+                >
+                  {iniciandoServicio ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />}
+                  Iniciar servicio
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── TAB: CHECKLIST ── */}
+          {detailTab === 'checklist' && (
+            <div className="p-4 sm:p-6">
+              {checklistLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#D95B26]" />
+                </div>
+              ) : checklist.length === 0 ? (
+                <div className="text-center py-10">
+                  <ListChecks className="h-12 w-12 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">No hay actividades en el checklist de esta reserva.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Progreso */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm font-medium text-gray-700">
+                      {checklist.filter(c => c.ejecutada).length} de {checklist.length} completadas
+                    </span>
+                    <div className="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#D95B26] rounded-full transition-all"
+                        style={{ width: `${(checklist.filter(c => c.ejecutada).length / checklist.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  {checklist.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => toggleActividad(selectedServicio.id, item)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
+                        item.ejecutada
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-white border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        item.ejecutada ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                      }`}>
+                        {item.ejecutada && <CheckCircle className="h-3 w-3 text-white" />}
+                      </div>
+                      <span className={`text-sm font-medium flex-1 ${item.ejecutada ? 'text-green-800 line-through' : 'text-gray-800'}`}>
+                        {item.nombre_actividad}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── TAB: FOTOS ── */}
+          {detailTab === 'photos' && (
+            <div className="p-4 sm:p-6 space-y-5">
+              {/* Upload */}
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 space-y-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                  <Upload className="h-3.5 w-3.5" /> Subir foto
+                </p>
+
+                {/* File input oculto */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadFoto(selectedServicio.id, file);
+                  }}
+                />
+
+                <div className="flex gap-2">
+                  <select
+                    value={newFotoTipo}
+                    onChange={e => setNewFotoTipo(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#D95B26]/40"
+                  >
+                    <option value="antes">Antes</option>
+                    <option value="durante">Durante</option>
+                    <option value="despues">Después</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Descripción (opcional)"
+                    value={newFotoDesc}
+                    onChange={e => setNewFotoDesc(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#D95B26]/40"
+                  />
                 </div>
 
-                {/* Plan */}
-                {selectedServicio.plan && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-                      <Package className="h-4 w-4 text-[#D95B26]" />
-                      {t('empleada.services.modal.cleaningPlan')}
-                    </h4>
-                    <p className="font-medium text-gray-900 text-sm">{selectedServicio.plan.nombre}</p>
-                    {selectedServicio.plan.descripcion && (
-                      <p className="text-sm text-gray-600 mt-1">{selectedServicio.plan.descripcion}</p>
-                    )}
-                    {selectedServicio.plan.servicios_asociados?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {selectedServicio.plan.servicios_asociados.map((srv, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-white border border-gray-200 rounded-md text-xs text-gray-700">
-                            {srv}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingFoto}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#D95B26] text-white rounded-lg text-sm font-medium hover:bg-[#B8491F] disabled:opacity-50 transition-colors"
+                >
+                  {uploadingFoto
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Subiendo...</>
+                    : <><Camera className="h-4 w-4" /> Seleccionar foto</>
+                  }
+                </button>
+
+                {uploadError && (
+                  <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 p-2 rounded-lg">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {uploadError}
                   </div>
                 )}
+              </div>
 
-                {/* Ubicación */}
-                {selectedServicio.ubicacion && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-[#D95B26]" />
-                      {t('empleada.services.modal.locationDetails')}
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      {selectedServicio.ubicacion.nombre_lugar && (
-                        <div>
-                          <p className="text-xs text-gray-500">{t('empleada.services.modal.place')}</p>
-                          <p className="font-medium text-gray-900">{selectedServicio.ubicacion.nombre_lugar}</p>
-                        </div>
-                      )}
-                      {selectedServicio.ubicacion.tamaño && formatTamano(selectedServicio.ubicacion.tamaño) !== t('empleada.services.notSpecified') && (
-                        <div>
-                          <p className="text-xs text-gray-500">{t('empleada.services.size')}</p>
-                          <p className="font-medium text-gray-900">{formatTamano(selectedServicio.ubicacion.tamaño)}</p>
-                        </div>
-                      )}
-                      {selectedServicio.ubicacion.baños != null && (
-                        <div>
-                          <p className="text-xs text-gray-500">{t('empleada.services.bathrooms')}</p>
-                          <p className="font-medium text-gray-900">{selectedServicio.ubicacion.baños}</p>
-                        </div>
-                      )}
-                      {selectedServicio.ubicacion.pisos != null && (
-                        <div>
-                          <p className="text-xs text-gray-500">{t('empleada.services.floors')}</p>
-                          <p className="font-medium text-gray-900">{selectedServicio.ubicacion.pisos}</p>
+              {/* Galería */}
+              {fotosLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#D95B26]" />
+                </div>
+              ) : fotos.length === 0 ? (
+                <div className="text-center py-10">
+                  <Image className="h-12 w-12 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">Aún no hay fotos para este servicio.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {fotos.map(foto => (
+                    <div key={foto.id} className="relative group rounded-xl overflow-hidden border border-gray-100 aspect-square bg-gray-50">
+                      <img
+                        src={foto.url_foto}
+                        alt={foto.descripcion ?? 'Foto servicio'}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      {/* Overlay con tipo y botón eliminar */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100">
+                        <span className="self-end">
+                          <button
+                            onClick={() => deleteFoto(selectedServicio.id, foto.id)}
+                            className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            title="Eliminar foto"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                        <span className="px-2 py-0.5 bg-black/60 text-white text-[10px] rounded-full self-start capitalize">
+                          {foto.tipo ?? 'durante'}
+                        </span>
+                      </div>
+                      {foto.descripcion && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1 text-[10px] text-white truncate">
+                          {foto.descripcion}
                         </div>
                       )}
                     </div>
-                    {selectedServicio.ubicacion.descripcion && (
-                      <p className="text-sm text-gray-600 mt-3">{selectedServicio.ubicacion.descripcion}</p>
-                    )}
-                    {selectedServicio.ubicacion.ubicacion && (
-                      <div className="mt-3">
-                        {(selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion) && (
-                          <p className="text-sm text-gray-700 mb-3">
-                            📍 {selectedServicio.ubicacion.ubicacion.formatted_address || selectedServicio.ubicacion.ubicacion.direccion}
-                          </p>
-                        )}
-                        <InteractiveMap ubicacion={selectedServicio.ubicacion.ubicacion} />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedServicio.descripcion && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2 text-sm">
-                      <FileText className="h-4 w-4" />
-                      {t('empleada.services.modal.additionalNotes')}
-                    </h4>
-                    <p className="text-sm text-gray-700">{selectedServicio.descripcion}</p>
-                  </div>
-                )}
-
-                {/* Botón iniciar servicio — solo para confirmada/programada */}
-                {['confirmada', 'programada'].includes((selectedServicio.estado || '').toLowerCase()) && (
-                  <button
-                    onClick={() => iniciarServicio(selectedServicio.id)}
-                    disabled={iniciandoServicio}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#195083] hover:bg-[#143f69] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors shadow-sm"
-                  >
-                    {iniciandoServicio ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Play className="h-5 w-5" />
-                    )}
-                    Iniciar servicio
-                  </button>
-                )}
+                  ))}
+                </div>
+              )}
             </div>
-
-
-          </div>
+          )}
         </div>
       </div>
     );
