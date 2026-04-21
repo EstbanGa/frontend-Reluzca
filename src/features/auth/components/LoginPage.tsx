@@ -181,7 +181,7 @@ export default function SignInPage() {
       {/* Top bar */}
       <div className="fixed top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between z-10">
         <a 
-          href="https://reluzca.com/" 
+          href="/" 
           className="flex items-center space-x-2 text-[#4894AD] hover:text-[#195083] transition-colors group"
         >
           <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
