@@ -447,6 +447,7 @@
       "subtitle": "Manage all system users",
       "createUser": "Create User",
       "exportCSV": "Export CSV",
+      "exportExcel": "Export Excel",
       "administrators": "Administrators",
       "clients": "Clients",
       "employees": "Employees",
@@ -456,7 +457,13 @@
       "selected": "selected",
       "clear": "Clear",
       "selectAll": "Select all",
-      "searchPlaceholder": "Search {{role}}...",
+      "searchPlaceholder": "Search by name, email or phone...",
+      "filters": {
+        "allRoles": "All roles",
+        "admins": "Admins",
+        "clients": "Clients",
+        "employees": "Employees"
+      },
       "registered": "Registered",
       "viewDetails": "View details",
       "editUser": "Edit user",
@@ -469,6 +476,10 @@
       "noUsersRegistered": "No {{role}} have been registered in the system yet",
       "confirmDelete": "Are you sure you want to delete {{count}} user(s)?\n\nThis action cannot be undone.",
       "stats": {
+        "total": "Total",
+        "admins": "Admins",
+        "clients": "Clients",
+        "employees": "Employees",
         "reservations": "Reservations",
         "spent": "Spent",
         "services": "Services",
@@ -1446,6 +1457,10 @@
       "ratings": "Ratings",
       "notifications": "Notifications"
     },
+    "reservations": {
+      "startService": "Start service",
+      "viewActivity": "View activity"
+    },
     "earnings": {
       "title": "My Earnings",
       "subtitle": "View your income by period",
@@ -1667,6 +1682,13 @@
       "errorLoading": "Error loading notifications",
       "loading": "Loading notifications...",
       "confirmDelete": "Are you sure you want to delete this notification?"
+    },
+    "activeService": {
+      "noActiveServices": "No active services",
+      "noActiveMessage": "You have no reservations in progress or scheduled for today.",
+      "viewMyReservations": "View my reservations",
+      "serviceActivities": "Service activities",
+      "servicePhotos": "Service photos"
     }
   }
 }

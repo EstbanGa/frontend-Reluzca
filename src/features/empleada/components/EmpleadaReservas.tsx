@@ -813,7 +813,7 @@ function EmpleadaServicios() {
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#195083] hover:bg-[#143f69] disabled:opacity-50 text-white font-semibold rounded-xl transition-colors shadow-sm"
                 >
                   {iniciandoServicio ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />}
-                  Iniciar servicio
+                  {t('empleada.reservations.startService')}
                 </button>
               )}
             </div>
@@ -1031,7 +1031,7 @@ function EmpleadaServicios() {
                 className="px-3 py-1.5 bg-white text-[#195083] hover:bg-white/90 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
                 <ListChecks className="h-3.5 w-3.5" />
-                Ver actividad
+                {t('empleada.reservations.viewActivity')}
               </button>
             </div>
           </div>

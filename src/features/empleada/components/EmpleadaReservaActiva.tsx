@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { withEmpleadaRole } from "@/components/common/ProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import {
   CheckCircle,
@@ -133,6 +134,7 @@ const ESTADO_CONFIG: Record<string, { label: string; color: string; bg: string }
 
 function EmpleadaReservaActiva() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [empleadaId, setEmpleadaId] = useState<string | null>(null);
@@ -327,13 +329,13 @@ function EmpleadaReservaActiva() {
     return (
       <div className="text-center py-16 px-4">
         <Calendar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-        <h3 className="text-xl font-bold text-gray-700 mb-2">Sin servicios activos</h3>
-        <p className="text-gray-500 mb-6">No tienes reservas en progreso ni programadas para hoy.</p>
+        <h3 className="text-xl font-bold text-gray-700 mb-2">{t('empleada.activeService.noActiveServices')}</h3>
+        <p className="text-gray-500 mb-6">{t('empleada.activeService.noActiveMessage')}</p>
         <button
           onClick={() => navigate("/empleada/reservas/index")}
           className="bg-[#D95B26] text-white px-6 py-2 rounded-xl font-semibold"
         >
-          Ver mis reservas
+          {t('empleada.activeService.viewMyReservations')}
         </button>
       </div>
     );
@@ -494,7 +496,7 @@ function EmpleadaReservaActiva() {
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h2 className="font-bold text-gray-900 flex items-center gap-2">
               <Star className="h-4 w-4 text-[#D95B26]" />
-              Actividades del servicio
+              {t('empleada.activeService.serviceActivities')}
             </h2>
             <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
               {actividadesEjecutadas}/{actividades.length}
@@ -600,7 +602,7 @@ function EmpleadaReservaActiva() {
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-[#D95B26]" />
-            Fotos del servicio
+            {t('empleada.activeService.servicePhotos')}
           </h2>
           <button
             onClick={() => triggerFileInput("general")}

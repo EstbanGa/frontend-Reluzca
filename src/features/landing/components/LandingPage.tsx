@@ -1,8 +1,10 @@
 ﻿import { useState, useEffect } from 'react';
 import { Star, CheckCircle, Phone, Mail, MapPin, ArrowRight, Users, Shield, Clock, Sparkles, Home, Building, Calendar, Award, Target, Heart, Zap, TrendingUp, CheckSquare, MessageCircle, PlayCircle } from 'lucide-react';
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'hogar' | 'empresa'>('hogar');
 
@@ -170,10 +172,10 @@ export default function HomePage() {
 
             <div className="flex space-x-4">
               <Link to="/auth/login" className="hidden md:inline-flex px-4 py-2 text-[#4894AD] border border-[#4894AD] rounded-lg hover:bg-[#4894AD] hover:text-white transition-all duration-300">
-                  Iniciar Sesión
+                  {t('auth.login')}
               </Link>
               <Link to="/auth/sign_up" className="px-6 py-2 bg-[#D95B26] text-white rounded-lg hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  Crear Usuario
+                  {t('landing.createUser')}
               </Link>
             </div>
           </div>
@@ -203,11 +205,11 @@ export default function HomePage() {
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <button className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center group">
-                  Agendar Ahora
+                  {t('landing.scheduleNow')}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button className="px-8 py-4 border-2 border-[#4894AD] text-[#4894AD] rounded-xl hover:bg-[#4894AD] hover:text-white transition-all duration-300">
-                  Ver Cómo Funciona
+                  {t('landing.howItWorks')}
                 </button>
               </div>
 
@@ -254,11 +256,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-4xl font-bold text-gray-900">
-              Profesionales de limpieza en quienes puedes confiar
+              {t('landing.services.title')}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Nuestros Auxiliares Reluzca están capacitados para brindarte un servicio seguro, 
-              confiable y de alta calidad con <span className="text-[#D95B26] font-semibold">responsabilidad, discreción y atención al detalle.</span>
+              {t('landing.services.subtitle')}
             </p>
           </div>
 

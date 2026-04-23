@@ -69,7 +69,7 @@ function EmpleadaPerfilPage() {
           className="bg-[#D95B26] text-white px-4 py-2 rounded-lg hover:bg-[#b84d1f] transition-colors inline-flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          Reintentar
+          {t('common.retry')}
         </button>
       </div>
     );

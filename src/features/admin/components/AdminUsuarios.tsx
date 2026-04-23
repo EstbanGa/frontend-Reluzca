@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
+import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
@@ -102,6 +103,7 @@ const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string }> 
 // â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AdminUsuarios() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +208,7 @@ function AdminUsuarios() {
       <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
       <p className="text-gray-600 mb-4">{error}</p>
       <button onClick={loadAllUsuarios} className="bg-[#195083] text-white px-4 py-2 rounded-lg">
-        Reintentar
+        {t('common.retry')}
       </button>
     </div>
   );
@@ -227,14 +229,14 @@ function AdminUsuarios() {
               className="flex items-center gap-2 bg-white text-[#195083] hover:bg-[#F5F0E7] px-4 py-2 rounded-lg font-medium text-sm transition-colors"
             >
               <UserPlus className="h-4 w-4" />
-              Crear Usuario
+              {t('admin.users.createUser')}
             </button>
             <button
               onClick={exportToExcel}
               className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
             >
               <Download className="h-4 w-4" />
-              Exportar Excel
+              {t('admin.users.exportExcel')}
             </button>
           </div>
         }
@@ -244,10 +246,10 @@ function AdminUsuarios() {
       <ListStatsGrid
         columns={4}
         stats={[
-          { label: "Total", value: usuarios.length, color: "#195083" },
-          { label: "Admins", value: usuarios.filter(u => u.rol === "admin").length, color: "#7c3aed" },
-          { label: "Clientes", value: usuarios.filter(u => u.rol === "cliente").length, color: "#2563eb" },
-          { label: "Empleadas", value: usuarios.filter(u => u.rol === "empleada").length, color: "#059669" },
+          { label: t('admin.users.stats.total'), value: usuarios.length, color: "#195083" },
+          { label: t('admin.users.stats.admins'), value: usuarios.filter(u => u.rol === "admin").length, color: "#7c3aed" },
+          { label: t('admin.users.stats.clients'), value: usuarios.filter(u => u.rol === "cliente").length, color: "#2563eb" },
+          { label: t('admin.users.stats.employees'), value: usuarios.filter(u => u.rol === "empleada").length, color: "#059669" },
         ]}
       />
 
@@ -258,7 +260,7 @@ function AdminUsuarios() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por nombre, correo o teléfono..."
+              placeholder={t('admin.users.searchPlaceholder')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
@@ -270,10 +272,10 @@ function AdminUsuarios() {
               onChange={(e) => { setRolFilter(e.target.value as typeof rolFilter); setPage(1); }}
               className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
             >
-              <option value="todos">Todos los roles</option>
-              <option value="admin">Admins</option>
-              <option value="cliente">Clientes</option>
-              <option value="empleada">Empleadas</option>
+              <option value="todos">{t('admin.users.filters.allRoles')}</option>
+              <option value="admin">{t('admin.users.filters.admins')}</option>
+              <option value="cliente">{t('admin.users.filters.clients')}</option>
+              <option value="empleada">{t('admin.users.filters.employees')}</option>
             </select>
           </div>
         </div>
@@ -328,7 +330,7 @@ function AdminUsuarios() {
                       isActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${isActivo ? "bg-green-500" : "bg-red-500"}`} />
-                      {isActivo ? "Activo" : "Inactivo"}
+                      {isActivo ? t('common.active') : t('common.inactive')}
                     </span>
                     {u.ranking != null && (
                       <span className="inline-flex items-center gap-0.5 text-xs text-gray-500">
@@ -343,7 +345,7 @@ function AdminUsuarios() {
                 <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
                   <span className="text-xs text-gray-400">{fmtDate(u.fecha_registro)}</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-500">Reservas</span>
+                    <span className="text-xs text-gray-500">{t('admin.users.reservations')}</span>
                     <span className="text-sm font-bold text-[#195083]">{u.estadisticas?.total_reservas ?? "—"}</span>
                   </div>
                 </div>

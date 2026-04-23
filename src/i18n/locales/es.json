@@ -447,6 +447,7 @@
       "subtitle": "Administra todos los usuarios del sistema",
       "createUser": "Crear Usuario",
       "exportCSV": "Exportar CSV",
+      "exportExcel": "Exportar Excel",
       "administrators": "Administradores",
       "clients": "Clientes",
       "employees": "Empleadas",
@@ -456,7 +457,13 @@
       "selected": "seleccionados",
       "clear": "Limpiar",
       "selectAll": "Seleccionar todos",
-      "searchPlaceholder": "Buscar {{role}}...",
+      "searchPlaceholder": "Buscar por nombre, correo o teléfono...",
+      "filters": {
+        "allRoles": "Todos los roles",
+        "admins": "Admins",
+        "clients": "Clientes", 
+        "employees": "Empleadas"
+      },
       "registered": "Registrado",
       "viewDetails": "Ver detalles",
       "editUser": "Editar usuario",
@@ -468,16 +475,26 @@
       "tryDifferentSearch": "Intenta cambiar el término de búsqueda",
       "noUsersRegistered": "Aún no se han registrado {{role}} en el sistema",
       "confirmDelete": "¿Estás seguro de que deseas eliminar {{count}} usuario(s)?\n\nEsta acción no se puede deshacer.",
+      "backToUsers": "Volver a usuarios",
       "stats": {
+        "total": "Total",
+        "admins": "Admins",
+        "clients": "Clientes",
+        "employees": "Empleadas",
         "reservations": "Reservas",
         "spent": "Gastado",
         "services": "Servicios",
         "revenue": "Ingresos",
-        "users": "Usuarios"
+        "users": "Usuarios",
+        "reservations": "Reservas",
+        "totalSpent": "Gasto total",
+        "memberSince": "Miembro desde",
+        "locations": "Ubicaciones"
       },
       "errors": {
         "loadError": "Error al cargar usuarios",
-        "deleteError": "Error al eliminar usuarios"
+        "deleteError": "Error al eliminar usuarios",
+        "userNotFound": "Usuario no encontrado"
       },
       "modal": {
         "personalInfo": "Información Personal",
@@ -1446,6 +1463,10 @@
       "ratings": "Calificaciones",
       "notifications": "Notificaciones"
     },
+    "reservations": {
+      "startService": "Iniciar servicio",
+      "viewActivity": "Ver actividad"
+    },
     "earnings": {
       "title": "Mis Ganancias",
       "subtitle": "Consulta tus ingresos por período",
@@ -1667,6 +1688,13 @@
       "errorLoading": "Error al cargar notificaciones",
       "loading": "Cargando notificaciones...",
       "confirmDelete": "¿Estás seguro de eliminar esta notificación?"
+    },
+    "activeService": {
+      "noActiveServices": "Sin servicios activos",
+      "noActiveMessage": "No tienes reservas en progreso ni programadas para hoy.",
+      "viewMyReservations": "Ver mis reservas",
+      "serviceActivities": "Actividades del servicio",
+      "servicePhotos": "Fotos del servicio"
     }
   }
 }

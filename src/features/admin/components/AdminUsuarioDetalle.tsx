@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
+import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
 import {
   ArrowLeft, Edit3, Save, RefreshCw, AlertCircle, KeyRound,
@@ -97,6 +98,7 @@ const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string }> 
 function AdminUsuarioDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Data
   const [usuario, setUsuario] = useState<Usuario | null>(null);
@@ -240,9 +242,9 @@ function AdminUsuarioDetalle() {
   if (error || !usuario) return (
     <div className="text-center py-16">
       <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
-      <p className="text-gray-600 mb-4">{error ?? "Usuario no encontrado"}</p>
+      <p className="text-gray-600 mb-4">{error ?? t('admin.users.errors.userNotFound')}</p>
       <button onClick={() => navigate("/admin/usuarios/index")} className="bg-[#195083] text-white px-4 py-2 rounded-lg">
-        Volver a usuarios
+        {t('admin.users.backToUsers')}
       </button>
     </div>
   );
@@ -260,7 +262,7 @@ function AdminUsuarioDetalle() {
           className="flex items-center gap-2 text-white/80 hover:text-white mb-4 text-sm font-medium transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver a usuarios
+          {t('admin.users.backToUsers')}
         </button>
         <div className="flex items-start gap-4">
           <div
@@ -281,7 +283,7 @@ function AdminUsuarioDetalle() {
                 isActivo ? "bg-green-500/30 text-green-100" : "bg-red-500/30 text-red-100"
               }`}>
                 {isActivo ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                {isActivo ? "Activo" : "Inactivo"}
+                {isActivo ? t('common.active') : t('common.inactive')}
               </span>
               {usuario.ranking != null && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-100">
@@ -297,10 +299,10 @@ function AdminUsuarioDetalle() {
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Reservas", value: usuario.estadisticas?.total_reservas ?? 0, icon: Calendar },
-          { label: "Gasto total", value: fmtCOP(usuario.estadisticas?.gasto_total), icon: User },
-          { label: "Miembro desde", value: fmtDate(usuario.fecha_registro), icon: Home },
-          { label: "Ubicaciones", value: ubicaciones.length, icon: MapPin },
+          { label: t('admin.users.stats.reservations'), value: usuario.estadisticas?.total_reservas ?? 0, icon: Calendar },
+          { label: t('admin.users.stats.totalSpent'), value: fmtCOP(usuario.estadisticas?.gasto_total), icon: User },
+          { label: t('admin.users.stats.memberSince'), value: fmtDate(usuario.fecha_registro), icon: Home },
+          { label: t('admin.users.stats.locations'), value: ubicaciones.length, icon: MapPin },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-1">
@@ -316,9 +318,9 @@ function AdminUsuarioDetalle() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex border-b border-gray-200">
           {[
-            { key: "detalles",   label: "Detalles",              icon: User },
-            { key: "reservas",   label: `Reservas (${reservas.length})`,        icon: Calendar },
-            { key: "ubicaciones",label: `Ubicaciones (${ubicaciones.length})`,  icon: MapPin },
+            { key: "detalles",   label: t('admin.users.tabs.details'),              icon: User },
+            { key: "reservas",   label: `${t('admin.users.tabs.reservations')} (${reservas.length})`,        icon: Calendar },
+            { key: "ubicaciones",label: `${t('admin.users.tabs.locations')} (${ubicaciones.length})`,  icon: MapPin },
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
