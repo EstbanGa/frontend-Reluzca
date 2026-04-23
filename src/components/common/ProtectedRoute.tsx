@@ -144,27 +144,46 @@ export function withClienteRole<P extends object>(Component: React.ComponentType
     const [authorized, setAuthorized] = useState<boolean | null>(null);
 
     useEffect(() => {
-      const checkAuth = () => {
+      const checkAuth = async () => {
         try {
-          // Validación simplificada: solo verifica localStorage
-          const userStr = localStorage.getItem("user");
+          const token = tokenStorage.getToken();
           
-          if (!userStr) {
+          if (!token) {
             navigate('/auth/login', { replace: true });
             return;
           }
 
-          const userData = JSON.parse(userStr);
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/auth/me`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (res.status === 401) {
+            tokenStorage.clear();
+            navigate('/auth/login', { replace: true });
+            return;
+          }
+
+          if (!res.ok) {
+            navigate('/unauthorized', { replace: true });
+            return;
+          }
+
+          const data = await res.json();
           
-          // Verificar que tenga rol de cliente
-          if (userData.rol !== 'cliente') {
+          // El backend devuelve el usuario directamente, no envuelto en { user: {...} }
+          if (data.rol !== 'cliente') {
             navigate('/unauthorized', { replace: true });
             return;
           }
 
           setAuthorized(true);
         } catch (error) {
-          navigate('/auth/login', { replace: true });
+          navigate('/unauthorized', { replace: true });
         }
       };
 

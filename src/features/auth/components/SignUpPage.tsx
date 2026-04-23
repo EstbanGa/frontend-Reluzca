@@ -15,8 +15,7 @@ import {
   FileText, 
   Phone, 
   Calendar,
-  UserCheck,
-  Users
+  UserCheck
 } from 'lucide-react';
 
 export default function SignUpPage() {
@@ -32,7 +31,7 @@ export default function SignUpPage() {
     telefono: '',
     tipo_persona: '',
     fecha_nacimiento: '',
-    rol: '', // Nuevo campo para el rol
+    rol: 'cliente', // Automáticamente cliente
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -59,11 +58,6 @@ export default function SignUpPage() {
   const isPasswordValid = Object.values(passwordValidation).every(Boolean);
 
   const validateForm = () => {
-    if (!form.rol) {
-      setMessage(t('auth.signup.errors.selectRole'));
-      setMessageType('error');
-      return false;
-    }
     if (!isPasswordValid) {
       setMessage(t('auth.signup.errors.passwordReqs'));
       setMessageType('error');
@@ -161,85 +155,6 @@ export default function SignUpPage() {
         {/* Form */}
         <div className="p-4 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Rol de usuario - Nuevo campo al inicio */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#195083]">
-                {t('auth.signup.roleQuestion')}
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div 
-                  className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                    form.rol === 'cliente' 
-                      ? 'border-[#4894AD] bg-[#4894AD]/5' 
-                      : 'border-gray-300 hover:border-[#4894AD]/50'
-                  }`}
-                  onClick={() => setForm({ ...form, rol: 'cliente' })}
-                >
-                  <input
-                    type="radio"
-                    name="rol"
-                    value="cliente"
-                    checked={form.rol === 'cliente'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      form.rol === 'cliente' ? 'bg-[#4894AD] text-white' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-[#195083]">{t('auth.signup.roleClient')}</p>
-                      <p className="text-xs text-gray-500">{t('auth.signup.roleClientDesc')}</p>
-                    </div>
-                  </div>
-                  {form.rol === 'cliente' && (
-                    <div className="absolute top-2 right-2 w-5 h-5 bg-[#4894AD] rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                <div 
-                  className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                    form.rol === 'empleada' 
-                      ? 'border-[#D95B26] bg-[#D95B26]/5' 
-                      : 'border-gray-300 hover:border-[#D95B26]/50'
-                  }`}
-                  onClick={() => setForm({ ...form, rol: 'empleada' })}
-                >
-                  <input
-                    type="radio"
-                    name="rol"
-                    value="empleada"
-                    checked={form.rol === 'empleada'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      form.rol === 'empleada' ? 'bg-[#D95B26] text-white' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-[#195083]">{t('auth.signup.roleEmployee')}</p>
-                      <p className="text-xs text-gray-500">{t('auth.signup.roleEmployeeDesc')}</p>
-                    </div>
-                  </div>
-                  {form.rol === 'empleada' && (
-                    <div className="absolute top-2 right-2 w-5 h-5 bg-[#D95B26] rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
             {/* Nombre y Apellido */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

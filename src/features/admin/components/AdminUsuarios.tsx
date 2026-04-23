@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 import {
   Users, User, Search, Crown, UserCheck, Briefcase, Eye, EyeOff,
   RefreshCw, AlertCircle, Download, Star, X, KeyRound, Save,
+  UserPlus,
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import ListStatsGrid from "@/components/ui/ListStatsGrid";
@@ -220,13 +221,22 @@ function AdminUsuarios() {
         subtitle={`${usuarios.length} usuarios registrados — ${filtered.length} mostrados`}
         icon={<Users className="h-7 w-7" />}
         actions={
-          <button
-            onClick={exportToExcel}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            Exportar Excel
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate('/admin/usuarios/crear')}
+              className="flex items-center gap-2 bg-white text-[#195083] hover:bg-[#F5F0E7] px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              Crear Usuario
+            </button>
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Exportar Excel
+            </button>
+          </div>
         }
       />
 

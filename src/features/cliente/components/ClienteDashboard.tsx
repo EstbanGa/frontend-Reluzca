@@ -102,6 +102,16 @@ function ClienteIndex() {
   const { t } = useTranslation();
 
   useEffect(() => {
+    // Verificar rol del usuario
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user.rol === 'empleada') {
+        navigate('/empleada/index', { replace: true });
+        return;
+      }
+    }
+
     const fetchData = async () => {
       try {
         // Obtener el usuario_id desde el localStorage (lo guarda el HOC withRole)

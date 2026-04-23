@@ -58,6 +58,16 @@ function EmpleadaIndex() {
   });
 
   useEffect(() => {
+    // Verificar rol del usuario
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user.rol === 'cliente') {
+        navigate('/cliente/index', { replace: true });
+        return;
+      }
+    }
+
     fetchData();
     // Obtener empleada_id del token
     fetch(`${API_BASE_URL}/api/auth/me`, { headers: authHeader() })

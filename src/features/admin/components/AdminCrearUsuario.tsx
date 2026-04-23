@@ -34,6 +34,7 @@ interface FormData {
 }
 
 const ROLES = [
+  { value: "admin", label: "Admin" },
   { value: "cliente", label: "Cliente" },
   { value: "empleada", label: "Empleada" },
 ];
