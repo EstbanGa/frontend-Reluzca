@@ -493,7 +493,8 @@
       "tabs": {
         "details": "Details",
         "reservations": "Reservations",
-        "locations": "Locations"
+        "locations": "Locations",
+        "ratings": "Ratings"
       },
       "errors": {
         "loadError": "Error loading users",

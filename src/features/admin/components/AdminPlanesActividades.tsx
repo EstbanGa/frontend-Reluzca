@@ -750,14 +750,14 @@ function AdminPlanesActividades() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Precio por día (COP) <span className="text-red-500">*</span>
+                      Precio por día $$ <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       min={0}
                       value={planForm.precio}
                       onChange={(e) => setPlanForm((f) => ({ ...f, precio: e.target.value }))}
-                      placeholder="Ej: 80000"
+                      placeholder="Ej: $150"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
                     />
                   </div>
@@ -932,14 +932,14 @@ function AdminPlanesActividades() {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Precio unitario (COP)
+                      Precio unitario $$
                     </label>
                     <input
                       type="number"
                       min={0}
                       value={actForm.precio_unitario}
                       onChange={(e) => setActForm((f) => ({ ...f, precio_unitario: e.target.value }))}
-                      placeholder="Ej: 15000"
+                      placeholder="Ej: $15"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40"
                     />
                     <p className="text-xs text-gray-400 mt-1">Precio cuando se solicita individualmente.</p>
@@ -1018,14 +1018,14 @@ function AdminPlanesActividades() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Precio unitario (COP)
+                  Precio unitario $$
                 </label>
                 <input
                   type="number"
                   min={0}
                   value={actForm.precio_unitario}
                   onChange={(e) => setActForm((f) => ({ ...f, precio_unitario: e.target.value }))}
-                  placeholder="Ej: 15000"
+                  placeholder="Ej: $15"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
                 />
                 <p className="text-xs text-gray-400 mt-1">Precio cuando el cliente la solicita individualmente.</p>

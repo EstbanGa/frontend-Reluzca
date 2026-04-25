@@ -203,7 +203,7 @@ function AdminReservas() {
       "Estado": r.estado,
       "Estado pago": r.estado_pago ?? "",
       "Método pago": r.metodo_pago ?? "",
-      "Total (COP)": r.precio_total ?? "",
+      "Total $$": r.precio_total ?? "",
       "Descripción": r.descripcion ?? "",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);

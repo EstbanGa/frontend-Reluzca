@@ -312,7 +312,7 @@ function AdminCrearPlan() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
-                    {t("admin.createPlan.price")} (COP)
+                    {t("admin.createPlan.price")} $$
                   </label>
                   <input
                     type="number"

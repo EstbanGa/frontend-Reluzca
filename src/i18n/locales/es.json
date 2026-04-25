@@ -494,7 +494,8 @@
       "tabs": {
         "details": "Detalles",
         "reservations": "Reservas",
-        "locations": "Ubicaciones"
+        "locations": "Ubicaciones",
+        "ratings": "Calificaciones"
       },
       "errors": {
         "loadError": "Error al cargar usuarios",
@@ -1227,7 +1228,7 @@
       "referencesLabel": "Referencias para llegar",
       "referencesPlaceholder": "Ej: Casa esquinera con antejardín...",
       "descriptionLabel": "Descripción y observaciones",
-      "descriptionPlaceholder": "Comparte información importante para el servicio...",
+      "descriptionPlaceholder": "Comparte informacion adicional para el prestador del servicio: Persona que atiende, numero de telefono alternativo, instrucciones para llegar a la ubicación dentro del edificio, datos de acceso, etc...",
       "activeCheckbox": "Ubicación activa (disponible para programar servicios)",
       "charCount": "{{n}}/{{max}} caracteres",
       "submit": "Crear Ubicación",

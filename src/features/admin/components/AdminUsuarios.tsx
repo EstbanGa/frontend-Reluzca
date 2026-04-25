@@ -345,7 +345,7 @@ function AdminUsuarios() {
                 <div className="flex-shrink-0 flex flex-col items-end gap-1 text-right">
                   <span className="text-xs text-gray-400">{fmtDate(u.fecha_registro)}</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-500">{t('admin.users.reservations')}</span>
+                    <span className="text-xs text-gray-500">{t('admin.users.stats.reservations')}</span>
                     <span className="text-sm font-bold text-[#195083]">{u.estadisticas?.total_reservas ?? "—"}</span>
                   </div>
                 </div>
