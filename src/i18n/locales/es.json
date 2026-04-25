@@ -491,6 +491,11 @@
         "memberSince": "Miembro desde",
         "locations": "Ubicaciones"
       },
+      "tabs": {
+        "details": "Detalles",
+        "reservations": "Reservas",
+        "locations": "Ubicaciones"
+      },
       "errors": {
         "loadError": "Error al cargar usuarios",
         "deleteError": "Error al eliminar usuarios",

@@ -172,10 +172,10 @@ export default function HomePage() {
 
             <div className="flex space-x-4">
               <Link to="/auth/login" className="hidden md:inline-flex px-4 py-2 text-[#4894AD] border border-[#4894AD] rounded-lg hover:bg-[#4894AD] hover:text-white transition-all duration-300">
-                  {t('auth.login')}
+                  {t('landing.nav.login')}
               </Link>
               <Link to="/auth/sign_up" className="px-6 py-2 bg-[#D95B26] text-white rounded-lg hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  {t('landing.createUser')}
+                  {t('landing.nav.createUser')}
               </Link>
             </div>
           </div>
@@ -204,13 +204,13 @@ export default function HomePage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center group">
-                  {t('landing.scheduleNow')}
+                <Link to="/auth/login" className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center group">
+                  {t('landing.hero.ctaPrimary')}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="px-8 py-4 border-2 border-[#4894AD] text-[#4894AD] rounded-xl hover:bg-[#4894AD] hover:text-white transition-all duration-300">
-                  {t('landing.howItWorks')}
-                </button>
+                </Link>
+                <a href="#como-funciona" className="px-8 py-4 border-2 border-[#4894AD] text-[#4894AD] rounded-xl hover:bg-[#4894AD] hover:text-white transition-all duration-300 flex items-center justify-center">
+                  {t('landing.hero.ctaSecondary')}
+                </a>
               </div>
 
               <div className="flex items-center space-x-6 text-sm text-gray-600">
@@ -326,6 +326,13 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
+          <div className="text-center mt-12">
+            <Link to="/auth/login" className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center group">
+              Reservar Ahora
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -373,6 +380,13 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link to="/auth/login" className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center group">
+              Reservar Ahora
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
         </div>
       </section>
@@ -444,6 +458,13 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+
+          <div className="text-center mt-12">
+            <Link to="/auth/login" className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center group">
+              Reservar Ahora
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -488,8 +509,12 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Social Proof */}
-
+          <div className="text-center mt-4">
+            <Link to="/auth/login" className="px-8 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center group">
+              Reservar Ahora
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -602,12 +627,13 @@ export default function HomePage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-12 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg">
+              <Link to="/auth/login" className="px-12 py-4 bg-[#D95B26] text-white rounded-xl hover:bg-[#D95B26]/90 transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg inline-flex items-center justify-center group">
                 Agendar Mi Servicio Ahora
-              </button>
-              <button className="px-12 py-4 bg-white text-[#4894AD] rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg">
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link to="/auth/login" className="px-12 py-4 bg-white text-[#4894AD] rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl font-bold text-lg inline-flex items-center justify-center">
                 Solicitar Cotización
-              </button>
+              </Link>
             </div>
 
             <div className="flex justify-center items-center space-x-8 text-white/80 text-sm">

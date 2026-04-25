@@ -113,7 +113,7 @@ export default function SignUpPage() {
         telefono: '',
         tipo_persona: '',
         fecha_nacimiento: '',
-        rol: '',
+        rol: 'cliente',
       });
 
     } catch (err: unknown) {
@@ -410,7 +410,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               className="w-full bg-[#D95B26] hover:bg-[#D95B26]/90 text-white py-3 px-4 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 group"
-              disabled={loading || !form.rol}
+              disabled={loading}
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
@@ -428,11 +428,6 @@ export default function SignUpPage() {
               )}
             </button>
 
-            {!form.rol && (
-              <p className="text-sm text-red-500 text-center -mt-2">
-                {t('auth.signup.errors.selectRoleBelow')}
-              </p>
-            )}
           </form>
 
           {/* Message */}

@@ -62,6 +62,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
     if (!res.ok) {
       const errorMessage =
+        data?.detail ||
         data?.message ||
         data?.error ||
         `Error ${res.status}: ${res.statusText}`;

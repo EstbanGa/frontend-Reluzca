@@ -475,6 +475,7 @@
       "tryDifferentSearch": "Try a different search term",
       "noUsersRegistered": "No {{role}} have been registered in the system yet",
       "confirmDelete": "Are you sure you want to delete {{count}} user(s)?\n\nThis action cannot be undone.",
+      "backToUsers": "Back to Users",
       "stats": {
         "total": "Total",
         "admins": "Admins",
@@ -484,11 +485,20 @@
         "spent": "Spent",
         "services": "Services",
         "revenue": "Revenue",
-        "users": "Users"
+        "users": "Users",
+        "totalSpent": "Total Spent",
+        "memberSince": "Member Since",
+        "locations": "Locations"
+      },
+      "tabs": {
+        "details": "Details",
+        "reservations": "Reservations",
+        "locations": "Locations"
       },
       "errors": {
         "loadError": "Error loading users",
-        "deleteError": "Error deleting users"
+        "deleteError": "Error deleting users",
+        "userNotFound": "User not found"
       },
       "modal": {
         "personalInfo": "Personal Information",

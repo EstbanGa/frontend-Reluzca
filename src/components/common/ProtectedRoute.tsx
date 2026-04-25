@@ -12,12 +12,14 @@ export function withAdminRole<P extends object>(Component: React.ComponentType<P
     const [authorized, setAuthorized] = useState<boolean | null>(null);
 
     useEffect(() => {
+      let isMounted = true;
+
       const checkAuth = async () => {
         try {
           const token = tokenStorage.getToken();
-          
+
           if (!token) {
-            navigate('/auth/login', { replace: true });
+            if (isMounted) navigate('/auth/login', { replace: true });
             return;
           }
 
@@ -29,7 +31,9 @@ export function withAdminRole<P extends object>(Component: React.ComponentType<P
               },
             }
           );
-          
+
+          if (!isMounted) return;
+
           if (res.status === 401) {
             tokenStorage.clear();
             navigate('/auth/login', { replace: true });
@@ -42,8 +46,7 @@ export function withAdminRole<P extends object>(Component: React.ComponentType<P
           }
 
           const data = await res.json();
-          
-          // El backend devuelve el usuario directamente, no envuelto en { user: {...} }
+
           if (data.rol !== 'admin') {
             navigate('/unauthorized', { replace: true });
             return;
@@ -51,11 +54,12 @@ export function withAdminRole<P extends object>(Component: React.ComponentType<P
 
           setAuthorized(true);
         } catch (error) {
-          navigate('/unauthorized', { replace: true });
+          if (isMounted) navigate('/unauthorized', { replace: true });
         }
       };
 
       checkAuth();
+      return () => { isMounted = false; };
     }, [navigate]);
 
     if (authorized === null) {
@@ -78,12 +82,14 @@ export function withEmpleadaRole<P extends object>(Component: React.ComponentTyp
     const [authorized, setAuthorized] = useState<boolean | null>(null);
 
     useEffect(() => {
+      let isMounted = true;
+
       const checkAuth = async () => {
         try {
           const token = tokenStorage.getToken();
-          
+
           if (!token) {
-            navigate('/auth/login', { replace: true });
+            if (isMounted) navigate('/auth/login', { replace: true });
             return;
           }
 
@@ -95,6 +101,8 @@ export function withEmpleadaRole<P extends object>(Component: React.ComponentTyp
               },
             }
           );
+
+          if (!isMounted) return;
 
           if (res.status === 401) {
             tokenStorage.clear();
@@ -108,8 +116,7 @@ export function withEmpleadaRole<P extends object>(Component: React.ComponentTyp
           }
 
           const data = await res.json();
-          
-          // El backend devuelve el usuario directamente, no envuelto en { user: {...} }
+
           if (data.rol !== 'empleada') {
             navigate('/unauthorized', { replace: true });
             return;
@@ -117,11 +124,12 @@ export function withEmpleadaRole<P extends object>(Component: React.ComponentTyp
 
           setAuthorized(true);
         } catch (error) {
-          navigate('/unauthorized', { replace: true });
+          if (isMounted) navigate('/unauthorized', { replace: true });
         }
       };
 
       checkAuth();
+      return () => { isMounted = false; };
     }, [navigate]);
 
     if (authorized === null) {
@@ -144,12 +152,14 @@ export function withClienteRole<P extends object>(Component: React.ComponentType
     const [authorized, setAuthorized] = useState<boolean | null>(null);
 
     useEffect(() => {
+      let isMounted = true;
+
       const checkAuth = async () => {
         try {
           const token = tokenStorage.getToken();
-          
+
           if (!token) {
-            navigate('/auth/login', { replace: true });
+            if (isMounted) navigate('/auth/login', { replace: true });
             return;
           }
 
@@ -161,6 +171,8 @@ export function withClienteRole<P extends object>(Component: React.ComponentType
               },
             }
           );
+
+          if (!isMounted) return;
 
           if (res.status === 401) {
             tokenStorage.clear();
@@ -174,8 +186,7 @@ export function withClienteRole<P extends object>(Component: React.ComponentType
           }
 
           const data = await res.json();
-          
-          // El backend devuelve el usuario directamente, no envuelto en { user: {...} }
+
           if (data.rol !== 'cliente') {
             navigate('/unauthorized', { replace: true });
             return;
@@ -183,11 +194,12 @@ export function withClienteRole<P extends object>(Component: React.ComponentType
 
           setAuthorized(true);
         } catch (error) {
-          navigate('/unauthorized', { replace: true });
+          if (isMounted) navigate('/unauthorized', { replace: true });
         }
       };
 
       checkAuth();
+      return () => { isMounted = false; };
     }, [navigate]);
 
     if (authorized === null) {

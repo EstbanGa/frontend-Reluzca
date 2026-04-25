@@ -15,7 +15,7 @@ interface Usuario {
   id: string;
   nombre: string;
   apellido: string;
-  correo: string;
+  email: string;
   telefono?: string;
   rol: string;
   estado: string;
@@ -273,7 +273,7 @@ function AdminUsuarioDetalle() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-extrabold text-[#F5F0E7]">{usuario.nombre} {usuario.apellido}</h1>
-            <p className="text-[#F5F0E7]/70 text-sm mt-1">{usuario.correo}</p>
+            <p className="text-[#F5F0E7]/70 text-sm mt-1">{usuario.email}</p>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white`}>
                 <RolIcon className="h-3 w-3" />
@@ -379,7 +379,7 @@ function AdminUsuarioDetalle() {
                 <Mail className="h-4 w-4 text-[#195083]/60 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Correo</p>
-                  <p className="text-sm text-gray-800 font-medium mt-0.5">{usuario.correo}</p>
+                  <p className="text-sm text-gray-800 font-medium mt-0.5">{usuario.email}</p>
                 </div>
               </div>
               {/* Teléfono */}
@@ -410,19 +410,6 @@ function AdminUsuarioDetalle() {
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Nacimiento</p>
                   <p className="text-sm text-gray-800 font-medium mt-0.5">{fmtDate(usuario.fecha_nacimiento)}</p>
-                </div>
-              </div>
-              {/* Dirección */}
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg sm:col-span-2">
-                <MapPin className="h-4 w-4 text-[#195083]/60 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500 font-medium">Dirección</p>
-                  {editing ? (
-                    <input type="text" value={editForm.direccion} onChange={e => setEditForm(f => ({ ...f, direccion: e.target.value }))}
-                      className="w-full mt-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30" />
-                  ) : (
-                    <p className="text-sm text-gray-800 font-medium mt-0.5">{usuario.direccion ?? "No registrada"}</p>
-                  )}
                 </div>
               </div>
               {/* Estado (solo visible en modo edición) */}
