@@ -212,8 +212,7 @@ function AdminCrearPlan() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#195083] to-[#0f3a5f] rounded-xl p-4 sm:p-6 text-white mb-6">
           <div className="flex items-center gap-4">
@@ -510,7 +509,6 @@ function AdminCrearPlan() {
             </button>
           </div>
         </form>
-      </div>
     </div>
   );
 }

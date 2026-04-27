@@ -3,11 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { withAdminRole } from "@/components/common/ProtectedRoute";
 import { useTranslation } from "react-i18next";
 import { API_BASE_URL } from "@/config/env";
+import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
+import ListDetailModal from "@/components/ui/ListDetailModal";
+import { ROLE_THEMES } from "@/components/ui/ListPageHeader";
 import {
   ArrowLeft, Edit3, Save, RefreshCw, AlertCircle, KeyRound,
   Trash2, Eye, EyeOff, X, Calendar, MapPin, Star,
   CheckCircle, XCircle, Mail, Phone, Crown, UserCheck,
-  Briefcase, ChevronLeft, ChevronRight, User, Home,
+  Briefcase, User, Home, Clock, DollarSign,
+  Bath, Layers, Ruler, Search, Filter,
 } from "lucide-react";
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
@@ -39,24 +43,30 @@ interface Reserva {
   hora_final: string;
   estado: string;
   estado_pago?: string;
+  metodo_pago?: string;
+  descripcion?: string;
   precio_total?: number;
-  plan?: { nombre: string };
-  empleada?: { nombre: string; apellido: string };
-  cliente?: { nombre: string; apellido: string; email?: string; telefono?: string };
-  lugar?: { nombre?: string; direccion?: string; tipo_inmueble?: string };
+  created_at?: string;
+  updated_at?: string;
+  empleada?: { id?: string; nombre: string; apellido: string; telefono?: string; ranking?: number };
+  cliente?: { id?: string; nombre: string; apellido: string; email?: string; telefono?: string };
+  plan?: { id?: string; nombre: string; precio?: number; duracion?: number };
+  lugar?: { id?: string; nombre?: string; direccion?: string; tipo_lugar?: string };
 }
 
 interface Ubicacion {
   id: string;
-  nombre?: string;
-  direccion?: string;
-  tipo_inmueble?: string;
-  area_m2?: number;
-  area_ft2?: number;
-  num_habitaciones?: number;
-  num_banos?: number;
-  activa?: boolean;
-  descripcion?: string;
+  nombre: string;
+  tamaño: { categoria: string | null; metros: number | null; unidad: string | null; display: string } | null;
+  baños: number | null;
+  pisos: number | null;
+  ubicacion: { lat?: number; lng?: number; direccion?: string; formatted_address?: string } | null;
+  nombre_lugar: string | null;
+  tipo_lugar: string | null;
+  estado: boolean | null;
+  descripcion: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface Calificacion {
@@ -96,19 +106,23 @@ const ROL_CONFIG: Record<string, { label: string; color: string; bg: string; ico
   empleada: { label: "Empleada", color: "text-emerald-700", bg: "bg-emerald-100", icon: Briefcase },
 };
 
-const ESTADO_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pendiente:  { label: "Pendiente",  color: "text-yellow-700", bg: "bg-yellow-100" },
-  confirmada: { label: "Confirmada", color: "text-blue-700",   bg: "bg-blue-100"   },
-  en_proceso: { label: "En proceso", color: "text-orange-700", bg: "bg-orange-100" },
-  completada: { label: "Completada", color: "text-green-700",  bg: "bg-green-100"  },
-  cancelada:  { label: "Cancelada",  color: "text-red-700",    bg: "bg-red-100"    },
+const ESTADO_CONFIG: Record<string, { label: string; color: string; bg: string; icon: typeof CheckCircle }> = {
+  pendiente:  { label: "Pendiente",  color: "text-amber-700",  bg: "bg-amber-100",  icon: AlertCircle },
+  programada: { label: "Programada", color: "text-blue-700",   bg: "bg-blue-100",   icon: Calendar },
+  confirmada: { label: "Programada", color: "text-blue-700",   bg: "bg-blue-100",   icon: Calendar },
+  en_curso:   { label: "En Curso",   color: "text-orange-700", bg: "bg-orange-100", icon: Clock },
+  en_proceso: { label: "En Curso",   color: "text-orange-700", bg: "bg-orange-100", icon: Clock },
+  completada: { label: "Completada", color: "text-green-700",  bg: "bg-green-100",  icon: CheckCircle },
+  cancelada:  { label: "Cancelada",  color: "text-red-700",    bg: "bg-red-100",    icon: XCircle },
 };
 
 const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pendiente:   { label: "Pendiente",   color: "text-yellow-700", bg: "bg-yellow-50" },
+  pendiente:   { label: "Sin pagar",   color: "text-yellow-700", bg: "bg-yellow-50" },
+  SIN_PAGAR:   { label: "Sin pagar",   color: "text-yellow-700", bg: "bg-yellow-50" },
+  PAGADO:      { label: "Pagado",      color: "text-green-700",  bg: "bg-green-50"  },
   pagado:      { label: "Pagado",      color: "text-green-700",  bg: "bg-green-50"  },
-  fallido:     { label: "Fallido",     color: "text-red-700",    bg: "bg-red-50"    },
-  reembolsado: { label: "Reembolsado", color: "text-gray-700",   bg: "bg-gray-100"  },
+  PARCIAL:     { label: "Parcial",     color: "text-blue-700",   bg: "bg-blue-50"   },
+  REEMBOLSADO: { label: "Reembolsado", color: "text-gray-700",   bg: "bg-gray-100"  },
 };
 
 function StarsDisplay({ value }: { value: number }) {
@@ -130,95 +144,6 @@ function ModalRow({ label, value, bold }: { label: string; value: string; bold?:
   );
 }
 
-// ── Reservation Detail Modal ──────────────────────────────────────────────────
-function ReservaModal({ reserva, onClose, userRol }: { reserva: Reserva; onClose: () => void; userRol: string }) {
-  const estCfg = ESTADO_CONFIG[reserva.estado] ?? ESTADO_CONFIG.pendiente;
-  const pagoCfg = PAGO_CONFIG[reserva.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="bg-linear-to-r from-[#195083] to-[#0f3a5f] px-5 py-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-white font-bold text-sm">Detalle de Reserva</h2>
-            <p className="text-white/60 text-xs mt-0.5">{fmtDate(reserva.fecha)}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-            <X className="h-4 w-4 text-white" />
-          </button>
-        </div>
-        <div className="p-5 space-y-2.5 text-sm">
-          <div className="flex gap-2 mb-1">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${estCfg.bg} ${estCfg.color}`}>{estCfg.label}</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>{pagoCfg.label}</span>
-          </div>
-          <ModalRow label="Horario" value={`${reserva.hora_inicio} – ${reserva.hora_final}`} />
-          {reserva.plan && <ModalRow label="Plan" value={reserva.plan.nombre} />}
-          {userRol !== "empleada" && reserva.empleada && (
-            <ModalRow label="Empleada" value={`${reserva.empleada.nombre} ${reserva.empleada.apellido}`} />
-          )}
-          {userRol === "empleada" && reserva.cliente && (
-            <>
-              <ModalRow label="Cliente" value={`${reserva.cliente.nombre} ${reserva.cliente.apellido}`} />
-              {reserva.cliente.email && <ModalRow label="Correo" value={reserva.cliente.email} />}
-              {reserva.cliente.telefono && <ModalRow label="Teléfono" value={reserva.cliente.telefono} />}
-            </>
-          )}
-          {reserva.lugar && (
-            <>
-              <ModalRow label="Lugar" value={reserva.lugar.nombre ?? "—"} />
-              {reserva.lugar.direccion && <ModalRow label="Dirección" value={reserva.lugar.direccion} />}
-            </>
-          )}
-          {reserva.precio_total != null && (
-            <div className="pt-2 border-t border-gray-100">
-              <ModalRow label="Total" value={fmtCOP(reserva.precio_total)} bold />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Location Detail Modal ─────────────────────────────────────────────────────
-function UbicacionModal({ ubicacion, onClose, areaUnit }: { ubicacion: Ubicacion; onClose: () => void; areaUnit: "m2" | "ft2" }) {
-  const area = areaUnit === "ft2"
-    ? (ubicacion.area_ft2 ?? (ubicacion.area_m2 != null ? Math.round(ubicacion.area_m2 * 10.7639 * 100) / 100 : null))
-    : (ubicacion.area_m2 ?? (ubicacion.area_ft2 != null ? Math.round(ubicacion.area_ft2 / 10.7639 * 100) / 100 : null));
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="bg-linear-to-r from-[#195083] to-[#0f3a5f] px-5 py-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-white font-bold text-sm">{ubicacion.nombre ?? "Ubicación"}</h2>
-            <p className="text-white/60 text-xs mt-0.5">{ubicacion.direccion ?? "Sin dirección"}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-            <X className="h-4 w-4 text-white" />
-          </button>
-        </div>
-        <div className="p-5 space-y-2.5 text-sm">
-          <div className="flex gap-2 mb-1">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ubicacion.activa !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-              {ubicacion.activa !== false ? "Activa" : "Inactiva"}
-            </span>
-            {ubicacion.tipo_inmueble && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 capitalize">
-                {ubicacion.tipo_inmueble}
-              </span>
-            )}
-          </div>
-          {area != null && <ModalRow label={`Área`} value={`${area.toLocaleString()} ${areaUnit}`} />}
-          {ubicacion.num_habitaciones != null && <ModalRow label="Habitaciones" value={String(ubicacion.num_habitaciones)} />}
-          {ubicacion.num_banos != null && <ModalRow label="Baños" value={String(ubicacion.num_banos)} />}
-          {ubicacion.descripcion && <ModalRow label="Descripción" value={ubicacion.descripcion} />}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Main Component ────────────────────────────────────────────────────────────
 function AdminUsuarioDetalle() {
@@ -235,11 +160,14 @@ function AdminUsuarioDetalle() {
   const [error, setError] = useState<string | null>(null);
 
   const [tab, setTab] = useState<"detalles" | "reservas" | "ubicaciones" | "calificaciones">("detalles");
-  const [resPage, setResPage] = useState(1);
-  const [areaUnit, setAreaUnit] = useState<"ft2" | "m2">("ft2");
 
   const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
   const [selectedUbicacion, setSelectedUbicacion] = useState<Ubicacion | null>(null);
+
+  // Búsqueda y filtros
+  const [busquedaReserva, setBusquedaReserva] = useState("");
+  const [filtroEstadoReserva, setFiltroEstadoReserva] = useState("todas");
+  const [busquedaUbicacion, setBusquedaUbicacion] = useState("");
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ nombre: "", apellido: "", telefono: "", direccion: "", estado: "" });
@@ -273,10 +201,10 @@ function AdminUsuarioDetalle() {
 
       if (uData.rol === "empleada") {
         const [rRes, calRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/reservas/empleada/${userId}`, { headers: authHeaders() }),
+          fetch(`${API_BASE_URL}/api/reservas/empleada/${userId}/detalle`, { headers: authHeaders() }),
           fetch(`${API_BASE_URL}/api/calificaciones/usuario/${userId}`, { headers: authHeaders() }),
         ]);
-        const rData = rRes.ok ? await rRes.json() : [];
+        const rData = rRes.ok ? await rRes.json() : { reservas: [] };
         setReservas(Array.isArray(rData) ? rData : (rData.reservas ?? []));
         if (calRes.ok) {
           const calData = await calRes.json();
@@ -362,17 +290,41 @@ function AdminUsuarioDetalle() {
     }
   };
 
-  const pagedReservas = reservas.slice((resPage - 1) * PAGE_SIZE, resPage * PAGE_SIZE);
-  const resPages = Math.max(1, Math.ceil(reservas.length / PAGE_SIZE));
+  const formatCurrency = (v?: number | null) =>
+    v != null ? new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(v) : "—";
 
-  const fmtArea = (ub: Ubicacion) => {
-    if (areaUnit === "ft2") {
-      const ft2 = ub.area_ft2 ?? (ub.area_m2 != null ? Math.round(ub.area_m2 * 10.7639 * 100) / 100 : null);
-      return ft2 != null ? `${ft2.toLocaleString()} ft²` : "—";
+  const formatTamano = (t: Ubicacion['tamaño']) => {
+    if (!t) return null;
+    if (t.metros) {
+      const ft2 = Math.round(t.metros * 10.7639 * 100) / 100;
+      return `${t.metros} m² / ${ft2} ft²`;
     }
-    const m2 = ub.area_m2 ?? (ub.area_ft2 != null ? Math.round(ub.area_ft2 / 10.7639 * 100) / 100 : null);
-    return m2 != null ? `${m2.toLocaleString()} m²` : "—";
+    return t.display || null;
   };
+
+  const reservasFiltradas = reservas.filter(r => {
+    const matchEstado = filtroEstadoReserva === "todas" || r.estado === filtroEstadoReserva ||
+      (filtroEstadoReserva === "programada" && (r.estado === "programada" || r.estado === "confirmada")) ||
+      (filtroEstadoReserva === "en_curso" && (r.estado === "en_curso" || r.estado === "en_proceso"));
+    const term = busquedaReserva.toLowerCase();
+    const matchSearch = !term ||
+      r.empleada?.nombre?.toLowerCase().includes(term) ||
+      r.empleada?.apellido?.toLowerCase().includes(term) ||
+      r.cliente?.nombre?.toLowerCase().includes(term) ||
+      r.cliente?.apellido?.toLowerCase().includes(term) ||
+      r.plan?.nombre?.toLowerCase().includes(term) ||
+      r.lugar?.nombre?.toLowerCase().includes(term);
+    return matchEstado && matchSearch;
+  });
+
+  const ubicacionesFiltradas = ubicaciones.filter(ub => {
+    const term = busquedaUbicacion.toLowerCase();
+    return !term ||
+      ub.nombre?.toLowerCase().includes(term) ||
+      ub.nombre_lugar?.toLowerCase().includes(term) ||
+      ub.tipo_lugar?.toLowerCase().includes(term) ||
+      (ub.ubicacion?.formatted_address ?? ub.ubicacion?.direccion ?? "").toLowerCase().includes(term);
+  });
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-64">
@@ -408,7 +360,7 @@ function AdminUsuarioDetalle() {
       ];
 
   return (
-    <div className="space-y-4 max-w-5xl">
+    <div className="space-y-4 max-w-5xl mx-auto">
       {/* Header */}
       <div className="bg-linear-to-r from-[#195083] to-[#0f3a5f] rounded-xl p-5 sm:p-7 text-white">
         <button
@@ -634,165 +586,195 @@ function AdminUsuarioDetalle() {
 
         {/* ── Reservas ── */}
         {tab === "reservas" && (
-          <div>
-            {reservas.length === 0 ? (
+          <div className="p-4 space-y-4">
+            {/* Filtros */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por empleada, cliente, plan..."
+                  value={busquedaReserva}
+                  onChange={e => setBusquedaReserva(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+                />
+              </div>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  value={filtroEstadoReserva}
+                  onChange={e => setFiltroEstadoReserva(e.target.value)}
+                  className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30 bg-white"
+                >
+                  <option value="todas">Todos los estados</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="programada">Programada</option>
+                  <option value="en_curso">En Curso</option>
+                  <option value="completada">Completada</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </div>
+            </div>
+
+            {reservasFiltradas.length === 0 ? (
               <div className="text-center py-12 text-gray-400">
                 <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-200" />
-                <p className="text-sm">Sin reservas registradas</p>
+                <p className="text-sm">{reservas.length === 0 ? "Sin reservas registradas" : "No hay resultados"}</p>
               </div>
             ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Fecha</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Horario</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Plan</th>
-                        {isEmpleada ? (
-                          <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Cliente</th>
-                        ) : (
-                          <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Empleada</th>
-                        )}
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Estado</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Pago</th>
-                        <th className="text-right px-4 py-2 font-bold text-gray-500 uppercase">Total</th>
-                        <th className="px-4 py-2" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {pagedReservas.map((r) => {
-                        const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
-                        const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
-                        return (
-                          <tr key={r.id} className="hover:bg-gray-50/70">
-                            <td className="px-4 py-1.5 whitespace-nowrap text-gray-700">{fmtDate(r.fecha)}</td>
-                            <td className="px-4 py-1.5 whitespace-nowrap text-gray-600">{r.hora_inicio} – {r.hora_final}</td>
-                            <td className="px-4 py-1.5 whitespace-nowrap text-gray-700">{r.plan?.nombre ?? "—"}</td>
-                            {isEmpleada ? (
-                              <td className="px-4 py-1.5 whitespace-nowrap text-gray-600">
-                                {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "—"}
-                              </td>
-                            ) : (
-                              <td className="px-4 py-1.5 whitespace-nowrap text-gray-600">
-                                {r.empleada ? `${r.empleada.nombre} ${r.empleada.apellido}` : "—"}
-                              </td>
-                            )}
-                            <td className="px-4 py-1.5 whitespace-nowrap">
-                              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${estCfg.bg} ${estCfg.color}`}>
-                                {estCfg.label}
-                              </span>
-                            </td>
-                            <td className="px-4 py-1.5 whitespace-nowrap">
-                              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
-                                {pagoCfg.label}
-                              </span>
-                            </td>
-                            <td className="px-4 py-1.5 whitespace-nowrap text-right font-semibold text-gray-800">
-                              {fmtCOP(r.precio_total)}
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <button
-                                onClick={() => setSelectedReserva(r)}
-                                className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-[#195083] transition-colors"
-                                title="Ver detalle"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                {resPages > 1 && (
-                  <div className="px-4 py-2.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
-                    <span>{(resPage - 1) * PAGE_SIZE + 1}–{Math.min(resPage * PAGE_SIZE, reservas.length)} de {reservas.length}</span>
-                    <div className="flex gap-1">
-                      <button disabled={resPage === 1} onClick={() => setResPage(p => p - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                        <ChevronLeft className="h-3.5 w-3.5" />
-                      </button>
-                      <button disabled={resPage >= resPages} onClick={() => setResPage(p => p + 1)} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40">
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
+              <div className="space-y-3">
+                {reservasFiltradas.map((r) => {
+                  const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
+                  const EstIcon = estCfg.icon;
+                  const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "SIN_PAGAR"] ?? PAGO_CONFIG.SIN_PAGAR;
+                  return (
+                    <SlideRevealCard
+                      key={r.id}
+                      buttonCount={1}
+                      actions={
+                        <SlideButton
+                          icon={<Eye className="h-4 w-4" />}
+                          onClick={() => setSelectedReserva(r)}
+                          title="Ver detalle"
+                          hoverColor="hover:bg-blue-50 hover:text-[#195083]"
+                        />
+                      }
+                      onClick={() => setSelectedReserva(r)}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="bg-[#195083]/10 p-2 rounded-lg shrink-0">
+                              <Calendar className="h-5 w-5 text-[#195083]" />
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-gray-900 text-sm truncate">{fmtDate(r.fecha)}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {isEmpleada
+                                  ? r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : ""
+                                  : r.empleada ? `${r.empleada.nombre} ${r.empleada.apellido}` : ""
+                                }
+                                {r.lugar?.nombre ? ` · ${r.lugar.nombre}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 shrink-0 ${estCfg.bg} ${estCfg.color}`}>
+                            <EstIcon className="h-3 w-3" />
+                            {estCfg.label}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {r.hora_inicio} – {r.hora_final}
+                          </span>
+                          {r.plan && (
+                            <span className="flex items-center gap-1">
+                              <Briefcase className="h-3.5 w-3.5" />
+                              {r.plan.nombre}
+                            </span>
+                          )}
+                          {r.precio_total != null && (
+                            <span className="flex items-center gap-1 font-medium text-green-600">
+                              <DollarSign className="h-3.5 w-3.5" />
+                              {formatCurrency(r.precio_total)}
+                            </span>
+                          )}
+                          {r.estado_pago && (
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${pagoCfg.bg} ${pagoCfg.color}`}>
+                              {pagoCfg.label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </SlideRevealCard>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
 
-        {/* ── Ubicaciones (clientes/admins) ── */}
+        {/* ── Ubicaciones (clientes) ── */}
         {tab === "ubicaciones" && !isEmpleada && (
-          <div>
-            {ubicaciones.length === 0 ? (
+          <div className="p-4 space-y-4">
+            {/* Búsqueda */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, barrio, dirección..."
+                value={busquedaUbicacion}
+                onChange={e => setBusquedaUbicacion(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#195083]/30"
+              />
+            </div>
+
+            {ubicacionesFiltradas.length === 0 ? (
               <div className="text-center py-12 text-gray-400">
                 <MapPin className="h-8 w-8 mx-auto mb-2 text-gray-200" />
-                <p className="text-sm">Sin ubicaciones registradas</p>
+                <p className="text-sm">{ubicaciones.length === 0 ? "Sin ubicaciones registradas" : "No hay resultados"}</p>
               </div>
             ) : (
-              <>
-                <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-end gap-2">
-                  <span className="text-xs text-gray-500">Área en:</span>
-                  <div className="flex rounded-lg overflow-hidden border border-gray-200">
-                    <button onClick={() => setAreaUnit("ft2")}
-                      className={`px-3 py-1 text-xs font-semibold transition-colors ${areaUnit === "ft2" ? "bg-[#195083] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
-                      ft²
-                    </button>
-                    <button onClick={() => setAreaUnit("m2")}
-                      className={`px-3 py-1 text-xs font-semibold transition-colors ${areaUnit === "m2" ? "bg-[#195083] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
-                      m²
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Nombre / Dirección</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Tipo</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Área</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Hab.</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Baños</th>
-                        <th className="text-left px-4 py-2 font-bold text-gray-500 uppercase">Estado</th>
-                        <th className="px-4 py-2" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {ubicaciones.map((ub) => (
-                        <tr key={ub.id} className="hover:bg-gray-50/70">
-                          <td className="px-4 py-1.5">
-                            <p className="font-semibold text-gray-800">{ub.nombre ?? "Sin nombre"}</p>
-                            <p className="text-gray-500 text-xs mt-0.5">{ub.direccion}</p>
-                          </td>
-                          <td className="px-4 py-1.5 text-gray-600 capitalize">{ub.tipo_inmueble ?? "—"}</td>
-                          <td className="px-4 py-1.5 text-gray-600">{fmtArea(ub)}</td>
-                          <td className="px-4 py-1.5 text-gray-600">{ub.num_habitaciones ?? "—"}</td>
-                          <td className="px-4 py-1.5 text-gray-600">{ub.num_banos ?? "—"}</td>
-                          <td className="px-4 py-1.5">
-                            <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                              ub.activa !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                            }`}>
-                              {ub.activa !== false ? "Activa" : "Inactiva"}
+              <div className="space-y-3">
+                {ubicacionesFiltradas.map((ub) => {
+                  const tam = formatTamano(ub.tamaño);
+                  const addr = ub.ubicacion?.formatted_address ?? ub.ubicacion?.direccion;
+                  return (
+                    <SlideRevealCard
+                      key={ub.id}
+                      buttonCount={1}
+                      actions={
+                        <SlideButton
+                          icon={<Eye className="h-4 w-4" />}
+                          onClick={() => setSelectedUbicacion(ub)}
+                          title="Ver detalle"
+                          hoverColor="hover:bg-blue-50 hover:text-[#195083]"
+                        />
+                      }
+                      onClick={() => setSelectedUbicacion(ub)}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="bg-[#195083]/10 p-2 rounded-lg shrink-0">
+                              <MapPin className="h-5 w-5 text-[#195083]" />
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-gray-900 text-sm truncate">{ub.nombre}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {ub.tipo_lugar ?? ""}
+                                {ub.nombre_lugar ? ` · ${ub.nombre_lugar}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${
+                            ub.estado ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}>
+                            {ub.estado ? "Activa" : "Inactiva"}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                          {tam && (
+                            <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{tam}</span>
+                          )}
+                          {ub.baños != null && (
+                            <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" />{ub.baños} baños</span>
+                          )}
+                          {ub.pisos != null && (
+                            <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" />{ub.pisos} pisos</span>
+                          )}
+                          {addr && (
+                            <span className="flex items-center gap-1 truncate max-w-xs">
+                              <MapPin className="h-3.5 w-3.5 shrink-0" />{addr}
                             </span>
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <button
-                              onClick={() => setSelectedUbicacion(ub)}
-                              className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-[#195083] transition-colors"
-                              title="Ver detalle"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+                          )}
+                        </div>
+                      </div>
+                    </SlideRevealCard>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
@@ -923,22 +905,207 @@ function AdminUsuarioDetalle() {
       )}
 
       {/* Reservation detail modal */}
-      {selectedReserva && (
-        <ReservaModal
-          reserva={selectedReserva}
-          onClose={() => setSelectedReserva(null)}
-          userRol={usuario.rol}
-        />
-      )}
+      <ListDetailModal
+        theme={ROLE_THEMES.admin}
+        open={!!selectedReserva}
+        onClose={() => setSelectedReserva(null)}
+        title="Detalle de Reserva"
+        subtitle={selectedReserva ? `${fmtDate(selectedReserva.fecha)} · ${selectedReserva.hora_inicio} – ${selectedReserva.hora_final}` : ""}
+      >
+        {selectedReserva && (() => {
+          const estCfg = ESTADO_CONFIG[selectedReserva.estado] ?? ESTADO_CONFIG.pendiente;
+          const EstIcon = estCfg.icon;
+          const pagoCfg = PAGO_CONFIG[selectedReserva.estado_pago ?? "SIN_PAGAR"] ?? PAGO_CONFIG.SIN_PAGAR;
+          return (
+            <>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1.5 ${estCfg.bg} ${estCfg.color}`}>
+                  <EstIcon className="h-4 w-4" />
+                  {estCfg.label}
+                </span>
+                {selectedReserva.precio_total != null && (
+                  <span className="ml-auto font-bold text-lg text-gray-900">
+                    {fmtCOP(selectedReserva.precio_total)}
+                  </span>
+                )}
+              </div>
+
+              {selectedReserva.empleada && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Empleada</p>
+                  <p className="font-semibold text-gray-900">{selectedReserva.empleada.nombre} {selectedReserva.empleada.apellido}</p>
+                  {selectedReserva.empleada.telefono && (
+                    <p className="text-sm text-gray-600 mt-1">{selectedReserva.empleada.telefono}</p>
+                  )}
+                  {selectedReserva.empleada.ranking != null && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
+                      <span className="text-sm text-gray-600">{Number(selectedReserva.empleada.ranking).toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedReserva.cliente && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Cliente</p>
+                  <p className="font-semibold text-gray-900">{selectedReserva.cliente.nombre} {selectedReserva.cliente.apellido}</p>
+                  {selectedReserva.cliente.email && (
+                    <p className="text-sm text-gray-600 mt-1">{selectedReserva.cliente.email}</p>
+                  )}
+                  {selectedReserva.cliente.telefono && (
+                    <p className="text-sm text-gray-600 mt-0.5">{selectedReserva.cliente.telefono}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                {selectedReserva.plan && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Plan</p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedReserva.plan.nombre}</p>
+                    {selectedReserva.plan.precio != null && (
+                      <p className="text-xs text-gray-500 mt-0.5">{fmtCOP(selectedReserva.plan.precio)}</p>
+                    )}
+                  </div>
+                )}
+                {selectedReserva.lugar && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Lugar</p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedReserva.lugar.nombre ?? "—"}</p>
+                    {selectedReserva.lugar.tipo_lugar && (
+                      <p className="text-xs text-gray-500 mt-0.5">{selectedReserva.lugar.tipo_lugar}</p>
+                    )}
+                    {selectedReserva.lugar.direccion && (
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{selectedReserva.lugar.direccion}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {selectedReserva.estado_pago && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Pago</p>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
+                    {pagoCfg.label}
+                  </span>
+                  {selectedReserva.metodo_pago && (
+                    <p className="text-xs text-gray-500 mt-1">{selectedReserva.metodo_pago}</p>
+                  )}
+                </div>
+              )}
+
+              {selectedReserva.descripcion && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Notas</p>
+                  <p className="text-gray-700 text-sm">{selectedReserva.descripcion}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 text-xs text-gray-400">
+                {selectedReserva.created_at && (
+                  <p>Creada: {fmtDate(selectedReserva.created_at)}</p>
+                )}
+                {selectedReserva.updated_at && (
+                  <p>Actualizada: {fmtDate(selectedReserva.updated_at)}</p>
+                )}
+              </div>
+            </>
+          );
+        })()}
+      </ListDetailModal>
 
       {/* Location detail modal */}
-      {selectedUbicacion && (
-        <UbicacionModal
-          ubicacion={selectedUbicacion}
-          onClose={() => setSelectedUbicacion(null)}
-          areaUnit={areaUnit}
-        />
-      )}
+      <ListDetailModal
+        theme={ROLE_THEMES.admin}
+        open={!!selectedUbicacion}
+        onClose={() => setSelectedUbicacion(null)}
+        title={selectedUbicacion?.nombre ?? "Detalle de Ubicación"}
+        subtitle={selectedUbicacion ? [selectedUbicacion.tipo_lugar, selectedUbicacion.nombre_lugar].filter(Boolean).join(" · ") : ""}
+      >
+        {selectedUbicacion && (() => {
+          const tam = formatTamano(selectedUbicacion.tamaño);
+          const addr = selectedUbicacion.ubicacion?.formatted_address ?? selectedUbicacion.ubicacion?.direccion;
+          return (
+            <>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  selectedUbicacion.estado ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                }`}>
+                  {selectedUbicacion.estado ? "Activa" : "Inactiva"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {selectedUbicacion.nombre_lugar && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Barrio / Edificio</p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedUbicacion.nombre_lugar}</p>
+                  </div>
+                )}
+                {selectedUbicacion.tipo_lugar && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Tipo</p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedUbicacion.tipo_lugar}</p>
+                  </div>
+                )}
+                {tam && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                      <Ruler className="h-3 w-3" /> Tamaño
+                    </p>
+                    <p className="font-semibold text-gray-900 text-sm">{tam}</p>
+                    {selectedUbicacion.tamaño?.categoria && (
+                      <p className="text-xs text-gray-500 mt-0.5 capitalize">{selectedUbicacion.tamaño.categoria}</p>
+                    )}
+                  </div>
+                )}
+                {selectedUbicacion.baños != null && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                      <Bath className="h-3 w-3" /> Baños
+                    </p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedUbicacion.baños}</p>
+                  </div>
+                )}
+                {selectedUbicacion.pisos != null && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                      <Layers className="h-3 w-3" /> Pisos
+                    </p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedUbicacion.pisos}</p>
+                  </div>
+                )}
+              </div>
+
+              {addr && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Dirección
+                  </p>
+                  <p className="text-sm text-gray-700">📍 {addr}</p>
+                </div>
+              )}
+
+              {selectedUbicacion.descripcion && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Descripción</p>
+                  <p className="text-gray-700 text-sm leading-relaxed">{selectedUbicacion.descripcion}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 text-xs text-gray-400">
+                {selectedUbicacion.created_at && (
+                  <p>Creada: {fmtDate(selectedUbicacion.created_at)}</p>
+                )}
+                {selectedUbicacion.updated_at && selectedUbicacion.updated_at !== selectedUbicacion.created_at && (
+                  <p>Actualizada: {fmtDate(selectedUbicacion.updated_at)}</p>
+                )}
+              </div>
+            </>
+          );
+        })()}
+      </ListDetailModal>
     </div>
   );
 }

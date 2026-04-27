@@ -121,7 +121,9 @@ function AdminIndex() {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedEstado, setExpandedEstado] = useState<string | null>(null);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -312,9 +314,6 @@ function AdminIndex() {
       </div>
     );
   }
-
-  const navigate = useNavigate();
-  const [expandedEstado, setExpandedEstado] = useState<string | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {

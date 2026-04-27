@@ -1,6 +1,7 @@
 
 import {
   Calendar,
+  LayoutDashboard,
   MapPin,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,7 @@ export default function ClienteLayout() {
   const { t } = useTranslation();
 
   const menuItems: MenuItem[] = [
+    { href: "/cliente/index", icon: LayoutDashboard, label: t('Menu') },
     { href: "/cliente/reservas/index", icon: Calendar, label: t('cliente.menu.reservations') },
     { href: "/cliente/ubicaciones/index", icon: MapPin, label: t('cliente.menu.locations') },
   ];
