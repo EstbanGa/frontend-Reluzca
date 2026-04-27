@@ -3,17 +3,26 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/utils/dateUtils";
 import { API_BASE_URL } from "@/config/env";
-import { 
-  Users, 
-  Calendar, 
-  DollarSign, 
+import { useNavigate } from "react-router-dom";
+import {
+  Users,
+  Calendar,
+  DollarSign,
   Clock,
   CheckCircle,
   AlertCircle,
   Star,
   FileText,
   UserCheck,
-  XCircle
+  XCircle,
+  ChevronDown,
+  ChevronRight,
+  MapPin,
+  Home,
+  TrendingUp,
+  Activity,
+  Zap,
+  ArrowRight
 } from "lucide-react";
 
 interface AdminData {
@@ -142,7 +151,7 @@ function AdminIndex() {
         const token = localStorage.getItem("access_token");
         
         // Obtener datos reales de múltiples endpoints en paralelo
-        const [usuariosRes, reservasRes, planesRes, pqrsRes] = await Promise.all([
+        const [usuariosRes, reservasRes, planesRes, pqrsRes, ubicacionesRes, ubicacionesActivasRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/usuarios`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           }),
@@ -154,6 +163,12 @@ function AdminIndex() {
           }),
           fetch(`${API_BASE_URL}/api/pqrs/admin/all`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          }),
+          fetch(`${API_BASE_URL}/api/ubicaciones/?activo_only=false&limit=100`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          }),
+          fetch(`${API_BASE_URL}/api/ubicaciones/?activo_only=true&limit=100`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           })
         ]);
 
@@ -161,6 +176,10 @@ function AdminIndex() {
         const reservasData = reservasRes.ok ? await reservasRes.json() : { reservas: [] };
         const planesData = planesRes.ok ? await planesRes.json() : [];
         const pqrsData = pqrsRes.ok ? await pqrsRes.json() : { pqrs: [], estadisticas: {} };
+        const ubicacionesData = ubicacionesRes.ok ? await ubicacionesRes.json() : [];
+        const ubicacionesActivasData = ubicacionesActivasRes.ok ? await ubicacionesActivasRes.json() : [];
+        const totalUbicaciones = Array.isArray(ubicacionesData) ? ubicacionesData.length : 0;
+        const ubicacionesActivas = Array.isArray(ubicacionesActivasData) ? ubicacionesActivasData.length : 0;
 
         // Procesar usuarios
         const usuariosArray = Array.isArray(usuarios) ? usuarios : usuarios.usuarios || [];
@@ -172,7 +191,8 @@ function AdminIndex() {
         const reservasArray = Array.isArray(reservasData) ? reservasData : reservasData.reservas || [];
         const hoy = new Date().toISOString().split('T')[0];
         const reservasHoy = reservasArray.filter((r: { fecha?: string }) => r.fecha?.startsWith(hoy));
-        const reservasActivas = reservasArray.filter((r: { estado: string }) => r.estado === 'pendiente' || r.estado === 'confirmada');
+        const reservasActivas = reservasArray.filter((r: { estado: string }) =>
+          ['pendiente', 'programada', 'confirmada', 'en_curso', 'en_proceso'].includes(r.estado));
         const reservasCompletadas = reservasArray.filter((r: { estado: string }) => r.estado === 'completada');
         const reservasCanceladas = reservasArray.filter((r: { estado: string }) => r.estado === 'cancelada');
         
@@ -219,10 +239,11 @@ function AdminIndex() {
             reservas_canceladas: reservasCanceladas.length,
             reservas_hoy: reservasHoy.length,
             reservas_por_estado: [
-              { estado: 'pendiente', count: reservasArray.filter((r: { estado: string }) => r.estado === 'pendiente').length },
-              { estado: 'confirmada', count: reservasArray.filter((r: { estado: string }) => r.estado === 'confirmada').length },
+              { estado: 'pendiente',  count: reservasArray.filter((r: { estado: string }) => r.estado === 'pendiente').length },
+              { estado: 'programada', count: reservasArray.filter((r: { estado: string }) => r.estado === 'programada' || r.estado === 'confirmada').length },
+              { estado: 'en_curso',   count: reservasArray.filter((r: { estado: string }) => r.estado === 'en_curso' || r.estado === 'en_proceso').length },
               { estado: 'completada', count: reservasCompletadas.length },
-              { estado: 'cancelada', count: reservasCanceladas.length }
+              { estado: 'cancelada',  count: reservasCanceladas.length },
             ]
           },
           estadisticas_financieras: {
@@ -239,8 +260,8 @@ function AdminIndex() {
             planes_populares: []
           },
           estadisticas_sistema: {
-            total_ubicaciones: 0,
-            ubicaciones_activas: 0,
+            total_ubicaciones: totalUbicaciones,
+            ubicaciones_activas: ubicacionesActivas,
             total_pqrs: pqrsArray.length,
             pqrs_pendientes: pqrsStats.pendientes || 0,
             pqrs_resueltas: pqrsStats.resueltos || 0,
@@ -292,6 +313,9 @@ function AdminIndex() {
     );
   }
 
+  const navigate = useNavigate();
+  const [expandedEstado, setExpandedEstado] = useState<string | null>(null);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -300,321 +324,368 @@ function AdminIndex() {
     }).format(amount);
   };
 
+  const fmtDateLocal = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+  };
+
+  const ESTADO_CFG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
+    pendiente:  { label: 'Pendiente',  color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  icon: <Clock className="h-4 w-4" /> },
+    programada: { label: 'Programada', color: 'text-blue-700',   bg: 'bg-blue-50',   border: 'border-blue-200',   icon: <Calendar className="h-4 w-4" /> },
+    en_curso:   { label: 'En Curso',   color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200', icon: <Activity className="h-4 w-4" /> },
+    completada: { label: 'Completada', color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200',  icon: <CheckCircle className="h-4 w-4" /> },
+    cancelada:  { label: 'Cancelada',  color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    icon: <XCircle className="h-4 w-4" /> },
+  };
+
+  const reservasPorEstado = data.estadisticas_reservas.reservas_por_estado;
+  const getCount = (estado: string) => reservasPorEstado.find(e => e.estado === estado)?.count ?? 0;
+
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#195083] to-[#4894AD] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+    <div className="space-y-5 lg:space-y-7">
+
+      {/* ── Header ── */}
+      <div className="bg-gradient-to-br from-[#195083] via-[#1a6399] to-[#4894AD] rounded-2xl p-5 sm:p-7 text-white shadow-lg">
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F5F0E7] mb-2">
-              {t('admin.dashboard.greeting', { name: data.admin_info.nombre })}
+            <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Panel de control</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">
+              Bienvenido, {data.admin_info.nombre}
             </h1>
-            <p className="text-[#F5F0E7]/80 text-sm sm:text-base">
-              {t('admin.dashboard.summary')}
+            <p className="text-white/75 text-sm">
+              Visión global de procesos, reservas y usuarios del sistema
             </p>
           </div>
-          <div className="text-right flex-shrink-0">
-            <p className="text-xs sm:text-sm text-[#F5F0E7]/60">{t('admin.dashboard.lastUpdate')}</p>
-            <p className="text-[#F5F0E7] font-semibold text-sm sm:text-base">
-              {new Date(data.fecha_consulta).toLocaleString('es-CO')}
-            </p>
+          <div className="flex gap-3 flex-shrink-0">
+            <div className="text-right">
+              <p className="text-white/50 text-xs">Última actualización</p>
+              <p className="text-white font-semibold text-sm">{new Date(data.fecha_consulta).toLocaleString('es-CO')}</p>
+            </div>
+          </div>
+        </div>
+        {/* Mini KPIs en header */}
+        <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Reservas hoy', value: data.estadisticas_reservas.reservas_hoy, icon: <Zap className="h-3.5 w-3.5" /> },
+            { label: 'Activas', value: data.estadisticas_reservas.reservas_activas, icon: <Activity className="h-3.5 w-3.5" /> },
+            { label: 'Ubicaciones', value: data.estadisticas_sistema.ubicaciones_activas, icon: <Home className="h-3.5 w-3.5" /> },
+            { label: 'PQRS pend.', value: data.estadisticas_sistema.pqrs_pendientes, icon: <FileText className="h-3.5 w-3.5" /> },
+          ].map(k => (
+            <div key={k.label} className="bg-white/10 backdrop-blur rounded-xl p-3 border border-white/20">
+              <div className="flex items-center gap-1.5 text-white/70 text-xs mb-1">{k.icon}{k.label}</div>
+              <p className="text-white text-xl font-bold">{k.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Fila 1: Métricas principales ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/usuarios/index')}>
+          <div className="flex items-start justify-between mb-3">
+            <div className="bg-[#195083]/10 p-2 rounded-lg"><Users className="h-5 w-5 text-[#195083]" /></div>
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-medium">+{data.estadisticas_usuarios.nuevos_usuarios_semana} sem.</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-[#195083]">{data.estadisticas_usuarios.total_usuarios}</p>
+          <p className="text-xs text-gray-500 mt-1">Usuarios totales</p>
+          <div className="mt-3 flex gap-2 text-xs text-gray-400">
+            <span className="bg-gray-50 px-1.5 py-0.5 rounded">{data.estadisticas_usuarios.empleadas_count} empleadas</span>
+            <span className="bg-gray-50 px-1.5 py-0.5 rounded">{data.estadisticas_usuarios.clientes_count} clientes</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/reservas/index')}>
+          <div className="flex items-start justify-between mb-3">
+            <div className="bg-[#4894AD]/10 p-2 rounded-lg"><Calendar className="h-5 w-5 text-[#4894AD]" /></div>
+            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">{data.estadisticas_reservas.reservas_hoy} hoy</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-[#4894AD]">{data.estadisticas_reservas.total_reservas}</p>
+          <p className="text-xs text-gray-500 mt-1">Total reservas</p>
+          <div className="mt-3 flex gap-2 text-xs text-gray-400">
+            <span className="bg-gray-50 px-1.5 py-0.5 rounded">{data.estadisticas_reservas.reservas_completadas} completadas</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+          <div className="flex items-start justify-between mb-3">
+            <div className="bg-green-100 p-2 rounded-lg"><DollarSign className="h-5 w-5 text-green-600" /></div>
+            <TrendingUp className="h-4 w-4 text-green-500" />
+          </div>
+          <p className="text-xl sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(data.estadisticas_financieras.ingresos_totales)}</p>
+          <p className="text-xs text-gray-500 mt-1">Ingresos totales</p>
+          <p className="text-xs text-green-600 mt-2 truncate">{formatCurrency(data.estadisticas_financieras.ingresos_mes)} este mes</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/pqrs/index')}>
+          <div className="flex items-start justify-between mb-3">
+            <div className="bg-orange-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-orange-600" /></div>
+            {data.estadisticas_sistema.pqrs_pendientes > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white text-xs font-bold">{data.estadisticas_sistema.pqrs_pendientes}</span>
+            )}
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-orange-600">{data.estadisticas_sistema.pqrs_pendientes}</p>
+          <p className="text-xs text-gray-500 mt-1">PQRS pendientes</p>
+          <p className="text-xs text-gray-400 mt-2">{data.estadisticas_sistema.total_pqrs} total</p>
+        </div>
+      </div>
+
+      {/* ── Fila 2: Cards de estado de reservas (expandibles) + Ubicaciones ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Cards estado reservas — 2/3 del ancho */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-bold text-gray-900">Reservas por estado</h3>
+            <button onClick={() => navigate('/admin/reservas/index')} className="text-xs text-[#195083] hover:underline flex items-center gap-1">
+              Ver todas <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {(['pendiente','programada','en_curso','completada','cancelada'] as const).map(estado => {
+              const cfg = ESTADO_CFG[estado];
+              const count = getCount(estado);
+              const isOpen = expandedEstado === estado;
+              const reservasDeEste = data.datos_recientes.reservas_recientes.filter(r =>
+                r.estado === estado || (estado === 'programada' && r.estado === 'confirmada') || (estado === 'en_curso' && r.estado === 'en_proceso')
+              );
+              return (
+                <div key={estado}>
+                  <button
+                    className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors text-left"
+                    onClick={() => setExpandedEstado(isOpen ? null : estado)}
+                  >
+                    <div className={`p-1.5 rounded-lg ${cfg.bg} ${cfg.color}`}>{cfg.icon}</div>
+                    <span className="flex-1 font-medium text-gray-800 text-sm">{cfg.label}</span>
+                    <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>{count}</span>
+                    {isOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+                  </button>
+                  {isOpen && (
+                    <div className={`mx-3 mb-3 rounded-xl border ${cfg.border} ${cfg.bg} overflow-hidden`}>
+                      {reservasDeEste.length === 0 ? (
+                        <p className={`text-xs ${cfg.color} px-4 py-3 opacity-60`}>No hay reservas recientes con este estado</p>
+                      ) : (
+                        <div className="divide-y divide-white/50">
+                          {reservasDeEste.map((r, i) => (
+                            <div key={i} className="px-4 py-2.5 flex items-center justify-between">
+                              <div>
+                                <p className={`text-sm font-semibold ${cfg.color}`}>
+                                  {r.cliente?.nombre ?? 'Cliente'} {(r.cliente as any)?.apellido ?? ''}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  {r.fecha ? fmtDateLocal(r.fecha) : '—'} · {r.hora_inicio ?? ''}
+                                </p>
+                              </div>
+                              {r.precio_total != null && (
+                                <p className={`text-xs font-bold ${cfg.color}`}>{formatCurrency(r.precio_total)}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className={`px-4 py-2 border-t ${cfg.border}`}>
+                        <button
+                          onClick={() => navigate('/admin/reservas/index')}
+                          className={`text-xs ${cfg.color} font-medium hover:underline flex items-center gap-1`}
+                        >
+                          Ver todas las {cfg.label.toLowerCase()} <ArrowRight className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Panel lateral derecho: Sistema + Planes + Ubicaciones */}
+        <div className="space-y-4">
+          {/* Ubicaciones */}
+          <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="h-4 w-4 text-[#195083]" />
+              <h4 className="font-bold text-gray-900 text-sm">Ubicaciones</h4>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Activas
+                </span>
+                <span className="font-bold text-green-600">{data.estadisticas_sistema.ubicaciones_activas}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-gray-300 inline-block"></span>Total
+                </span>
+                <span className="font-semibold text-gray-700">{data.estadisticas_sistema.total_ubicaciones}</span>
+              </div>
+              {data.estadisticas_sistema.total_ubicaciones > 0 && (
+                <div className="mt-2">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full transition-all"
+                      style={{ width: `${Math.round((data.estadisticas_sistema.ubicaciones_activas / data.estadisticas_sistema.total_ubicaciones) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1 text-right">
+                    {Math.round((data.estadisticas_sistema.ubicaciones_activas / data.estadisticas_sistema.total_ubicaciones) * 100)}% activas
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Planes */}
+          <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="h-4 w-4 text-purple-600" />
+              <h4 className="font-bold text-gray-900 text-sm">Planes</h4>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Activos
+                </span>
+                <span className="font-bold text-green-600">{data.estadisticas_planes.planes_activos}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-400 inline-block"></span>Inactivos
+                </span>
+                <span className="font-semibold text-gray-500">{data.estadisticas_planes.planes_inactivos}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Usuarios por rol */}
+          <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-4 w-4 text-[#195083]" />
+              <h4 className="font-bold text-gray-900 text-sm">Usuarios</h4>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: 'Admins', count: data.estadisticas_usuarios.admin_count, color: 'bg-[#195083]' },
+                { label: 'Empleadas', count: data.estadisticas_usuarios.empleadas_count, color: 'bg-[#4894AD]' },
+                { label: 'Clientes', count: data.estadisticas_usuarios.clientes_count, color: 'bg-green-500' },
+              ].map(u => (
+                <div key={u.label} className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 w-16">{u.label}</span>
+                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full ${u.color} rounded-full`} style={{ width: `${data.estadisticas_usuarios.total_usuarios > 0 ? Math.round((u.count / data.estadisticas_usuarios.total_usuarios) * 100) : 0}%` }} />
+                  </div>
+                  <span className="text-xs font-bold text-gray-700 w-6 text-right">{u.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Cards - Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Total Usuarios */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.totalUsers')}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-[#195083]">
-                {data.estadisticas_usuarios.total_usuarios}
-              </p>
-              <p className="text-xs sm:text-sm text-green-600 mt-1">
-                +{data.estadisticas_usuarios.nuevos_usuarios_semana} {t('admin.dashboard.thisWeek')}
-              </p>
-            </div>
-            <div className="bg-[#195083] p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
+      {/* ── Fila 3: Reservas recientes + Top empleadas ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Reservas recientes */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-bold text-gray-900">Reservas recientes</h3>
+            <button onClick={() => navigate('/admin/reservas/index')} className="text-xs text-[#195083] hover:underline flex items-center gap-1">
+              Ver todas <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
-        </div>
-
-        {/* Reservas Totales */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.totalReservations')}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-[#4894AD]">
-                {data.estadisticas_reservas.total_reservas}
-              </p>
-              <p className="text-xs sm:text-sm text-blue-600 mt-1">
-                {data.estadisticas_reservas.reservas_hoy} {t('admin.dashboard.today')}
-              </p>
-            </div>
-            <div className="bg-[#4894AD] p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
-          </div>
-        </div>
-
-        {/* Ingresos */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.totalRevenue')}</p>
-              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 truncate">
-                {formatCurrency(data.estadisticas_financieras.ingresos_totales)}
-              </p>
-              <p className="text-xs sm:text-sm text-green-600 mt-1 truncate">
-                {formatCurrency(data.estadisticas_financieras.ingresos_mes)} {t('admin.dashboard.thisMonth')}
-              </p>
-            </div>
-            <div className="bg-green-500 p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
-          </div>
-        </div>
-
-        {/* PQRS Pendientes */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('admin.dashboard.pendingPqrs')}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-orange-600">
-                {data.estadisticas_sistema.pqrs_pendientes}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                {t('admin.dashboard.ofTotal', { total: data.estadisticas_sistema.total_pqrs })}
-              </p>
-            </div>
-            <div className="bg-orange-500 p-2 sm:p-3 rounded-lg flex-shrink-0">
-              <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Detailed Stats - Responsive Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-        {/* Usuarios por Rol */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.usersByRole')}</h3>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-[#195083] flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('common.roles.admin')}</span>
-              </div>
-              <span className="font-bold text-[#195083] text-sm sm:text-base flex-shrink-0">
-                {data.estadisticas_usuarios.admin_count}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-[#4894AD] flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('common.roles.empleada')}</span>
-              </div>
-              <span className="font-bold text-[#4894AD] text-sm sm:text-base flex-shrink-0">
-                {data.estadisticas_usuarios.empleadas_count}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('common.roles.cliente')}</span>
-              </div>
-              <span className="font-bold text-green-600 text-sm sm:text-base flex-shrink-0">
-                {data.estadisticas_usuarios.clientes_count}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Estado de Reservas */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.reservationStatus')}</h3>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('admin.dashboard.active')}</span>
-              </div>
-              <span className="font-bold text-blue-600 text-sm sm:text-base flex-shrink-0">
-                {data.estadisticas_reservas.reservas_activas}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('admin.dashboard.completed')}</span>
-              </div>
-              <span className="font-bold text-green-600 text-sm sm:text-base flex-shrink-0">
-                {data.estadisticas_reservas.reservas_completadas}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 flex-shrink-0" />
-                <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{t('admin.dashboard.cancelled')}</span>
-              </div>
-              <span className="font-bold text-red-600 text-sm sm:text-base flex-shrink-0">
-                {data.estadisticas_reservas.reservas_canceladas}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Data - Responsive Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-        {/* Reservas Recientes */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.recentReservations')}</h3>
-          
           {data.datos_recientes.reservas_recientes.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
-              {data.datos_recientes.reservas_recientes.slice(0, 5).map((reserva, index) => (
-                <div key={index} className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                        {reserva.cliente?.nombre || t('admin.dashboard.unknownClient')}
+            <div className="divide-y divide-gray-50">
+              {data.datos_recientes.reservas_recientes.slice(0, 6).map((r, i) => {
+                const eConf = ESTADO_CFG[r.estado] ?? ESTADO_CFG['pendiente'];
+                return (
+                  <div key={i} className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0`}
+                      style={{ background: 'linear-gradient(135deg,#195083,#0f3a5f)' }}>
+                      {r.fecha ? new Date(r.fecha + 'T12:00:00').getDate() : '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {r.cliente?.nombre ?? 'Cliente'} {(r.cliente as any)?.apellido ?? ''}
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                        {reserva.fecha && formatDate(reserva.fecha)} • {reserva.hora_inicio}
+                      <p className="text-xs text-gray-500 truncate">
+                        {r.fecha ? fmtDateLocal(r.fecha) : ''} · {r.hora_inicio ?? ''}
                       </p>
                     </div>
-                    <div className="text-left sm:text-right flex-shrink-0">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        reserva.estado === 'completada' ? 'bg-green-100 text-green-800' :
-                        reserva.estado === 'confirmada' ? 'bg-blue-100 text-blue-800' :
-                        reserva.estado === 'cancelada' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {reserva.estado}
-                      </span>
-                      {reserva.precio_total && (
-                        <p className="text-xs sm:text-sm font-medium text-gray-900 mt-1">
-                          {formatCurrency(reserva.precio_total)}
-                        </p>
+                    <div className="text-right shrink-0">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${eConf.bg} ${eConf.color}`}>{eConf.label}</span>
+                      {r.precio_total != null && (
+                        <p className="text-xs font-bold text-gray-700 mt-1">{formatCurrency(r.precio_total)}</p>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
-              
-              {/* <button className="w-full mt-3 sm:mt-4 text-[#195083] hover:text-[#4894AD] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-[#195083]/20 hover:bg-[#195083]/5 transition-colors">
-                Ver todas las reservas <ArrowRight size={14} />
-              </button> */}
+                );
+              })}
             </div>
           ) : (
-            <div className="text-center py-6 sm:py-8">
-              <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm sm:text-base">{t('admin.dashboard.noRecentReservations')}</p>
+            <div className="text-center py-10">
+              <Calendar className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">Sin reservas recientes</p>
             </div>
           )}
         </div>
 
-        {/* Top Empleadas */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-[#195083] mb-4">{t('admin.dashboard.topEmployees')}</h3>
-          
-          {data.datos_recientes.top_empleadas.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
-              {data.datos_recientes.top_empleadas.map((empleada, index) => (
-                <div key={empleada.id} className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 ${
-                        index === 0 ? 'bg-yellow-500' :
-                        index === 1 ? 'bg-gray-400' :
-                        index === 2 ? 'bg-orange-600' :
-                        'bg-[#4894AD]'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                          {empleada.nombre} {empleada.apellido}
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-500">{empleada.telefono}</p>
-                      </div>
+        {/* Últimas empleadas + Clientes */}
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">Últimas empleadas</h3>
+              <button onClick={() => navigate('/admin/usuarios/index')} className="text-xs text-[#195083] hover:underline flex items-center gap-1">
+                Ver todas <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {data.datos_recientes.ultimas_empleadas.slice(0, 4).map(e => (
+                <div key={e.id} className="px-5 py-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#4894AD]/10 flex items-center justify-center text-[#4894AD] font-bold text-sm shrink-0">
+                    {e.nombre[0]}{e.apellido[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{e.nombre} {e.apellido}</p>
+                    <p className="text-xs text-gray-500 truncate">{e.correo}</p>
+                  </div>
+                  {e.calificacion_promedio != null && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      <span className="text-xs font-bold text-gray-700">{Number(e.calificacion_promedio).toFixed(1)}</span>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 fill-current" />
-                      <span className="font-bold text-gray-900 text-sm sm:text-base">
-                        {empleada.ranking || 'N/A'}
-                      </span>
-                    </div>
+                  )}
+                  <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${e.estado === 'activo' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {e.estado}
+                  </span>
+                </div>
+              ))}
+              {data.datos_recientes.ultimas_empleadas.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-6">Sin empleadas</p>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">Últimos clientes</h3>
+              <button onClick={() => navigate('/admin/usuarios/index')} className="text-xs text-[#195083] hover:underline flex items-center gap-1">
+                Ver todos <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {data.datos_recientes.ultimos_clientes.slice(0, 3).map(c => (
+                <div key={c.id} className="px-5 py-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-700 font-bold text-sm shrink-0">
+                    {c.nombre[0]}{c.apellido[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{c.nombre} {c.apellido}</p>
+                    <p className="text-xs text-gray-500 truncate">{c.correo}</p>
                   </div>
                 </div>
               ))}
-              
-              {/* <button className="w-full mt-3 sm:mt-4 text-[#4894AD] hover:text-[#195083] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 py-2 rounded-lg border border-[#4894AD]/20 hover:bg-[#4894AD]/5 transition-colors">
-                Ver todas las empleadas <ArrowRight size={14} />
-              </button> */}
+              {data.datos_recientes.ultimos_clientes.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-6">Sin clientes</p>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8">
-              <UserCheck className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm sm:text-base">{t('admin.dashboard.noEmployees')}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Additional Info Cards - Full width responsive grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Sistema Info */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">{t('admin.dashboard.system')}</h4>
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.activeLocations')}</span>
-              <span className="font-semibold text-sm sm:text-base">{data.estadisticas_sistema.ubicaciones_activas}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.activeDiscounts')}</span>
-              <span className="font-semibold text-sm sm:text-base">{data.estadisticas_sistema.descuentos_activos}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.notifications')}</span>
-              <span className="font-semibold text-sm sm:text-base text-red-600">{data.estadisticas_sistema.notificaciones_no_leidas}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Planes Info */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
-          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">{t('admin.dashboard.plans')}</h4>
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.activePlans')}</span>
-              <span className="font-semibold text-sm sm:text-base text-green-600">{data.estadisticas_planes.planes_activos}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-gray-600">{t('admin.dashboard.inactivePlans')}</span>
-              <span className="font-semibold text-sm sm:text-base text-red-600">{data.estadisticas_planes.planes_inactivos}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 sm:col-span-2 lg:col-span-1">
-          <h4 className="text-base sm:text-lg font-bold text-[#195083] mb-3 sm:mb-4">{t('admin.dashboard.quickActions')}</h4>
-          <div className="space-y-2 sm:space-y-3">
-            <button className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
-              {t('admin.dashboard.managePqrs')}
-            </button>
-            <button className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors">
-              {t('admin.dashboard.viewReports')}
-            </button>
-            <button className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors">
-              {t('admin.dashboard.reviewNewUsers')}
-            </button>
           </div>
         </div>
       </div>

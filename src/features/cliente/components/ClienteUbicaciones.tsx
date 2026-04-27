@@ -270,6 +270,7 @@ function ClienteUbicaciones() {
   const [editingUbicacion, setEditingUbicacion] = useState<Ubicacion | null>(null);
   const [editFormData, setEditFormData] = useState({
     nombre: '',
+    nombre_lugar: '',
     tipo_lugar: '',
     tamaño: '',
     baños: '',
@@ -399,6 +400,7 @@ function ClienteUbicaciones() {
     setEditingUbicacion(ubicacion);
     setEditFormData({
       nombre: ubicacion.nombre,
+      nombre_lugar: ubicacion.nombre_lugar || '',
       tipo_lugar: ubicacion.tipo_lugar || '',
       tamaño: ubicacion.tamaño?.metros?.toString() || '',
       baños: ubicacion.baños?.toString() || '',
@@ -452,6 +454,7 @@ function ClienteUbicaciones() {
 
       const payload = {
         nombre: editFormData.nombre.trim(),
+        nombre_lugar: editFormData.nombre_lugar.trim() || null,
         tipo_lugar: editFormData.tipo_lugar || null,
         tamaño: tamañoData,
         area_m2: areaM2,
@@ -942,6 +945,38 @@ function ClienteUbicaciones() {
                     placeholder={t('cliente.locations.editModal.namePlaceholder')}
                   />
                 </div>
+
+                {/* Nombre del lugar (barrio/edificio) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Barrio / Edificio / Torre
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.nombre_lugar}
+                    onChange={(e) => setEditFormData({...editFormData, nombre_lugar: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4894AD] focus:border-transparent placeholder:text-gray-700 text-gray-900"
+                    placeholder="Ej. Barrio El Poblado, Torre Norte..."
+                  />
+                </div>
+
+                {/* Dirección (solo lectura) */}
+                {editingUbicacion.ubicacion && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dirección
+                    </label>
+                    <div className="flex items-start gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <MapPin className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 wrap-break-word">
+                          {editingUbicacion.ubicacion.formatted_address || editingUbicacion.ubicacion.direccion || 'Sin dirección registrada'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">Para cambiar la dirección, crea una nueva ubicación.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Tipo de lugar */}
                 <div>

@@ -5,143 +5,102 @@ import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/config/env";
 import * as XLSX from "xlsx";
 import {
-  Calendar, Clock, MapPin, User, Edit3, Trash2, Search, CheckCircle, AlertCircle,
-  XCircle, RefreshCw, Eye, DollarSign,
-  Download, Star, Phone, Mail, Filter
+  Calendar, Clock, MapPin, Edit3, Trash2, Search, CheckCircle, AlertCircle,
+  XCircle, RefreshCw, Eye, DollarSign, Download, Star, Phone, Mail,
+  ChevronLeft, ChevronRight, Activity, User
 } from "lucide-react";
 import ListPageHeader, { ROLE_THEMES } from "@/components/ui/ListPageHeader";
-import ListStatsGrid from "@/components/ui/ListStatsGrid";
-import SlideRevealCard, { SlideButton } from "@/components/ui/SlideRevealCard";
 import ListDetailModal from "@/components/ui/ListDetailModal";
-import ListPagination from "@/components/ui/ListPagination";
 
-// ─── Interfaces ──────────────────────────────────────────────────────────────
-interface Cliente {
-  id: string;
-  nombre: string;
-  apellido: string;
-  correo: string;
-  telefono?: string;
-  fecha_registro?: string;
-}
-
-interface Empleada {
-  id: string;
-  nombre: string;
-  apellido: string;
-  telefono?: string;
-  ranking?: number;
-}
-
-interface Plan {
-  id: string;
-  nombre: string;
-  precio: number;
-  duracion?: number;
-  descripcion?: string;
-}
-
-interface Lugar {
-  id: string;
-  nombre?: string;
-  direccion?: string;
-  tipo_lugar?: string;
-}
-
+// ─── Interfaces ───────────────────────────────────────────────────────────────
+interface Cliente { id: string; nombre: string; apellido: string; correo: string; telefono?: string; }
+interface Empleada { id: string; nombre: string; apellido: string; telefono?: string; ranking?: number; }
+interface Plan { id: string; nombre: string; precio: number; descripcion?: string; }
+interface Lugar { id: string; nombre?: string; direccion?: string; tipo_lugar?: string; }
 interface Reserva {
-  id: string;
-  fecha: string;
-  hora_inicio: string;
-  hora_final: string;
-  estado: string;
-  estado_pago?: string;
-  metodo_pago?: string;
-  descripcion?: string;
-  precio_total?: number;
-  created_at: string;
-  updated_at: string;
-  cliente?: Cliente;
-  empleada?: Empleada;
-  plan?: Plan;
-  lugar?: Lugar;
+  id: string; fecha: string; hora_inicio: string; hora_final: string;
+  estado: string; estado_pago?: string; metodo_pago?: string;
+  descripcion?: string; precio_total?: number;
+  created_at: string; updated_at: string;
+  cliente?: Cliente; empleada?: Empleada; plan?: Plan; lugar?: Lugar;
 }
 
-const PAGE_SIZE = 15;
-
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const authHeaders = () => {
   const token = localStorage.getItem("access_token");
   return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 };
 
 const fmtCOP = (v?: number | null) =>
-  v != null
-    ? new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(v)
-    : "—";
+  v != null ? new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(v) : "—";
 
-const fmtDate = (s?: string | null) =>
-  s ? new Date(s).toLocaleDateString("es-CO", { year: "numeric", month: "short", day: "numeric" }) : "—";
-
-const ESTADO_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pendiente:  { label: "Pendiente",  color: "text-yellow-700", bg: "bg-yellow-100" },
-  confirmada: { label: "Confirmada", color: "text-blue-700",   bg: "bg-blue-100"   },
-  en_proceso: { label: "En proceso", color: "text-orange-700", bg: "bg-orange-100" },
-  completada: { label: "Completada", color: "text-green-700",  bg: "bg-green-100"  },
-  cancelada:  { label: "Cancelada",  color: "text-red-700",    bg: "bg-red-100"    },
+const fmtDateLocal = (s: string) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 };
 
-const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pendiente:   { label: "Pendiente",   color: "text-yellow-700", bg: "bg-yellow-50"  },
-  pagado:      { label: "Pagado",      color: "text-green-700",  bg: "bg-green-100"  },
-  fallido:     { label: "Fallido",     color: "text-red-700",    bg: "bg-red-100"    },
-  reembolsado: { label: "Reembolsado", color: "text-gray-700",   bg: "bg-gray-100"   },
+const fmtDateShort = (s: string) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
 };
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Estado config ────────────────────────────────────────────────────────────
+const ESTADO_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+  pendiente:  { label: "Pendiente",  color: "text-amber-700",  bg: "bg-amber-100",  dot: "bg-amber-400"  },
+  programada: { label: "Programada", color: "text-blue-700",   bg: "bg-blue-100",   dot: "bg-blue-500"   },
+  confirmada: { label: "Programada", color: "text-blue-700",   bg: "bg-blue-100",   dot: "bg-blue-500"   },
+  en_curso:   { label: "En Curso",   color: "text-orange-700", bg: "bg-orange-100", dot: "bg-orange-500" },
+  en_proceso: { label: "En Curso",   color: "text-orange-700", bg: "bg-orange-100", dot: "bg-orange-500" },
+  completada: { label: "Completada", color: "text-green-700",  bg: "bg-green-100",  dot: "bg-green-500"  },
+  cancelada:  { label: "Cancelada",  color: "text-red-700",    bg: "bg-red-100",    dot: "bg-red-400"    },
+};
+
+const ESTADOS_FILTRO = [
+  { value: "todos",     label: "Todos"      },
+  { value: "pendiente", label: "Pendiente"  },
+  { value: "programada",label: "Programada" },
+  { value: "en_curso",  label: "En Curso"   },
+  { value: "completada",label: "Completada" },
+  { value: "cancelada", label: "Cancelada"  },
+];
+
+const ESTADO_ALIASES: Record<string, string[]> = {
+  programada: ["programada", "confirmada"],
+  en_curso:   ["en_curso", "en_proceso"],
+};
+
+const matchEstado = (r: Reserva, filtro: string) => {
+  if (filtro === "todos") return true;
+  const aliases = ESTADO_ALIASES[filtro];
+  return aliases ? aliases.includes(r.estado) : r.estado === filtro;
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 function AdminReservas() {
+  const navigate = useNavigate();
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filtroEstado, setFiltroEstado] = useState("todos");
-  const [filtroEstadoPago, setFiltroEstadoPago] = useState("todos");
-  const [busqueda, setBusqueda] = useState("");
-  const [page, setPage] = useState(1);
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  const [calendarMonth, setCalendarMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [busqueda, setBusqueda] = useState("");
   const [detailReserva, setDetailReserva] = useState<Reserva | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => { loadReservas(); }, []);
 
-  const handleDeleteReserva = async (id: string) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) return;
-    setDeleteLoading(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/reservas/${id}`, {
-        method: "DELETE",
-        headers: authHeaders(),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setDetailReserva(null);
-      await loadReservas();
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   const loadReservas = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       let all: Reserva[] = [];
       let pg = 1;
       while (true) {
-        const res = await fetch(
-          `${API_BASE_URL}/api/reservas?page=${pg}&items_per_page=100`,
-          { headers: authHeaders() }
-        );
+        const res = await fetch(`${API_BASE_URL}/api/reservas?page=${pg}&items_per_page=100`, { headers: authHeaders() });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         all = [...all, ...(data.reservas ?? [])];
@@ -149,62 +108,80 @@ function AdminReservas() {
         pg++;
       }
       setReservas(all);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
   };
 
-  const filtered = useMemo(() => {
-    const q = busqueda.toLowerCase();
-    return reservas.filter(r => {
-      const matchEstado = filtroEstado === "todos" || r.estado === filtroEstado;
-      const matchPago = filtroEstadoPago === "todos" || r.estado_pago === filtroEstadoPago;
-      const matchSearch = !q || (
-        r.cliente?.nombre?.toLowerCase().includes(q) ||
-        r.cliente?.apellido?.toLowerCase().includes(q) ||
-        r.cliente?.correo?.toLowerCase().includes(q) ||
-        r.empleada?.nombre?.toLowerCase().includes(q) ||
-        r.empleada?.apellido?.toLowerCase().includes(q) ||
-        r.plan?.nombre?.toLowerCase().includes(q) ||
-        r.lugar?.direccion?.toLowerCase().includes(q) ||
-        r.lugar?.nombre?.toLowerCase().includes(q)
-      );
-      return matchEstado && matchPago && matchSearch;
-    });
-  }, [reservas, filtroEstado, filtroEstadoPago, busqueda]);
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("¿Eliminar esta reserva?")) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reservas/${id}`, { method: "DELETE", headers: authHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setDetailReserva(null);
+      await loadReservas();
+    } catch (e: any) { alert(e.message); }
+    finally { setDeleteLoading(false); }
+  };
 
-  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Stats from all reservas
+  // ── Stats globales ──────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
-    total: reservas.length,
-    pendientes: reservas.filter(r => r.estado === "pendiente").length,
-    confirmadas: reservas.filter(r => r.estado === "confirmada").length,
-    en_proceso: reservas.filter(r => r.estado === "en_proceso").length,
+    total:       reservas.length,
+    pendientes:  reservas.filter(r => r.estado === "pendiente").length,
+    programadas: reservas.filter(r => r.estado === "programada" || r.estado === "confirmada").length,
+    en_curso:    reservas.filter(r => r.estado === "en_curso" || r.estado === "en_proceso").length,
     completadas: reservas.filter(r => r.estado === "completada").length,
-    canceladas: reservas.filter(r => r.estado === "cancelada").length,
-    ingresos: reservas.filter(r => r.estado_pago === "pagado").reduce((s, r) => s + (r.precio_total ?? 0), 0),
+    canceladas:  reservas.filter(r => r.estado === "cancelada").length,
+    ingresos:    reservas.filter(r => r.estado_pago === "pagado" || r.estado_pago === "PAGADO").reduce((s, r) => s + (r.precio_total ?? 0), 0),
   }), [reservas]);
 
+  // ── Agrupar reservas por fecha ──────────────────────────────────────────────
+  const reservasByDate = useMemo(() => {
+    const map: Record<string, Reserva[]> = {};
+    for (const r of reservas) {
+      if (!map[r.fecha]) map[r.fecha] = [];
+      map[r.fecha].push(r);
+    }
+    return map;
+  }, [reservas]);
+
+  // ── Días del mes actual ────────────────────────────────────────────────────
+  const diasDelMes = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const primerDia = new Date(year, month, 1).getDay();
+    const ultimoDia = new Date(year, month + 1, 0).getDate();
+    const days: (string | null)[] = Array(primerDia).fill(null);
+    for (let d = 1; d <= ultimoDia; d++) {
+      days.push(`${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    }
+    return days;
+  }, [calendarMonth]);
+
+  // ── Reservas del día seleccionado (con filtros) ─────────────────────────────
+  const reservasDelDia = useMemo(() => {
+    const diaReservas = reservasByDate[selectedDate] ?? [];
+    const q = busqueda.toLowerCase();
+    return diaReservas.filter(r => {
+      const matchE = matchEstado(r, filtroEstado);
+      const matchQ = !q || (
+        r.cliente?.nombre?.toLowerCase().includes(q) ||
+        r.cliente?.apellido?.toLowerCase().includes(q) ||
+        r.empleada?.nombre?.toLowerCase().includes(q) ||
+        r.plan?.nombre?.toLowerCase().includes(q)
+      );
+      return matchE && matchQ;
+    });
+  }, [reservasByDate, selectedDate, filtroEstado, busqueda]);
+
   const exportToExcel = () => {
-    const rows = filtered.map((r, i) => ({
-      "#": i + 1,
-      "Fecha": fmtDate(r.fecha),
+    const rows = reservas.map((r, i) => ({
+      "#": i + 1, "Fecha": fmtDateLocal(r.fecha),
       "Horario": `${r.hora_inicio} – ${r.hora_final}`,
       "Cliente": r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "",
-      "Correo cliente": r.cliente?.correo ?? "",
-      "Tel. cliente": r.cliente?.telefono ?? "",
       "Empleada": r.empleada ? `${r.empleada.nombre} ${r.empleada.apellido}` : "",
-      "Plan": r.plan?.nombre ?? "",
-      "Lugar": r.lugar?.nombre ?? r.lugar?.direccion ?? "",
-      "Estado": r.estado,
-      "Estado pago": r.estado_pago ?? "",
-      "Método pago": r.metodo_pago ?? "",
+      "Plan": r.plan?.nombre ?? "", "Estado": r.estado,
       "Total $$": r.precio_total ?? "",
-      "Descripción": r.descripcion ?? "",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -212,248 +189,425 @@ function AdminReservas() {
     XLSX.writeFile(wb, `reservas_reluzca_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-64">
-      <RefreshCw className="h-10 w-10 animate-spin text-[#195083]" />
-    </div>
-  );
-
+  if (loading) return <div className="flex items-center justify-center min-h-64"><RefreshCw className="h-10 w-10 animate-spin text-[#195083]" /></div>;
   if (error) return (
     <div className="text-center py-12">
       <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
       <p className="text-gray-600 mb-4">{error}</p>
-      <button onClick={loadReservas} className="bg-[#195083] text-white px-4 py-2 rounded-lg">
-        Reintentar
-      </button>
+      <button onClick={loadReservas} className="bg-[#195083] text-white px-4 py-2 rounded-lg">Reintentar</button>
     </div>
   );
 
+  const DIAS_SEMANA = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="space-y-5 lg:space-y-6">
 
       {/* Header */}
       <ListPageHeader
         theme={ROLE_THEMES.admin}
         title="Reservas"
-        subtitle={`${reservas.length} reservas totales — ${filtered.length} mostradas`}
+        subtitle={`${reservas.length} reservas totales`}
         actions={
-          <button
-            onClick={exportToExcel}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            Exportar Excel
+          <button onClick={exportToExcel} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors">
+            <Download className="h-4 w-4" /> Exportar Excel
           </button>
         }
       />
 
-      {/* Stats */}
-      <ListStatsGrid
-        columns={6}
-        stats={[
-          { label: "Pendientes",  value: stats.pendientes,  color: "#ca8a04" },
-          { label: "Confirmadas", value: stats.confirmadas, color: "#2563eb" },
-          { label: "En proceso",  value: stats.en_proceso,  color: "#ea580c" },
-          { label: "Completadas", value: stats.completadas, color: "#16a34a" },
-          { label: "Canceladas",  value: stats.canceladas,  color: "#dc2626" },
-          { label: "Ingresos",    value: fmtCOP(stats.ingresos), color: "#059669" },
-        ]}
-      />
+      {/* Stats chips */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { label: "Total",       value: stats.total,       color: "bg-gray-100 text-gray-700"     },
+          { label: "Pendientes",  value: stats.pendientes,  color: "bg-amber-100 text-amber-700"   },
+          { label: "Programadas", value: stats.programadas, color: "bg-blue-100 text-blue-700"     },
+          { label: "En Curso",    value: stats.en_curso,    color: "bg-orange-100 text-orange-700" },
+          { label: "Completadas", value: stats.completadas, color: "bg-green-100 text-green-700"   },
+          { label: "Canceladas",  value: stats.canceladas,  color: "bg-red-100 text-red-700"       },
+          { label: "Ingresos",    value: fmtCOP(stats.ingresos), color: "bg-emerald-100 text-emerald-700" },
+        ].map(s => (
+          <div key={s.label} className={`px-3 py-1.5 rounded-full text-xs font-semibold ${s.color}`}>
+            {s.label}: <span className="font-bold">{s.value}</span>
+          </div>
+        ))}
+      </div>
 
-      {/* Filtros y Búsqueda */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
-        <div className="flex flex-col gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Buscar por cliente, empleada, plan o lugar..."
-              value={busqueda}
-              onChange={e => { setBusqueda(e.target.value); setPage(1); }}
-              className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 placeholder-gray-600 bg-white"
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <select
-              value={filtroEstado}
-              onChange={e => { setFiltroEstado(e.target.value); setPage(1); }}
-              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
+      {/* ── Layout principal: Calendario + Lista del día ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+
+        {/* ── CALENDARIO ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          {/* Navegación mes */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <button
+              onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <option value="todos">Todos los estados</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="confirmada">Confirmada</option>
-              <option value="en_proceso">En proceso</option>
-              <option value="completada">Completada</option>
-              <option value="cancelada">Cancelada</option>
-            </select>
-            <select
-              value={filtroEstadoPago}
-              onChange={e => { setFiltroEstadoPago(e.target.value); setPage(1); }}
-              className="flex-1 px-4 py-2 sm:py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#195083] focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            </button>
+            <div className="text-center">
+              <h3 className="font-bold text-gray-900 text-lg">
+                {MESES[calendarMonth.getMonth()]}
+              </h3>
+              <p className="text-sm text-gray-500">{calendarMonth.getFullYear()}</p>
+            </div>
+            <button
+              onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <option value="todos">Todo pago</option>
-              <option value="pendiente">Pago pendiente</option>
-              <option value="pagado">Pagado</option>
-              <option value="fallido">Fallido</option>
-              <option value="reembolsado">Reembolsado</option>
-            </select>
+              <ChevronRight className="h-5 w-5 text-gray-600" />
+            </button>
           </div>
+
+          {/* Selector de mes rápido */}
+          <div className="px-4 pt-3 pb-0">
+            <div className="flex flex-wrap gap-1">
+              {MESES.map((mes, idx) => (
+                <button
+                  key={mes}
+                  onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), idx, 1))}
+                  className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                    calendarMonth.getMonth() === idx
+                      ? 'bg-[#195083] text-white'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  {mes.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid calendario */}
+          <div className="p-4">
+            {/* Encabezado días */}
+            <div className="grid grid-cols-7 mb-2">
+              {DIAS_SEMANA.map(d => (
+                <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</div>
+              ))}
+            </div>
+
+            {/* Días */}
+            <div className="grid grid-cols-7 gap-1">
+              {diasDelMes.map((fechaStr, idx) => {
+                if (!fechaStr) return <div key={idx} />;
+
+                const reservasDia = reservasByDate[fechaStr] ?? [];
+                const isSelected = fechaStr === selectedDate;
+                const isToday = fechaStr === todayStr;
+                const hasReservas = reservasDia.length > 0;
+
+                // Agrupar puntos por estado (máx 3 puntos distintos)
+                const estadosPuntos = [...new Set(reservasDia.map(r => {
+                  if (r.estado === 'confirmada') return 'programada';
+                  if (r.estado === 'en_proceso') return 'en_curso';
+                  return r.estado;
+                }))].slice(0, 3);
+
+                const [,, dayNum] = fechaStr.split('-');
+
+                return (
+                  <button
+                    key={fechaStr}
+                    onClick={() => setSelectedDate(fechaStr)}
+                    className={`
+                      relative flex flex-col items-center justify-start p-1.5 rounded-xl min-h-[52px] transition-all text-sm
+                      ${isSelected
+                        ? 'bg-[#195083] text-white shadow-lg shadow-[#195083]/25'
+                        : isToday
+                        ? 'bg-[#195083]/10 text-[#195083] font-bold'
+                        : hasReservas
+                        ? 'bg-gray-50 hover:bg-gray-100 text-gray-800'
+                        : 'hover:bg-gray-50 text-gray-600'
+                      }
+                    `}
+                  >
+                    <span className={`font-semibold text-sm leading-none ${isSelected ? 'text-white' : ''}`}>
+                      {parseInt(dayNum)}
+                    </span>
+                    {/* Dots de estados */}
+                    {estadosPuntos.length > 0 && (
+                      <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
+                        {estadosPuntos.map(est => (
+                          <span
+                            key={est}
+                            className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/80' : ESTADO_CONFIG[est]?.dot ?? 'bg-gray-400'}`}
+                          />
+                        ))}
+                        {reservasDia.length > 3 && (
+                          <span className={`text-[9px] font-bold ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
+                            +{reservasDia.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {/* Contador total */}
+                    {reservasDia.length > 0 && (
+                      <span className={`text-[10px] leading-none mt-0.5 ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
+                        {reservasDia.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Leyenda */}
+            <div className="mt-4 flex flex-wrap gap-3 pt-3 border-t border-gray-100">
+              {[
+                { label: "Pendiente",  dot: "bg-amber-400"  },
+                { label: "Programada", dot: "bg-blue-500"   },
+                { label: "En Curso",   dot: "bg-orange-500" },
+                { label: "Completada", dot: "bg-green-500"  },
+                { label: "Cancelada",  dot: "bg-red-400"    },
+              ].map(l => (
+                <div key={l.label} className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className={`w-2 h-2 rounded-full ${l.dot}`} />
+                  {l.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── LISTA DEL DÍA ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+          {/* Header día seleccionado */}
+          <div className="px-5 py-4 border-b border-gray-100">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-bold text-gray-900 text-base capitalize">
+                  {fmtDateLocal(selectedDate)}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {reservasDelDia.length} reserva{reservasDelDia.length !== 1 ? 's' : ''} para este día
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedDate(todayStr)}
+                  className="text-xs bg-[#195083]/10 text-[#195083] px-2.5 py-1 rounded-full font-medium hover:bg-[#195083]/20 transition-colors"
+                >
+                  Hoy
+                </button>
+              </div>
+            </div>
+
+            {/* Filtros de estado (chips) */}
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {ESTADOS_FILTRO.map(est => (
+                <button
+                  key={est.value}
+                  onClick={() => setFiltroEstado(est.value)}
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all ${
+                    filtroEstado === est.value
+                      ? 'bg-[#195083] text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {est.label}
+                  {est.value !== 'todos' && (() => {
+                    const c = (reservasByDate[selectedDate] ?? []).filter(r => matchEstado(r, est.value)).length;
+                    return c > 0 ? <span className="ml-1 opacity-70">({c})</span> : null;
+                  })()}
+                </button>
+              ))}
+            </div>
+
+            {/* Búsqueda */}
+            <div className="relative mt-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar cliente, empleada, plan..."
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#195083]/30 focus:border-[#195083] bg-gray-50"
+              />
+            </div>
+          </div>
+
+          {/* Lista de reservas del día */}
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-50 min-h-[300px] max-h-[520px]">
+            {reservasDelDia.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-gray-300">
+                <Calendar className="h-12 w-12 mb-3" />
+                <p className="text-sm text-gray-400">
+                  {(reservasByDate[selectedDate] ?? []).length === 0
+                    ? "Sin reservas para este día"
+                    : "Sin reservas con los filtros aplicados"}
+                </p>
+              </div>
+            ) : reservasDelDia.map(r => {
+              const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
+              return (
+                <div
+                  key={r.id}
+                  className="px-5 py-3 hover:bg-gray-50 transition-colors cursor-pointer group"
+                  onClick={() => setDetailReserva(r)}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Hora */}
+                    <div className="shrink-0 text-center w-12">
+                      <p className="text-xs font-bold text-gray-700">{r.hora_inicio?.slice(0,5)}</p>
+                      <p className="text-[10px] text-gray-400">{r.hora_final?.slice(0,5)}</p>
+                    </div>
+
+                    {/* Separador vertical coloreado */}
+                    <div className={`w-0.5 self-stretch rounded-full shrink-0 ${estCfg.dot}`} />
+
+                    {/* Info principal */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "Sin cliente"}
+                          </p>
+                          {r.empleada && (
+                            <p className="text-xs text-gray-500 truncate">
+                              {r.empleada.nombre} {r.empleada.apellido}
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${estCfg.bg} ${estCfg.color}`}>
+                            {estCfg.label}
+                          </span>
+                          {r.precio_total != null && (
+                            <p className="text-xs font-bold text-gray-700 mt-0.5">{fmtCOP(r.precio_total)}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        {r.plan && <span className="text-[11px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{r.plan.nombre}</span>}
+                        {r.lugar?.nombre && (
+                          <span className="text-[11px] text-gray-400 flex items-center gap-0.5">
+                            <MapPin className="h-2.5 w-2.5" />{r.lugar.nombre}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Acciones (visibles al hover) */}
+                    <div className="shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={e => { e.stopPropagation(); setDetailReserva(r); }}
+                        className="p-1.5 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-gray-400"
+                        title="Ver detalle"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate("/admin/reservas/editar", { state: { reserva: r } }); }}
+                        className="p-1.5 hover:bg-[#195083]/10 hover:text-[#195083] rounded-lg transition-colors text-gray-400"
+                        title="Editar"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDelete(r.id); }}
+                        className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-gray-400"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer — total del día */}
+          {reservasDelDia.length > 0 && (
+            <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+              <span className="text-xs text-gray-500">
+                {reservasDelDia.length} reserva{reservasDelDia.length !== 1 ? 's' : ''} mostradas
+              </span>
+              <span className="text-xs font-bold text-gray-700">
+                {fmtCOP(reservasDelDia.reduce((s, r) => s + (r.precio_total ?? 0), 0))} total día
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Lista de reservas */}
-      <div className="space-y-3 sm:space-y-4">
-        {paged.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 py-10 text-center text-gray-400">
-            <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-200" />
-            {busqueda || filtroEstado !== "todos" || filtroEstadoPago !== "todos"
-              ? "Sin resultados para los filtros aplicados."
-              : "No hay reservas registradas."}
-          </div>
-        ) : paged.map((r, idx) => {
-          const estCfg = ESTADO_CONFIG[r.estado] ?? ESTADO_CONFIG.pendiente;
-          const pagoCfg = PAGO_CONFIG[r.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
-          return (
-            <SlideRevealCard
-              key={r.id}
-              buttonCount={3}
-              actions={<>
-                <SlideButton icon={<Eye className="h-4 w-4" />} onClick={() => setDetailReserva(r)} title="Ver detalle" hoverColor="hover:bg-blue-50 hover:text-blue-600" />
-                <SlideButton icon={<Edit3 className="h-4 w-4" />} onClick={() => { setDetailReserva(null); navigate("/admin/reservas/editar", { state: { reserva: r } }); }} title="Editar reserva" hoverColor="hover:bg-[#195083]/10 hover:text-[#195083]" />
-                <SlideButton icon={<Trash2 className="h-4 w-4" />} onClick={() => handleDeleteReserva(r.id)} title="Eliminar reserva" hoverColor="hover:bg-red-50 hover:text-red-600" />
-              </>}
-              onClick={() => setDetailReserva(r)}
-            >
-              <div className="flex items-start gap-3">
-                {/* Avatar fecha */}
-                <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white shrink-0"
-                  style={{ background: "linear-gradient(135deg, #195083, #0f3a5f)" }}>
-                  <span className="text-xs font-bold leading-none">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { day: "2-digit" })}</span>
-                  <span className="text-[10px] uppercase leading-none mt-0.5">{new Date(r.fecha + "T00:00:00").toLocaleDateString("es-CO", { month: "short" })}</span>
-                </div>
-
-                {/* Contenido principal */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate">
-                    {r.cliente ? `${r.cliente.nombre} ${r.cliente.apellido}` : "Sin cliente"}
-                  </h4>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {r.hora_inicio} – {r.hora_final}{r.empleada ? ` · ${r.empleada.nombre} ${r.empleada.apellido}` : ""}{r.plan ? ` · ${r.plan.nombre}` : ""}
-                  </p>
-
-                  {/* Tags */}
-                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${estCfg.bg} ${estCfg.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${estCfg.color.replace("text-", "bg-")}`} />
-                      {estCfg.label}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${pagoCfg.color.replace("text-", "bg-")}`} />
-                      {pagoCfg.label}
-                    </span>
-                    {r.lugar && (
-                      <span className="inline-flex items-center gap-0.5 text-xs text-gray-500">
-                        <MapPin className="h-3 w-3" />
-                        {r.lugar.nombre ?? r.lugar.direccion ?? ""}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sección derecha - precio */}
-                <div className="shrink-0 flex flex-col items-end gap-1 text-right">
-                  <span className="text-xs font-bold text-[#195083]">{fmtCOP(r.precio_total)}</span>
-                  {r.empleada?.ranking != null && (
-                    <div className="flex items-center gap-0.5">
-                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      <span className="text-xs text-gray-500">{r.empleada.ranking.toFixed(1)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </SlideRevealCard>
-          );
-        })}
-
-        <ListPagination page={page} totalPages={pages} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
-      </div>
-
-      {/* ══════════ MODAL DETALLE RESERVA ══════════ */}
+      {/* ── Modal Detalle ── */}
       <ListDetailModal
         theme={ROLE_THEMES.admin}
         open={!!detailReserva}
         onClose={() => setDetailReserva(null)}
         title="Detalle de Reserva"
-        subtitle={detailReserva ? `${fmtDate(detailReserva.fecha)} · ${detailReserva.hora_inicio} – ${detailReserva.hora_final}` : ""}
+        subtitle={detailReserva ? `${fmtDateLocal(detailReserva.fecha)} · ${detailReserva.hora_inicio?.slice(0,5)} – ${detailReserva.hora_final?.slice(0,5)}` : ""}
       >
-        {detailReserva && (
-          <>
-              <div className="flex items-center gap-3">
-                {(() => {
-                  const estCfg = ESTADO_CONFIG[detailReserva.estado] ?? ESTADO_CONFIG.pendiente;
-                  const pagoCfg = PAGO_CONFIG[detailReserva.estado_pago ?? "pendiente"] ?? PAGO_CONFIG.pendiente;
-                  return (
-                    <>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${estCfg.bg} ${estCfg.color}`}>
-                        {estCfg.label}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${pagoCfg.bg} ${pagoCfg.color}`}>
-                        {pagoCfg.label}
-                      </span>
-                      {detailReserva.precio_total != null && (
-                        <span className="ml-auto font-bold text-lg text-gray-900">
-                          {fmtCOP(detailReserva.precio_total)}
-                        </span>
-                      )}
-                    </>
-                  );
-                })()}
+        {detailReserva && (() => {
+          const estCfg = ESTADO_CONFIG[detailReserva.estado] ?? ESTADO_CONFIG.pendiente;
+          return (
+            <>
+              {/* Estado y precio */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${estCfg.bg} ${estCfg.color}`}>{estCfg.label}</span>
+                {detailReserva.estado_pago && (
+                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700">{detailReserva.estado_pago}</span>
+                )}
+                {detailReserva.precio_total != null && (
+                  <span className="ml-auto font-bold text-xl text-gray-900">{fmtCOP(detailReserva.precio_total)}</span>
+                )}
               </div>
 
+              {/* Fecha y horario */}
+              <div className="bg-[#195083]/5 border border-[#195083]/10 rounded-xl p-4">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Fecha y Horario</p>
+                <p className="font-semibold text-gray-900 capitalize">{fmtDateLocal(detailReserva.fecha)}</p>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  {detailReserva.hora_inicio?.slice(0,5)} — {detailReserva.hora_final?.slice(0,5)}
+                </p>
+              </div>
+
+              {/* Cliente */}
               {detailReserva.cliente && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Cliente</p>
                   <p className="font-semibold text-gray-900">{detailReserva.cliente.nombre} {detailReserva.cliente.apellido}</p>
                   <div className="flex flex-col gap-1 mt-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Mail className="h-3.5 w-3.5" />{detailReserva.cliente.correo}
-                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600"><Mail className="h-3.5 w-3.5" />{detailReserva.cliente.correo}</div>
                     {detailReserva.cliente.telefono && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="h-3.5 w-3.5" />{detailReserva.cliente.telefono}
-                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600"><Activity className="h-3.5 w-3.5" />{detailReserva.cliente.telefono}</div>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* Empleada */}
               {detailReserva.empleada && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Empleada</p>
                   <p className="font-semibold text-gray-900">{detailReserva.empleada.nombre} {detailReserva.empleada.apellido}</p>
                   <div className="flex items-center gap-3 mt-1">
                     {detailReserva.empleada.telefono && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="h-3.5 w-3.5" />{detailReserva.empleada.telefono}
-                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600"><Activity className="h-3.5 w-3.5" />{detailReserva.empleada.telefono}</div>
                     )}
                     {detailReserva.empleada.ranking != null && (
                       <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
-                        {detailReserva.empleada.ranking.toFixed(1)}
+                        <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />{detailReserva.empleada.ranking.toFixed(1)}
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* Plan y Lugar */}
               <div className="grid grid-cols-2 gap-3">
                 {detailReserva.plan && (
                   <div className="bg-gray-50 rounded-xl p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Plan</p>
                     <p className="font-semibold text-gray-900 text-sm">{detailReserva.plan.nombre}</p>
                     {detailReserva.plan.precio != null && (
-                      <p className="text-xs text-gray-500 mt-0.5">{fmtCOP(detailReserva.plan.precio)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{fmtCOP(detailReserva.plan.precio)}/día</p>
+                    )}
+                    {detailReserva.plan.descripcion && (
+                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">{detailReserva.plan.descripcion}</p>
                     )}
                   </div>
                 )}
@@ -461,20 +615,32 @@ function AdminReservas() {
                   <div className="bg-gray-50 rounded-xl p-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Lugar</p>
                     <p className="font-semibold text-gray-900 text-sm">{detailReserva.lugar.nombre ?? "Sin nombre"}</p>
+                    {detailReserva.lugar.tipo_lugar && (
+                      <p className="text-xs text-gray-500 capitalize mt-0.5">{detailReserva.lugar.tipo_lugar}</p>
+                    )}
                     {detailReserva.lugar.direccion && (
-                      <p className="text-xs text-gray-500 mt-0.5">{detailReserva.lugar.direccion}</p>
+                      <p className="text-xs text-gray-400 mt-1">{detailReserva.lugar.direccion}</p>
                     )}
                   </div>
                 )}
               </div>
 
-              {detailReserva.metodo_pago && (
+              {/* Pago */}
+              {(detailReserva.metodo_pago || detailReserva.estado_pago) && (
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Método de pago</p>
-                  <p className="font-semibold text-gray-900 text-sm capitalize">{detailReserva.metodo_pago}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Información de Pago</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {detailReserva.estado_pago && (
+                      <div><span className="text-gray-500 text-xs">Estado pago:</span><p className="font-medium text-gray-900">{detailReserva.estado_pago}</p></div>
+                    )}
+                    {detailReserva.metodo_pago && (
+                      <div><span className="text-gray-500 text-xs">Método:</span><p className="font-medium text-gray-900 capitalize">{detailReserva.metodo_pago}</p></div>
+                    )}
+                  </div>
                 </div>
               )}
 
+              {/* Descripción */}
               {detailReserva.descripcion && (
                 <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Notas</p>
@@ -482,17 +648,23 @@ function AdminReservas() {
                 </div>
               )}
 
+              {/* IDs y fechas técnicas */}
+              <div className="text-xs text-gray-400 space-y-0.5 border-t border-gray-100 pt-3">
+                <p>ID: {detailReserva.id}</p>
+                {detailReserva.created_at && <p>Creada: {new Date(detailReserva.created_at).toLocaleString('es-CO')}</p>}
+                {detailReserva.updated_at && <p>Actualizada: {new Date(detailReserva.updated_at).toLocaleString('es-CO')}</p>}
+              </div>
+
               {/* Acciones */}
               <div className="flex gap-3 pt-4 border-t">
                 <button
                   onClick={() => { setDetailReserva(null); navigate("/admin/reservas/editar", { state: { reserva: detailReserva } }); }}
                   className="flex-1 bg-[#195083] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5f] transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
-                  <Edit3 className="h-4 w-4" />
-                  Editar reserva
+                  <Edit3 className="h-4 w-4" /> Editar reserva
                 </button>
                 <button
-                  onClick={() => handleDeleteReserva(detailReserva.id)}
+                  onClick={() => handleDelete(detailReserva.id)}
                   disabled={deleteLoading}
                   className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
@@ -500,8 +672,9 @@ function AdminReservas() {
                   Eliminar
                 </button>
               </div>
-          </>
-        )}
+            </>
+          );
+        })()}
       </ListDetailModal>
     </div>
   );

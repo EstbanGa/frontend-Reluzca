@@ -133,30 +133,36 @@ interface CalculoPrecio {
 // Horas de trabajo disponibles cuando no hay plan (solo el número)
 const HORAS_DISPONIBLES = [2, 3, 4, 5, 6, 8];
 
-// Genera franjas horarias posibles para una duración dada
-const generarFranjasHorarias = (horas: number): HorarioDisponible[] => {
-  const franjas: HorarioDisponible[] = [];
-  const horaMinInicio = 6; // 6 AM
-  const horaMaxFin = 20;   // 8 PM
-  for (let inicio = horaMinInicio; inicio + horas <= horaMaxFin; inicio++) {
-    const fin = inicio + horas;
-    franjas.push({
-      hora_inicio: `${String(inicio).padStart(2, '0')}:00`,
-      hora_final: `${String(fin).padStart(2, '0')}:00`,
-      horas_duracion: horas,
-      sobrecargo_sabado: 0,
-      descripcion: `${horas}h de servicio`,
-    });
+// Genera horas de inicio posibles para una duración dada (pasos de 30 min)
+const generarHorasInicio = (duracionHoras: number): string[] => {
+  const horas: string[] = [];
+  const horaMinInicio = 6 * 60; // 6:00 AM en minutos
+  const horaMaxFin = 20 * 60;   // 8:00 PM en minutos
+  const breakMin = duracionHoras > 4 ? 30 : 0;
+  const duracionMin = duracionHoras * 60 + breakMin;
+  for (let min = horaMinInicio; min + duracionMin <= horaMaxFin; min += 30) {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    horas.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
   }
-  return franjas;
+  return horas;
 };
 
-// Pasos del proceso
-const PASOS_IDS = [1, 2, 3, 4, 5, 6];
+// Calcula hora de fin dado inicio y duración (con break si >4h)
+const computeHoraFinal = (horaInicio: string, duracionHoras: number): string => {
+  const [h, m] = horaInicio.split(':').map(Number);
+  const breakMin = duracionHoras > 4 ? 30 : 0;
+  const totalMin = h * 60 + m + duracionHoras * 60 + breakMin;
+  const hFin = Math.floor(totalMin / 60);
+  const mFin = totalMin % 60;
+  return `${String(hFin).padStart(2, '0')}:${String(mFin).padStart(2, '0')}`;
+};
+
+// Pasos del proceso (plan + hora de inicio integrados en paso 2)
+const PASOS_IDS = [1, 2, 3, 4, 5];
 const PASO_KEYS = [
   { nombre: 'steps.employee', descripcion: 'steps.employeeDesc' },
   { nombre: 'steps.plan', descripcion: 'steps.planDesc' },
-  { nombre: 'steps.schedule', descripcion: 'steps.scheduleDesc' },
   { nombre: 'steps.dates', descripcion: 'steps.datesDesc' },
   { nombre: 'steps.details', descripcion: 'steps.detailsDesc' },
   { nombre: 'steps.confirmation', descripcion: 'steps.confirmationDesc' }
@@ -176,12 +182,12 @@ function CrearReserva() {
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
   const [actividadesDisponibles, setActividadesDisponibles] = useState<Actividad[]>([]);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadDia[]>([]);
-  const [horariosDisponibles, setHorariosDisponibles] = useState<HorarioDisponible[]>([]);
 
   // Estados de selección
   const [empleadaSeleccionada, setEmpleadaSeleccionada] = useState<Empleada | null>(null);
   const [planSeleccionado, setPlanSeleccionado] = useState<Plan | null>(null);
   const [horarioSeleccionado, setHorarioSeleccionado] = useState<HorarioDisponible | null>(null);
+  const [horaInicioSeleccionada, setHoraInicioSeleccionada] = useState<string | null>(null);
   const [fechasSeleccionadas, setFechasSeleccionadas] = useState<string[]>([]);
   const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState<Ubicacion | null>(null);
   const [actividadesSeleccionadas, setActividadesSeleccionadas] = useState<string[]>([]);
@@ -191,9 +197,8 @@ function CrearReserva() {
   const [calculoPrecio, setCalculoPrecio] = useState<CalculoPrecio | null>(null);
   const [calculandoPrecio, setCalculandoPrecio] = useState(false);
 
-  // Estados de calendario
+  // Estado de calendario
   const [mesActual, setMesActual] = useState(new Date());
-  const [cargandoHorarios, setCargandoHorarios] = useState(false);
 
   // Estados de búsqueda de empleadas y recientes
   const [busquedaEmpleada, setBusquedaEmpleada] = useState('');
@@ -210,16 +215,25 @@ function CrearReserva() {
     ]);
   }, []);
 
-  // Cargar horarios cuando se selecciona un plan (o usar defaults si no hay plan)
+  // Auto-computar horarioSeleccionado cuando cambia la hora de inicio o la duración
   useEffect(() => {
-    if (planSeleccionado) {
-      cargarHorariosDisponibles(planSeleccionado.id);
-    } else if (horasTrabajoSeleccionadas) {
-      setHorariosDisponibles(generarFranjasHorarias(horasTrabajoSeleccionadas));
-    } else {
-      setHorariosDisponibles([]);
+    if (!horaInicioSeleccionada) {
+      setHorarioSeleccionado(null);
+      return;
     }
-  }, [planSeleccionado, horasTrabajoSeleccionadas]);
+    const duracion = planSeleccionado?.horas_servicio ?? horasTrabajoSeleccionadas;
+    if (!duracion) {
+      setHorarioSeleccionado(null);
+      return;
+    }
+    setHorarioSeleccionado({
+      hora_inicio: horaInicioSeleccionada,
+      hora_final: computeHoraFinal(horaInicioSeleccionada, duracion),
+      horas_duracion: duracion,
+      sobrecargo_sabado: 0,
+      descripcion: `${duracion}h de servicio`,
+    });
+  }, [horaInicioSeleccionada, planSeleccionado, horasTrabajoSeleccionadas]);
 
   // Calcular precio cuando cambian los datos relevantes
   useEffect(() => {
@@ -357,37 +371,6 @@ function CrearReserva() {
       setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadAvailability'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  // CORRECTED: URL corregida para horarios
-  const cargarHorariosDisponibles = async (planId: string, fechaEjemplo: string = '2024-01-01') => {
-    try {
-      setCargandoHorarios(true);
-      const token = localStorage.getItem("access_token");
-      
-      // URL CORREGIDA: Coincide con el patrón de Django
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reservas/horarios/${planId}/${fechaEjemplo}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setHorariosDisponibles(result.horarios_disponibles);
-      } else {
-        throw new Error(result.error || t('cliente.createReservation.errors.loadSchedules'));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('cliente.createReservation.errors.loadSchedules'));
-    } finally {
-      setCargandoHorarios(false);
     }
   };
 
@@ -536,7 +519,8 @@ function CrearReserva() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CO', {
+    const [y, m, d] = dateString.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-CO', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -553,25 +537,23 @@ function CrearReserva() {
     return { porcentaje: 10, descripcion: t('cliente.createReservation.discounts.10pctMax') };
   };
 
-  // Funciones de navegación
+  // Funciones de navegación (5 pasos)
   const irAPaso = (paso: number) => {
     if (paso === 1) {
       setPasoActual(1);
-    } else if (paso === 2 && empleadaSeleccionada) {
+    } else if (paso === 2 && puedeAvanzarPaso1) {
       setPasoActual(2);
-    } else if (paso === 3 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0)) {
+    } else if (paso === 3 && puedeAvanzarPaso2) {
       setPasoActual(3);
-    } else if (paso === 4 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0) && horarioSeleccionado) {
+    } else if (paso === 4 && puedeAvanzarPaso2 && puedeAvanzarPaso3) {
       setPasoActual(4);
-    } else if (paso === 5 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0) && horarioSeleccionado && fechasSeleccionadas.length > 0) {
+    } else if (paso === 5 && puedeAvanzarPaso2 && puedeAvanzarPaso3 && puedeAvanzarPaso4) {
       setPasoActual(5);
-    } else if (paso === 6 && empleadaSeleccionada && (planSeleccionado || actividadesSeleccionadas.length > 0) && horarioSeleccionado && fechasSeleccionadas.length > 0 && ubicacionSeleccionada) {
-      setPasoActual(6);
     }
   };
 
   const siguientePaso = () => {
-    if (pasoActual < 6) {
+    if (pasoActual < 5) {
       irAPaso(pasoActual + 1);
     }
   };
@@ -590,16 +572,14 @@ function CrearReserva() {
   };
 
   const seleccionarPlan = (plan: Plan) => {
-    // Permite deseleccionar haciendo clic en el plan ya activo
     if (planSeleccionado?.id === plan.id) {
       setPlanSeleccionado(null);
     } else {
       setPlanSeleccionado(plan);
-      setHorasTrabajoSeleccionadas(null); // Limpiar horas manuales al elegir plan
+      setHorasTrabajoSeleccionadas(null);
     }
-    setHorarioSeleccionado(null);
+    setHoraInicioSeleccionada(null);
     setFechasSeleccionadas([]);
-    // actividadesSeleccionadas se mantiene para actividades individuales
   };
 
   const toggleActividadPlan = (id: string) => {
@@ -656,12 +636,11 @@ function CrearReserva() {
     return disponibilidad.find(d => d.fecha === fechaStr);
   };
 
-  // Validaciones
+  // Validaciones (5 pasos: empleada → plan+hora → fechas → ubicación → confirmación)
   const puedeAvanzarPaso1 = empleadaSeleccionada !== null;
-  const puedeAvanzarPaso2 = planSeleccionado !== null || (actividadesSeleccionadas.length > 0 && horasTrabajoSeleccionadas !== null);
-  const puedeAvanzarPaso3 = horarioSeleccionado !== null;
-  const puedeAvanzarPaso4 = fechasSeleccionadas.length > 0;
-  const puedeAvanzarPaso5 = ubicacionSeleccionada !== null;
+  const puedeAvanzarPaso2 = (planSeleccionado !== null || (actividadesSeleccionadas.length > 0 && horasTrabajoSeleccionadas !== null)) && horarioSeleccionado !== null;
+  const puedeAvanzarPaso3 = fechasSeleccionadas.length > 0;
+  const puedeAvanzarPaso4 = ubicacionSeleccionada !== null;
 
   return (
     <div className="space-y-6 lg:space-y-8 max-w-6xl mx-auto">
@@ -686,36 +665,64 @@ function CrearReserva() {
         </div>
       </div>
 
-      {/* Indicador de pasos */}
-      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+      {/* Indicador de pasos — barra segmentada estilo Airbnb/Linear */}
+      <div className="bg-white rounded-xl px-4 sm:px-6 py-4 shadow-sm border border-gray-200">
+        {/* Barra de progreso continua */}
+        <div className="relative mb-3">
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${((pasoActual - 1) / (PASOS_IDS.length - 1)) * 100}%`,
+                background: 'linear-gradient(90deg, #195083, #4894AD)'
+              }}
+            />
+          </div>
+          {/* Marcadores de paso */}
+          <div className="absolute inset-0 flex items-center justify-between pointer-events-none">
+            {PASOS_IDS.map((pasoId) => (
+              <div
+                key={pasoId}
+                className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
+                  pasoActual > pasoId
+                    ? 'bg-[#195083] border-[#195083]'
+                    : pasoActual === pasoId
+                    ? 'bg-white border-[#195083] shadow-md scale-125'
+                    : 'bg-white border-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        {/* Etiqueta del paso actual */}
         <div className="flex items-center justify-between">
-          {PASOS_IDS.map((pasoId, index) => (
-            <div key={pasoId} className="flex items-center flex-1">
-              <div className="flex items-center">
-                <button
-                  onClick={() => irAPaso(pasoId)}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all ${
-                    pasoActual === pasoId
-                      ? 'bg-[#195083] text-white'
-                      : pasoActual > pasoId
-                      ? 'bg-[#22c55e] text-white'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
-                >
-                  {pasoActual > pasoId ? <Check size={16} /> : pasoId}
-                </button>
-                <div className="ml-2 sm:ml-3 hidden sm:block">
-                  <p className={`font-medium text-sm ${pasoActual >= pasoId ? 'text-gray-900' : 'text-gray-500'}`}>
-                    {t(`cliente.createReservation.${PASO_KEYS[index].nombre}`)}
-                  </p>
-                  <p className="text-xs text-gray-500">{t(`cliente.createReservation.${PASO_KEYS[index].descripcion}`)}</p>
-                </div>
-              </div>
-              {index < PASOS_IDS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 sm:mx-4 ${pasoActual > pasoId ? 'bg-[#22c55e]' : 'bg-gray-200'}`} />
-              )}
-            </div>
-          ))}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#195083] bg-[#195083]/10 px-2 py-0.5 rounded-full">
+              Paso {pasoActual} de {PASOS_IDS.length}
+            </span>
+            <span className="text-sm font-semibold text-gray-800">
+              {t(`cliente.createReservation.${PASO_KEYS[pasoActual - 1].nombre}`)}
+            </span>
+          </div>
+          {/* Chips de pasos completados (desktop) */}
+          <div className="hidden sm:flex items-center gap-1">
+            {PASOS_IDS.map((pasoId, idx) => (
+              <button
+                key={pasoId}
+                onClick={() => irAPaso(pasoId)}
+                title={t(`cliente.createReservation.${PASO_KEYS[idx].nombre}`)}
+                className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-all ${
+                  pasoActual === pasoId
+                    ? 'bg-[#195083] text-white'
+                    : pasoActual > pasoId
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer'
+                    : 'bg-gray-100 text-gray-400 cursor-default'
+                }`}
+              >
+                {pasoActual > pasoId ? '✓' : pasoId}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1041,7 +1048,7 @@ function CrearReserva() {
                     )}
                   </div>
                   <p className="text-sm text-gray-500 mb-4">
-                    ¿Cuántas horas de trabajo necesitas? El horario exacto lo elegirás en el siguiente paso.
+                    ¿Cuántas horas de trabajo necesitas?
                   </p>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                     {HORAS_DISPONIBLES.map((h) => {
@@ -1051,7 +1058,7 @@ function CrearReserva() {
                           key={h}
                           onClick={() => {
                             setHorasTrabajoSeleccionadas(h);
-                            setHorarioSeleccionado(null); // Reset horario al cambiar horas
+                            setHoraInicioSeleccionada(null);
                           }}
                           className={`p-3 border-2 rounded-xl cursor-pointer transition-all text-center ${
                             sel
@@ -1069,98 +1076,67 @@ function CrearReserva() {
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {/* Paso 3: Seleccionar Horario */}
-        {pasoActual === 3 && (
-          <div className="p-4 sm:p-6">
-            <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                {t('cliente.createReservation.selectSchedule.title')}
-              </h2>
-              {planSeleccionado ? (
-                <div>
-                  <p className="text-gray-600">
-                    {t('cliente.createReservation.selectSchedule.plan')}{" "}
-                    <span className="font-semibold text-gray-900">{planSeleccionado.nombre}</span>
-                    {" · "}{planSeleccionado.horas_servicio}h de trabajo
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {t('cliente.createReservation.selectSchedule.subtitle')}
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-gray-600">
-                    Elegiste <span className="font-semibold text-gray-900">{horasTrabajoSeleccionadas}h de trabajo</span>.
-                    Ahora selecciona en qué horario prefieres el servicio.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {cargandoHorarios ? (
-              <div className="flex items-center justify-center py-12">
-                <RefreshCw className="h-8 w-8 animate-spin text-[#195083]" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {horariosDisponibles.map((horario, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setHorarioSeleccionado(horario)}
-                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                      horarioSeleccionado?.hora_inicio === horario.hora_inicio &&
-                      horarioSeleccionado?.hora_final === horario.hora_final
-                        ? 'border-[#195083] bg-[#195083]/5'
-                        : 'border-gray-200 hover:border-[#195083]/50'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="bg-[#195083]/10 p-2 rounded-lg">
-                        <Clock className="h-5 w-5 text-[#195083]" />
-                      </div>
-                      {horarioSeleccionado?.hora_inicio === horario.hora_inicio &&
-                       horarioSeleccionado?.hora_final === horario.hora_final && (
-                        <CheckCircle className="h-5 w-5 text-[#195083]" />
-                      )}
-                    </div>
-
-                    <h4 className="font-semibold text-gray-900 mb-1">
-                      {horario.hora_inicio} - {horario.hora_final}
-                    </h4>
-
-                    <p className="text-sm text-gray-600 mb-2">
-                      {horario.horas_duracion}h de servicio
-                    </p>
-
-                    {horario.sobrecargo_sabado > 0 && (
-                      <div className="bg-yellow-50 border border-yellow-200 p-2 rounded text-xs">
-                        <p className="text-yellow-800 font-medium">
-                          {t('cliente.createReservation.selectSchedule.saturdaySurcharge')}
-                        </p>
-                        <p className="text-yellow-700">
-                          {t('cliente.createReservation.selectSchedule.surchargeAmount', { amount: formatCurrency(horario.sobrecargo_sabado) })}
-                        </p>
-                      </div>
+            {/* ─── HORA DE INICIO ─── */}
+            {(planSeleccionado || (actividadesSeleccionadas.length > 0 && horasTrabajoSeleccionadas)) && (() => {
+              const duracion = planSeleccionado?.horas_servicio ?? horasTrabajoSeleccionadas!;
+              const tieneBreak = duracion > 4;
+              const horasInicio = generarHorasInicio(duracion);
+              const horaFinalCalculada = horaInicioSeleccionada ? computeHoraFinal(horaInicioSeleccionada, duracion) : null;
+              return (
+                <div className="border-t border-gray-100 pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock className="h-5 w-5 text-[#195083]" />
+                    <h3 className="text-lg font-semibold text-gray-800">Hora de inicio</h3>
+                    {horaInicioSeleccionada && horaFinalCalculada && (
+                      <span className="text-xs bg-[#195083]/10 text-[#195083] px-2 py-0.5 rounded-full font-semibold">
+                        {horaInicioSeleccionada} → {horaFinalCalculada}
+                      </span>
                     )}
                   </div>
-                ))}
 
-                {horariosDisponibles.length === 0 && (
-                  <div className="col-span-full text-center py-8">
-                    <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">{t('cliente.createReservation.selectSchedule.noSchedules')}</p>
+                  {tieneBreak && (
+                    <div className="mb-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm">
+                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-amber-800">
+                        Este plan dura más de 4 horas. Se incluye un <strong>descanso de 30 minutos</strong> para la empleada,
+                        por lo que el tiempo total en tu hogar será de <strong>{duracion}h 30min</strong>.
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-gray-500 mb-4">
+                    Selecciona a qué hora quieres que empiece el servicio. La hora de finalización se calcula automáticamente.
+                  </p>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                    {horasInicio.map((hora) => {
+                      const sel = horaInicioSeleccionada === hora;
+                      const horaFin = computeHoraFinal(hora, duracion);
+                      return (
+                        <button
+                          key={hora}
+                          onClick={() => setHoraInicioSeleccionada(hora)}
+                          className={`p-2.5 border-2 rounded-xl text-center transition-all ${
+                            sel
+                              ? 'border-[#195083] bg-[#195083]/5 shadow-sm'
+                              : 'border-gray-200 hover:border-[#195083]/50 hover:bg-gray-50'
+                          }`}
+                        >
+                          <p className={`text-sm font-bold ${sel ? 'text-[#195083]' : 'text-gray-800'}`}>{hora}</p>
+                          <p className={`text-xs mt-0.5 ${sel ? 'text-[#195083]/70' : 'text-gray-500'}`}>→ {horaFin}</p>
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
-        {/* Paso 4: Seleccionar Fechas */}
-        {pasoActual === 4 && (
+        {/* Paso 3: Seleccionar Fechas */}
+        {pasoActual === 3 && (
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
@@ -1184,7 +1160,7 @@ function CrearReserva() {
                     <div className="flex flex-wrap gap-1">
                       {fechasSeleccionadas.map(fecha => (
                         <span key={fecha} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                          {new Date(fecha).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          {(() => { const [y,m,d] = fecha.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' }); })()}
                         </span>
                       ))}
                     </div>
@@ -1308,8 +1284,8 @@ function CrearReserva() {
           </div>
         )}
 
-        {/* Paso 5: Detalles (Ubicación) */}
-        {pasoActual === 5 && (
+        {/* Paso 4: Detalles (Ubicación) */}
+        {pasoActual === 4 && (
           <div className="p-4 sm:p-6 space-y-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
@@ -1433,8 +1409,8 @@ function CrearReserva() {
           </div>
         )}
 
-        {/* Paso 6: Confirmación */}
-        {pasoActual === 6 && (
+        {/* Paso 5: Confirmación */}
+        {pasoActual === 5 && (
           <div className="p-4 sm:p-6">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
@@ -1615,7 +1591,7 @@ function CrearReserva() {
                 {/* Nota importante */}
                 <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
                     <div className="text-sm">
                       <p className="font-medium text-yellow-800 mb-1">{t('cliente.createReservation.confirm.important')}</p>
                       <p className="text-yellow-700">
@@ -1651,15 +1627,14 @@ function CrearReserva() {
             </button>
 
             <div className="flex items-center gap-3">
-              {pasoActual < 6 ? (
+              {pasoActual < 5 ? (
                 <button
                   onClick={siguientePaso}
                   disabled={
                     (pasoActual === 1 && !puedeAvanzarPaso1) ||
                     (pasoActual === 2 && !puedeAvanzarPaso2) ||
                     (pasoActual === 3 && !puedeAvanzarPaso3) ||
-                    (pasoActual === 4 && !puedeAvanzarPaso4) ||
-                    (pasoActual === 5 && !puedeAvanzarPaso5)
+                    (pasoActual === 4 && !puedeAvanzarPaso4)
                   }
                   className="flex items-center gap-2 bg-[#195083] text-white px-6 py-2 rounded-lg hover:bg-[#0f3a5f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
